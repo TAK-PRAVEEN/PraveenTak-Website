@@ -2,7 +2,7 @@
 
 **Swiss Futurism / Digital Matter.** Editorial precision × computational art × cinematic 3D.
 
-Status: **Phase 0 — awaiting approval.** Nothing is built yet. Branch: `feature/redesign-2026`.
+Status: **Phase 0 complete — hero decisions approved.** Nothing is built yet. Branch: `feature/redesign-2026`.
 Source brief: `Portfolio.pdf` (09 Nov 2026) and 14 reference images. This document adopts that
 brief and records where Phase 0 inspection changes or tightens it (marked **▲ change**).
 
@@ -180,7 +180,7 @@ low-end → 8k points, DPR capped at 1.5, paused when off-screen.
 
 ### C. Name animation
 Placed as the hero's lead line ("Hi, I'm" + signature) exactly as authored, re-encoded only.
-Treatment depends on D3.
+Recoloured to charcoal per D3.
 
 ---
 
@@ -269,7 +269,7 @@ support, AVIF/WebP, WebM/MP4, KTX2/Draco GLB, real-device testing.
 
 | Phase | Scope | Exit check |
 |---|---|---|
-| 0 | This spec | Your approval of D1–D4 |
+| 0 | This spec | ✓ D1–D4 approved |
 | 1 | Astro + Cloudflare scaffold, tokens, fonts, grid, nav, layouts, content schemas, migrated old content | Builds, deploys to a preview URL, Lighthouse baseline |
 | 2 | Name animation, binary portrait, orb cursor, hero transition, liquid nav | You sign off the hero |
 | 3 | About, Work (+ case study), Lab, Experiments, Experience, Contact | All pages with real content |
@@ -281,12 +281,12 @@ No push and no production deploy without your explicit go-ahead.
 
 ---
 
-## 12. Open decisions
+## 12. Decisions (approved 09 Nov 2026)
 
-- **D1 — Portrait first appearance:** immediately visible / reconstructs from scattered particles / partially visible then completes.
-- **D2 — Portrait main interaction:** hover / scroll / both.
-- **D3 — Name animation colours:** keep as authored / approve a monochrome or orange recolour.
-- **D4 — Portrait source:** use `portrait-source.png` / you supply a new high-res photo.
+- **D1 — Portrait first appearance:** starts as scattered 0/1 particles and **reconstructs** into the face (~1.5 s), covering 3D initialisation.
+- **D2 — Portrait main interaction:** **hover and scroll** — hover disintegrates/rebuilds; scroll dollies the camera through the cloud.
+- **D3 — Name animation colours:** **recolour to charcoal `#171719`**. Same frames, timing and lettering; only the colour changes (alpha-preserving recolour of the transparent GIF). Original GIF stays untouched in `reference/`.
+- **D4 — Portrait source:** **use `portrait-source.png`** — sky matted out, watermark area excluded from sampling.
 
 Still needed from you before Phase 3: project list with links and real outcomes, current role
 and availability, résumé, social links, any Blender renders, chatbot AI provider, custom domain.
