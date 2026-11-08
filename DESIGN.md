@@ -24,7 +24,7 @@ brief and records where Phase 0 inspection changes or tightens it (marked **▲ 
   4 colours**: peach-orange → pink → lavender → teal.
 - Old site placed it on a blue gradient band under "Hi, I'm".
 - **Conflict:** the pastel pink/teal/lavender cycle is outside the new palette. Per the brief
-  ("do not redesign without approval"), I will **not** recolour it. See Decision D3.
+  ("do not redesign without approval") this was put to you: **approved recolour to charcoal** (D3).
 - Plan regardless of D3: keep the GIF untouched in `reference/`; ship an encoded copy
   (WebM VP9 with alpha + HEVC-alpha MP4 for Safari, animated AVIF fallback). Expected
   ~1–3 MB instead of 18 MB with identical frames and timing.
