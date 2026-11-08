@@ -1,0 +1,109 @@
+[
+  {
+    "id": "create-consciously-ai",
+    "kind": "work",
+    "title": "AI/ML Intern",
+    "org": "Create Consciously AI",
+    "location": "Jaipur, Rajasthan",
+    "start": "2026-05",
+    "end": null,
+    "highlights": [
+      "Contributed to TourIQ, an AI-powered tour revenue optimisation platform processing 649K+ booking records across multiple tour operators.",
+      "Improved booking forecast accuracy from 82% to 90% and reduced prediction MAPE from 18% to 12% using DTD, occupancy and seasonal demand features.",
+      "Enhanced dynamic pricing recommendations, increasing projected seat fill rates from 68% to 82% and identifying $50K+ revenue recovery opportunities across underperforming departures.",
+      "Worked extensively with ML pipelines, time-series forecasting, pricing optimisation and data analytics."
+    ],
+    "stack": ["Python", "LightGBM", "Time-Series Forecasting", "Dynamic Pricing", "Pandas", "NumPy"]
+  },
+  {
+    "id": "infosys-springboard",
+    "kind": "work",
+    "title": "AI Intern",
+    "org": "Infosys Springboard",
+    "location": "Remote",
+    "start": "2025-11",
+    "end": "2026-01",
+    "highlights": [
+      "Built an AI-powered Python code reviewer using AST, Hugging Face (Qwen) and LangChain to detect 20+ code issues and enforce PEP8 standards.",
+      "Reduced linting violations from 50+ to 35 per 1,000 lines of code (~30% improvement) through automated analysis and optimisation recommendations.",
+      "Developed a Streamlit review platform delivering AI-generated feedback in under 2 seconds.",
+      "Integrated LLMs, prompt engineering and static code analysis into an end-to-end AI application."
+    ],
+    "stack": ["Python", "LangChain", "Hugging Face", "Qwen", "AST", "Streamlit", "LLMs"]
+  },
+  {
+    "id": "elevate-labs",
+    "kind": "work",
+    "title": "AI Intern",
+    "org": "Elevate Labs",
+    "location": "Remote",
+    "start": "2025-08",
+    "end": "2025-09",
+    "highlights": [
+      "Contributed to Sign Language Recognition, achieving ~85% accuracy in translating gestures to text.",
+      "Built and optimised deep learning models (CNNs, RNNs) with TensorFlow and PyTorch, reducing training time by 20%.",
+      "Applied preprocessing and augmentation on 10,000+ gesture images, improving model generalisation."
+    ],
+    "stack": ["Machine Learning", "Computer Vision", "Deep Learning"]
+  },
+  {
+    "id": "drdo",
+    "kind": "work",
+    "title": "Project Trainee",
+    "org": "Defence Research and Development Organisation (DRDO)",
+    "location": "Jodhpur, India",
+    "start": "2025-02",
+    "end": "2025-04",
+    "highlights": [
+      "Developed Painting Generation using CycleGANs, generating 1,000+ synthetic artworks from real images.",
+      "Trained GAN models with TensorFlow/PyTorch, improving image fidelity scores by 15%.",
+      "Preprocessed and augmented 5,000+ images, improving stability in model convergence."
+    ],
+    "stack": ["Machine Learning", "Computer Vision", "Deep Learning", "GANs"]
+  },
+  {
+    "id": "physicswallah",
+    "kind": "work",
+    "title": "Student Intern",
+    "org": "PW (PhysicsWallah)",
+    "location": "Remote",
+    "start": "2025-01",
+    "end": "2025-02",
+    "highlights": [
+      "Completed 3+ ML projects applying regression, classification and clustering on datasets of up to 50,000+ records.",
+      "Designed and evaluated models with Scikit-learn, TensorFlow and PyTorch, achieving 10–25% improvements over baseline.",
+      "Executed data cleaning and validation pipelines, reducing preprocessing errors by 30%."
+    ],
+    "stack": ["Machine Learning", "Python", "Data Analysis"]
+  },
+  {
+    "id": "mca-poornima",
+    "kind": "education",
+    "title": "Master of Computer Applications",
+    "org": "Poornima University, Jaipur",
+    "start": "2025-08",
+    "end": "2027-09",
+    "highlights": ["Specialisation in AI & Data Science.", "Active participant in technical events and competitions."],
+    "stack": []
+  },
+  {
+    "id": "bsc-lachoo",
+    "kind": "education",
+    "title": "Bachelor of Science (PMCS)",
+    "org": "Lachoo Memorial College of Science & Technology, Jodhpur",
+    "start": "2022-09",
+    "end": "2025-07",
+    "highlights": ["Computer Science with specialisation in Data Science.", "85% — graduated with Honours."],
+    "stack": []
+  },
+  {
+    "id": "xii-aps",
+    "kind": "education",
+    "title": "XII (Science)",
+    "org": "Army Public School, Jodhpur",
+    "start": "2021-05",
+    "end": "2022-07",
+    "highlights": ["Science stream, 85% in final examinations."],
+    "stack": []
+  }
+]

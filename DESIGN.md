@@ -2,7 +2,7 @@
 
 **Swiss Futurism / Digital Matter.** Editorial precision × computational art × cinematic 3D.
 
-Status: **Phase 0 complete — hero decisions approved.** Nothing is built yet. Branch: `feature/redesign-2026`.
+Status: **Phase 1 complete (foundation) — 09 Nov 2026.** Next: Phase 2 (hero signatures). Branch: `feature/redesign-2026`.
 Source brief: `Portfolio.pdf` (09 Nov 2026) and 14 reference images. This document adopts that
 brief and records where Phase 0 inspection changes or tightens it (marked **▲ change**).
 
@@ -270,7 +270,7 @@ support, AVIF/WebP, WebM/MP4, KTX2/Draco GLB, real-device testing.
 | Phase | Scope | Exit check |
 |---|---|---|
 | 0 | This spec | ✓ D1–D4 approved |
-| 1 | Astro + Cloudflare scaffold, tokens, fonts, grid, nav, layouts, content schemas, migrated old content | Builds, deploys to a preview URL, Lighthouse baseline |
+| 1 | ✓ Astro 7 + Cloudflare scaffold, tokens, fonts, grid, nav, layouts, content schemas, migrated old content | ✓ Builds + runs in local Workers runtime. Deploy + Lighthouse baseline wait for Cloudflare login |
 | 2 | Name animation, binary portrait, orb cursor, hero transition, liquid nav | You sign off the hero |
 | 3 | About, Work (+ case study), Lab, Experiments, Experience, Contact | All pages with real content |
 | 4 | Blender assets → GLB, shaders, scroll 3D | Budgets still met |

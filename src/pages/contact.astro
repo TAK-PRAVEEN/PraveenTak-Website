@@ -1,0 +1,166 @@
+---
+import { getEntry } from "astro:content";
+import { ArrowUpRight } from "@lucide/astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/layout/PageHeader.astro";
+import StatusDot from "../components/ui/StatusDot.astro";
+
+const profile = (await getEntry("profile", "main"))!.data;
+---
+
+<BaseLayout title="Contact" section="/contact" description="Get in touch with Praveen Tak." bare>
+  <PageHeader section="/contact" title="Let's talk" />
+
+  <section class="frame grid-12 contact" aria-label="Contact">
+    <div class="col-span-4 md:col-span-5 details">
+      <StatusDot open={profile.availability.open} label={profile.availability.label} />
+      <a href={`mailto:${profile.contact.email}`} class="heading email link-underline">{profile.contact.email}</a>
+      {profile.contact.phone && <a href={`tel:${profile.contact.phone.replace(/\s/g, "")}`} class="micro">{profile.contact.phone}</a>}
+      <ul class="socials">
+        {
+          profile.socials.map((s) => (
+            <li>
+              <a href={s.href} target="_blank" rel="me noopener" class="social">
+                <span class="heading">{s.label}</span>
+                <ArrowUpRight size={20} aria-hidden="true" />
+                <span class="sr-only">(opens in a new tab)</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="micro text-muted">{profile.location.city}, {profile.location.region}, {profile.location.country} · {profile.location.coords}</p>
+    </div>
+
+    <form class="col-span-4 md:col-span-6 md:col-start-7 form" data-contact-form data-email={profile.contact.email} novalidate>
+      <div class="field">
+        <label for="name" class="micro">Name</label>
+        <input id="name" name="name" type="text" autocomplete="name" required />
+      </div>
+      <div class="field">
+        <label for="email" class="micro">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="message" class="micro">Message</label>
+        <textarea id="message" name="message" rows="6" required></textarea>
+      </div>
+      <p class="micro form-error" role="alert" data-form-error hidden></p>
+      <button type="submit" class="micro submit">Compose email →</button>
+      <p class="micro text-muted">Opens your email app with the message filled in. A direct form arrives soon.</p>
+    </form>
+  </section>
+</BaseLayout>
+
+<script>
+  // Phase 1: no backend yet, so compose a mailto: instead of pretending to send.
+  // Phase 5 replaces this with POST /api/contact (Turnstile-protected Worker).
+  function setupContact() {
+    const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
+    const error = document.querySelector<HTMLElement>("[data-form-error]");
+    if (!form || !error) return;
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const name = String(data.get("name") ?? "").trim();
+      const email = String(data.get("email") ?? "").trim();
+      const message = String(data.get("message") ?? "").trim();
+      const missing = [!name && "name", !/^\S+@\S+\.\S+$/.test(email) && "a valid email", !message && "a message"].filter(Boolean);
+      if (missing.length) {
+        error.textContent = `Please add ${missing.join(", ")}.`;
+        error.hidden = false;
+        return;
+      }
+      error.hidden = true;
+      const subject = encodeURIComponent(`Portfolio enquiry from ${name}`);
+      const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`);
+      window.location.href = `mailto:${form.dataset.email}?subject=${subject}&body=${body}`;
+    };
+  }
+  document.addEventListener("astro:page-load", setupContact);
+</script>
+
+<style>
+  .contact {
+    row-gap: 64px;
+    padding-bottom: clamp(64px, 10vw, 160px);
+    border-top: 1px solid var(--line-strong);
+    padding-top: 40px;
+  }
+  .details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .email {
+    font-size: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    width: fit-content;
+    overflow-wrap: anywhere;
+  }
+  .socials {
+    list-style: none;
+    margin: 16px 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .social {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-block: 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-lead);
+  }
+  .social:hover {
+    padding-left: 8px;
+    transition: padding var(--dur) var(--ease-out);
+  }
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  input,
+  textarea {
+    font: inherit;
+    font-size: var(--text-lead);
+    color: var(--fg);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line-strong);
+    padding: 8px 0;
+    border-radius: 0;
+    resize: vertical;
+  }
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-bottom: 2px solid var(--orange);
+  }
+  .form-error {
+    margin: 0;
+    color: #b42318;
+  }
+  .submit {
+    align-self: flex-start;
+    min-height: 48px;
+    padding: 0 22px;
+    border: 1px solid var(--charcoal);
+    background: var(--charcoal);
+    color: var(--paper);
+    cursor: pointer;
+    transition:
+      background-color var(--dur-fast),
+      color var(--dur-fast);
+  }
+  .submit:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: var(--charcoal);
+  }
+</style>

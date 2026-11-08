@@ -1,0 +1,147 @@
+---
+import { getCollection, getEntry } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/layout/PageHeader.astro";
+import SpecList from "../components/ui/SpecList.astro";
+import { period, byStartDesc } from "../lib/format";
+
+const profile = (await getEntry("profile", "main"))!.data;
+const education = (await getCollection("experience", (e) => e.data.kind === "education")).sort(byStartDesc);
+---
+
+<BaseLayout title="About" section="/about" description={profile.intro}>
+  <PageHeader section="/about" title="About" statement={profile.statement} lead={profile.intro} />
+
+  <section class="frame block" aria-labelledby="identity-title">
+    <div class="grid-12">
+      <h2 id="identity-title" class="micro col-span-4 md:col-span-3 label">Identity</h2>
+      <ol class="identity col-span-4 md:col-span-9">
+        {
+          profile.roles.map((r, i) => (
+            <li>
+              <span class="micro text-muted">0{i + 1}</span>
+              <span class="heading">{r}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="frame block" aria-labelledby="skills-title">
+    <div class="grid-12">
+      <h2 id="skills-title" class="micro col-span-4 md:col-span-3 label">Toolkit</h2>
+      <div class="col-span-4 md:col-span-9 skills">
+        {profile.skills.map((g) => <SpecList title={g.group} items={g.items.map((s, i) => ({ label: String(i + 1).padStart(2, "0"), value: s }))} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="frame block" aria-labelledby="edu-title">
+    <div class="grid-12">
+      <h2 id="edu-title" class="micro col-span-4 md:col-span-3 label">Education</h2>
+      <ol class="col-span-4 md:col-span-9 rows">
+        {
+          education.map((e) => (
+            <li class="row">
+              <span class="micro text-muted">{period(e.data.start, e.data.end)}</span>
+              <div>
+                <h3 class="heading row-title">{e.data.title}</h3>
+                <p class="text-muted row-sub">{e.data.org}</p>
+              </div>
+              <ul class="row-notes">
+                {e.data.highlights.map((h) => <li>{h}</li>)}
+              </ul>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="frame block" aria-labelledby="ach-title">
+    <div class="grid-12">
+      <h2 id="ach-title" class="micro col-span-4 md:col-span-3 label">Recognition</h2>
+      <ol class="col-span-4 md:col-span-9 list">
+        {profile.achievements.map((a) => <li class="heading">{a}</li>)}
+      </ol>
+    </div>
+  </section>
+
+  <section class="frame block" aria-labelledby="outside-title">
+    <div class="grid-12">
+      <h2 id="outside-title" class="micro col-span-4 md:col-span-3 label">Outside code</h2>
+      <p class="col-span-4 md:col-span-9 interests editorial">{profile.interests.join(" · ")}</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .block {
+    padding-block: clamp(40px, 6vw, 96px);
+    border-top: 1px solid var(--line);
+  }
+  .label {
+    margin: 0 0 24px;
+  }
+  .identity {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .identity li {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding-block: 8px;
+  }
+  .identity .heading {
+    font-size: var(--text-h2);
+  }
+  .skills {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 40px 24px;
+  }
+  .rows,
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .row {
+    display: grid;
+    gap: 8px 24px;
+    padding-block: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .row:first-child {
+    padding-top: 0;
+  }
+  @media (min-width: 768px) {
+    .row {
+      grid-template-columns: 200px 1fr 1fr;
+    }
+  }
+  .row-title {
+    font-size: var(--text-lead);
+    margin: 0;
+  }
+  .row-sub {
+    margin: 4px 0 0;
+  }
+  .row-notes {
+    margin: 0;
+    padding-left: 1.1em;
+    color: var(--fg-muted);
+  }
+  .list li {
+    font-size: var(--text-h3);
+    padding-block: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .interests {
+    font-size: var(--text-h2);
+    margin: 0;
+  }
+</style>

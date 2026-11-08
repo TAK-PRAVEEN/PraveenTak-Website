@@ -1,0 +1,36 @@
+---
+// Rendered on demand so any unmatched URL reaching the Worker gets this page.
+export const prerender = false;
+
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LinkButton from "../components/ui/LinkButton.astro";
+---
+
+<BaseLayout title="Not found" section="/" bare>
+  <section class="frame nf">
+    <p class="micro text-muted">Error — Signal lost</p>
+    <hr class="rule-strong" />
+    <h1 class="display code">404</h1>
+    <p class="editorial line">This page drifted out of orbit.</p>
+    <LinkButton href="/">Back to home</LinkButton>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+    padding-top: var(--nav-h);
+  }
+  .code {
+    font-size: clamp(8rem, 2rem + 30vw, 28rem);
+    margin: 0;
+  }
+  .line {
+    font-size: var(--text-h3);
+    margin: 0 0 16px;
+  }
+</style>

@@ -1,29 +1,21 @@
-# Logs
-logs
+# build output
+dist/
+.wrangler/
+# generated types
+.astro/
+# dependencies
+node_modules/
+# logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
+# environment / secrets
+.env*
+.dev.vars*
 *.local
-
-# Editor directories and files
+.vercel
+# OS / editor
+.DS_Store
+.idea/
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.vercel
-.env*
-
 # Claude Code local config & installed skills
 .claude/

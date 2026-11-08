@@ -1,0 +1,50 @@
+---
+/** Availability indicator. Pulse is decorative and stops under reduced motion. */
+interface Props {
+  open: boolean;
+  label: string;
+}
+const { open, label } = Astro.props;
+---
+
+<p class="status micro" data-open={open ? "" : undefined}>
+  <span class="dot" aria-hidden="true"></span>
+  <span>{open ? label : "Not available right now"}</span>
+</p>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+  }
+  .dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--concrete);
+  }
+  [data-open] .dot {
+    background: var(--orange);
+  }
+  [data-open] .dot::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid var(--orange);
+    animation: pulse 2.4s var(--ease-out) infinite;
+  }
+  @keyframes pulse {
+    from {
+      transform: scale(0.6);
+      opacity: 1;
+    }
+    to {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }
+</style>

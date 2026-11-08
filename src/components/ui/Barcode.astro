@@ -1,0 +1,44 @@
+---
+/**
+ * Decorative barcode derived deterministically from real text (Warp / Braun
+ * references). Hidden from assistive tech; the value is shown as a caption.
+ */
+interface Props {
+  value: string;
+  height?: number;
+}
+const { value, height = 28 } = Astro.props;
+const bars: { x: number; w: number }[] = [];
+let x = 0;
+for (const ch of value) {
+  const c = ch.charCodeAt(0);
+  for (const bit of [c & 3, (c >> 2) & 3, (c >> 4) & 3]) {
+    const w = bit + 1;
+    bars.push({ x, w });
+    x += w + 1 + ((c >> bit) & 1);
+  }
+}
+---
+
+<span class="barcode" aria-hidden="true">
+  <svg width={x} height={height} viewBox={`0 0 ${x} ${height}`} preserveAspectRatio="none">
+    {bars.map((b) => <rect x={b.x} y="0" width={b.w} height={height} fill="currentColor" />)}
+  </svg>
+  <span class="micro">{value.toUpperCase()}</span>
+</span>
+
+<style>
+  .barcode {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--fg);
+  }
+  .barcode svg {
+    max-width: 180px;
+    width: 100%;
+  }
+  .barcode .micro {
+    font-size: 9px;
+  }
+</style>

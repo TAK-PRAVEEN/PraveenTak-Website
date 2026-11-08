@@ -1,0 +1,315 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Praveen Tak — Portfolio 2026 · Design tokens
+   Source of truth: DESIGN.md §3–5. Change values here, never in components.
+   ========================================================================== */
+
+/* ---------- Fonts (self-hosted, OFL licences in /public/fonts) ---------- */
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/space-grotesk-var.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("/fonts/manrope-var.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Mono";
+  src: url("/fonts/space-mono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Mono";
+  src: url("/fonts/space-mono-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/instrument-serif-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/instrument-serif-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ---------- Raw palette ---------- */
+:root {
+  --paper: #f0f0ee;
+  --mist: #d8d8d6;
+  --concrete: #858587;
+  --graphite: #5e5e61;
+  --charcoal: #171719;
+  --ink: #080809;
+
+  --orange: #ff5a1f;
+  --lime: #c8ff00;
+  --blue: #386bff;
+  --blue-on-ink: #5b86ff;
+  --lavender: #a78bfa;
+
+  /* Semantic (Paper surface is the default) */
+  --bg: var(--paper);
+  --fg: var(--charcoal);
+  --fg-muted: var(--graphite);
+  --line: var(--mist);
+  --line-strong: var(--charcoal);
+  --panel: color-mix(in oklab, var(--paper) 70%, white);
+
+  /* Accent: one per experience, set by [data-accent] */
+  --accent: var(--orange);
+  --accent-text: var(--charcoal); /* text colour placed ON an accent fill */
+  --accent-as-text: var(--charcoal); /* accent used AS text; only safe values */
+
+  /* Layout */
+  --gutter: 16px;
+  --margin: 16px;
+  --max: 1440px;
+  --nav-h: 64px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur: 320ms;
+  --dur-slow: 700ms;
+
+  color-scheme: light;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 24px;
+    --margin: 32px;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --margin: 48px;
+  }
+}
+
+/* ---------- Surfaces ---------- */
+[data-surface="ink"] {
+  --bg: var(--ink);
+  --fg: var(--paper);
+  --fg-muted: #a3a3a6;
+  --line: #2a2a2e;
+  --line-strong: var(--paper);
+  --panel: var(--charcoal);
+  color-scheme: dark;
+}
+
+/* ---------- Accents (contrast rules: DESIGN.md §3) ---------- */
+[data-accent="orange"] {
+  --accent: var(--orange);
+  --accent-text: var(--charcoal);
+}
+[data-accent="lime"] {
+  --accent: var(--lime);
+  --accent-text: var(--charcoal);
+}
+[data-accent="blue"] {
+  --accent: var(--blue);
+  --accent-text: var(--paper);
+}
+[data-accent="lavender"] {
+  --accent: var(--lavender);
+  --accent-text: var(--charcoal);
+}
+[data-accent="mono"] {
+  --accent: var(--charcoal);
+  --accent-text: var(--paper);
+}
+/* On Ink every accent is legible as text; on Paper it never is (small sizes). */
+[data-surface="ink"][data-accent="orange"] { --accent-as-text: var(--orange); }
+[data-surface="ink"][data-accent="lime"] { --accent-as-text: var(--lime); }
+[data-surface="ink"][data-accent="blue"] { --accent-as-text: var(--blue-on-ink); --accent: var(--blue-on-ink); }
+[data-surface="ink"][data-accent="lavender"] { --accent-as-text: var(--lavender); }
+[data-surface="ink"][data-accent="mono"] { --accent: var(--paper); --accent-text: var(--ink); --accent-as-text: var(--paper); }
+
+/* ---------- Tailwind theme bridge ---------- */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-mist: var(--mist);
+  --color-concrete: var(--concrete);
+  --color-graphite: var(--graphite);
+  --color-charcoal: var(--charcoal);
+  --color-ink: var(--ink);
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--accent-text);
+  --color-panel: var(--panel);
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "Cascadia Mono", monospace;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+
+  /* Fluid type scale */
+  --text-micro: 0.6875rem;
+  --text-body: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+  --text-lead: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  --text-h3: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
+  --text-h2: clamp(3rem, 2rem + 3.5vw, 5rem);
+  --text-display: clamp(4.5rem, 1rem + 13vw, 17.5rem);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    scroll-padding-top: calc(var(--nav-h) + 16px);
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: var(--orange);
+    color: var(--charcoal);
+  }
+  :focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  img,
+  video,
+  canvas {
+    display: block;
+    max-width: 100%;
+  }
+}
+
+/* ---------- Reusable editorial primitives ---------- */
+@layer components {
+  /* 12-column Swiss grid */
+  .grid-12 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: var(--gutter);
+  }
+  @media (min-width: 768px) {
+    .grid-12 {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+  }
+  .frame {
+    width: 100%;
+    max-width: var(--max);
+    margin-inline: auto;
+    padding-inline: var(--margin);
+  }
+
+  /* Mono micro-label: "01 — PROJECTS" */
+  .micro {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    line-height: 1.35;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    line-height: 0.85;
+  }
+  .heading {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+  }
+  .editorial {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+  }
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
+  .rule-strong {
+    border: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .link-underline {
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    transition: background-size var(--dur) var(--ease-out);
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  /* Visible-on-focus skip link */
+  .skip-link {
+    position: fixed;
+    left: 16px;
+    top: -100px;
+    z-index: 100;
+    padding: 10px 14px;
+    background: var(--charcoal);
+    color: var(--paper);
+  }
+  .skip-link:focus {
+    top: 16px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

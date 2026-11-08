@@ -1,0 +1,223 @@
+---
+/**
+ * Global navigation. Swiss top rule on desktop, full-screen index on mobile.
+ * Glass treatment appears only once the page scrolls (DESIGN.md §5).
+ */
+import { EXPERIENCES, SITE } from "../../config/site";
+
+interface Props {
+  current: string;
+}
+const { current } = Astro.props;
+const links = EXPERIENCES.filter((e) => e.href !== "/");
+---
+
+<header class="nav" data-nav transition:persist="nav">
+  <div class="frame nav-row">
+    <a href="/" class="brand" aria-label={`${SITE.name} — home`}>
+      <span class="brand-mark" aria-hidden="true">PT</span>
+      <span class="micro brand-name">{SITE.name}</span>
+    </a>
+
+    <nav aria-label="Primary" class="nav-desktop">
+      <ul>
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} class="micro nav-link" aria-current={current === l.href ? "page" : undefined}>
+                <span class="nav-index" aria-hidden="true">{l.index}</span>
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <button class="micro nav-toggle" type="button" aria-expanded="false" aria-controls="nav-panel" data-nav-toggle>
+      <span data-nav-toggle-label>Menu</span>
+    </button>
+  </div>
+
+  <div id="nav-panel" class="nav-panel" hidden data-nav-panel>
+    <nav aria-label="Primary mobile" class="frame">
+      <ul>
+        {
+          [EXPERIENCES[0], ...links].map((l) => (
+            <li>
+              <a href={l.href} class="nav-panel-link" aria-current={current === l.href ? "page" : undefined}>
+                <span class="micro">{l.index}</span>
+                <span class="heading">{l.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<script>
+  function setupNav() {
+    const nav = document.querySelector<HTMLElement>("[data-nav]");
+    const toggle = document.querySelector<HTMLButtonElement>("[data-nav-toggle]");
+    const panel = document.querySelector<HTMLElement>("[data-nav-panel]");
+    const label = document.querySelector<HTMLElement>("[data-nav-toggle-label]");
+    if (!nav || !toggle || !panel || !label) return;
+
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute("aria-expanded", String(open));
+      panel.hidden = !open;
+      label.textContent = open ? "Close" : "Menu";
+      document.documentElement.style.overflow = open ? "hidden" : "";
+    };
+    setOpen(false);
+    // The nav is persisted across navigations: bind listeners only once.
+    if (nav.dataset.ready) return;
+    nav.dataset.ready = "true";
+    toggle.onclick = () => setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    panel.onclick = (e) => {
+      if ((e.target as HTMLElement).closest("a")) setOpen(false);
+    };
+    document.onkeydown = (e) => {
+      if (e.key === "Escape" && !panel.hidden) {
+        setOpen(false);
+        toggle.focus();
+      }
+    };
+
+    const onScroll = () => nav.toggleAttribute("data-scrolled", window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
+  document.addEventListener("astro:page-load", setupNav);
+
+  // Keep aria-current correct when the persisted nav survives a navigation.
+  document.addEventListener("astro:after-swap", () => {
+    const path = "/" + (location.pathname.split("/")[1] ?? "");
+    document.querySelectorAll<HTMLAnchorElement>("[data-nav] a[href]").forEach((a) => {
+      if (a.getAttribute("href") === path) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+  });
+</script>
+
+<style>
+  .nav {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 50;
+    color: var(--fg);
+    transition:
+      background-color var(--dur) var(--ease-out),
+      border-color var(--dur) var(--ease-out);
+    border-bottom: 1px solid transparent;
+  }
+  .nav[data-scrolled] {
+    background: color-mix(in oklab, var(--bg) 72%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+    border-bottom-color: var(--line);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .nav[data-scrolled] {
+      background: var(--bg);
+      backdrop-filter: none;
+    }
+  }
+  .nav-row {
+    height: var(--nav-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line-strong);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: -0.02em;
+  }
+  .nav-desktop {
+    display: none;
+  }
+  .nav-desktop ul {
+    display: flex;
+    gap: clamp(16px, 2.2vw, 36px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav-link {
+    display: inline-flex;
+    gap: 6px;
+    padding-block: 8px;
+    color: var(--fg-muted);
+    transition: color var(--dur-fast);
+  }
+  .nav-link:hover,
+  .nav-link[aria-current="page"] {
+    color: var(--fg);
+  }
+  .nav-index {
+    opacity: 0.55;
+  }
+  .nav-link[aria-current="page"] .nav-index {
+    opacity: 1;
+  }
+  .nav-toggle {
+    min-height: 44px;
+    padding-inline: 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  @media (min-width: 960px) {
+    .nav-desktop {
+      display: block;
+    }
+    .nav-toggle {
+      display: none;
+    }
+  }
+
+  .nav-panel {
+    position: fixed;
+    inset: var(--nav-h) 0 0 0;
+    background: var(--bg);
+    overflow-y: auto;
+    padding-block: 16px 48px;
+  }
+  .nav-panel ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav-panel-link {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding-block: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-panel-link .heading {
+    font-size: clamp(2.25rem, 9vw, 3.5rem);
+  }
+  .nav-panel-link[aria-current="page"] .heading {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+</style>

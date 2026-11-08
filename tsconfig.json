@@ -1,0 +1,5 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "src/**/*", "astro.config.mjs", "./worker-configuration.d.ts"],
+  "exclude": ["dist", "reference", "node_modules", ".wrangler"]
+}

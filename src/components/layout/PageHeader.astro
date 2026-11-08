@@ -1,0 +1,64 @@
+---
+/** Editorial page opener: meta row, giant title, optional serif statement. */
+import { experienceFor } from "../../config/site";
+
+interface Props {
+  section: string;
+  title: string;
+  lead?: string;
+  statement?: string;
+}
+const { section, title, lead, statement } = Astro.props;
+const exp = experienceFor(section);
+---
+
+<header class="frame page-header">
+  <div class="meta micro">
+    <span>{exp.index} — {exp.label}</span>
+    <span class="text-muted">{exp.summary}</span>
+    <span class="text-muted">SYS_{new Date().getFullYear()}</span>
+  </div>
+  <hr class="rule-strong" />
+  <h1 class="display title">{title}</h1>
+  {
+    (lead || statement) && (
+      <div class="grid-12 below">
+        {statement && <p class="editorial statement col-span-4 md:col-span-5">{statement}</p>}
+        {lead && <p class="lead col-span-4 md:col-span-6 md:col-start-7">{lead}</p>}
+      </div>
+    )
+  }
+</header>
+
+<style>
+  .page-header {
+    padding-top: calc(var(--nav-h) + clamp(32px, 6vw, 96px));
+    padding-bottom: clamp(48px, 7vw, 112px);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding-bottom: 12px;
+  }
+  .title {
+    font-size: var(--text-display);
+    margin: 0.12em 0 0;
+    overflow-wrap: anywhere;
+  }
+  .below {
+    margin-top: clamp(32px, 4vw, 64px);
+    row-gap: 24px;
+  }
+  .statement {
+    font-size: var(--text-h3);
+    margin: 0;
+  }
+  .lead {
+    font-size: var(--text-lead);
+    line-height: 1.45;
+    color: var(--fg-muted);
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+import { ArrowUpRight, ArrowRight } from "@lucide/astro";
+
+interface Props {
+  href: string;
+  variant?: "solid" | "outline";
+  external?: boolean;
+}
+const { href, variant = "solid", external = false } = Astro.props;
+---
+
+<a
+  href={href}
+  class:list={["btn", "micro", variant]}
+  {...external ? { target: "_blank", rel: "noopener" } : {}}
+>
+  <span><slot /></span>
+  {external ? <ArrowUpRight size={14} aria-hidden="true" /> : <ArrowRight size={14} aria-hidden="true" />}
+  {external && <span class="sr-only">(opens in a new tab)</span>}
+</a>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--line-strong);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .solid {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .solid:hover {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+  .outline:hover {
+    background: var(--fg);
+    color: var(--bg);
+  }
+</style>

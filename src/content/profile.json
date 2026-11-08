@@ -1,0 +1,37 @@
+[
+  {
+    "id": "main",
+    "name": "Praveen Tak",
+    "roles": ["AI/ML Engineer", "Full-Stack Developer", "Creative Technologist"],
+    "intro": "Computer Science graduate from Jaipur, India, specialising in Data Science and Machine Learning. Currently pursuing an MCA at Poornima University and turning data into real-world systems.",
+    "statement": "Ideas become experiences.",
+    "location": { "city": "Jaipur", "region": "Rajasthan", "country": "India", "coords": "N 26°54′ / E 75°47′" },
+    "availability": { "open": true, "label": "Open to AI / ML roles" },
+    "contact": { "email": "praveentak715@gmail.com", "phone": "+91 94620 96002" },
+    "socials": [
+      { "label": "LinkedIn", "href": "https://www.linkedin.com/in/praveentak" },
+      { "label": "GitHub", "href": "https://github.com/TAK-PRAVEEN" },
+      { "label": "Hugging Face", "href": "https://huggingface.co/PraveenTak" }
+    ],
+    "skills": [
+      { "group": "Languages", "items": ["Python", "Java", "SQL", "C", "C++", "JavaScript", "HTML", "CSS"] },
+      { "group": "ML & Data Science", "items": ["Scikit-learn", "TensorFlow", "PyTorch", "Pandas", "NumPy", "Matplotlib", "LightGBM"] },
+      { "group": "LLMs & GenAI", "items": ["LangChain", "Hugging Face", "Prompt Engineering", "Gemini API"] },
+      { "group": "Web & Data", "items": ["FastAPI", "Streamlit", "MongoDB", "MySQL", "REST APIs", "Docker", "Git", "Figma"] }
+    ],
+    "achievements": [
+      "Finalist — Central India Hackathon 2.0",
+      "Runner-Up — Overnight Problem, Sandhaanam 2025",
+      "Winner — Hourly Problem, Sandhaanam 2025",
+      "Winner — MiniHackathon 2024",
+      "Honours in B.Sc"
+    ],
+    "activities": [
+      "Poster Making Competition Winner — National Mathematics Day",
+      "Calligraphy Competition Winner — APS Session 2021–22",
+      "National Reading (English) — APS Session 2021–22",
+      "Volunteer — Khelo India University Games 2025"
+    ],
+    "interests": ["Football", "Movies", "Photography", "Travelling", "New technology"]
+  }
+]

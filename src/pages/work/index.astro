@@ -1,0 +1,93 @@
+---
+import { getCollection } from "astro:content";
+import { ArrowUpRight } from "@lucide/astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/layout/PageHeader.astro";
+import TagBlock from "../../components/ui/TagBlock.astro";
+
+const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="Work" section="/work" description="Selected AI/ML and software projects by Praveen Tak.">
+  <PageHeader section="/work" title="Selected work" lead="Machine-learning systems, NLP tools and applications — from model to deployment." />
+
+  <section class="frame" aria-label="Projects">
+    <ol class="projects">
+      {
+        projects.map((p, i) => (
+          <li>
+            <a href={`/work/${p.id}`} class="project grid-12">
+              <span class="micro text-muted col-span-1 md:col-span-1">P—{String(i + 1).padStart(2, "0")}</span>
+              <div class="col-span-3 md:col-span-6">
+                <h2 class="heading project-title">{p.data.title}</h2>
+                <p class="project-summary">{p.data.summary}</p>
+              </div>
+              <div class="col-span-4 md:col-span-4 project-meta">
+                {p.data.metrics[0] && (
+                  <TagBlock size="lg">{p.data.metrics[0].value}</TagBlock>
+                )}
+                {p.data.metrics[0] && <span class="micro text-muted">{p.data.metrics[0].label}</span>}
+                <ul class="stack">
+                  {p.data.stack.slice(0, 5).map((s) => <li class="micro">{s}</li>)}
+                </ul>
+              </div>
+              <ArrowUpRight class="project-arrow" size={32} aria-hidden="true" />
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</BaseLayout>
+
+<style>
+  .projects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .project {
+    position: relative;
+    row-gap: 16px;
+    padding-block: clamp(28px, 4vw, 56px);
+    border-bottom: 1px solid var(--line);
+  }
+  .project-title {
+    font-size: var(--text-h2);
+    margin: 0;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .project:hover .project-title {
+    transform: translateX(12px);
+  }
+  .project-summary {
+    margin: 12px 0 0;
+    max-width: 52ch;
+    color: var(--fg-muted);
+  }
+  .project-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    color: var(--fg-muted);
+  }
+  .project :global(.project-arrow) {
+    position: absolute;
+    top: clamp(28px, 4vw, 56px);
+    right: 0;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .project:hover :global(.project-arrow) {
+    transform: rotate(45deg);
+  }
+</style>

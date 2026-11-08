@@ -1,0 +1,19 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/layout/PageHeader.astro";
+import EmptyChapter from "../components/layout/EmptyChapter.astro";
+
+const entries = await getCollection("lab");
+const areas = [
+  { code: "L—01", label: "Generative models" },
+  { code: "L—02", label: "Computer vision" },
+  { code: "L—03", label: "LLMs & agentic systems" },
+  { code: "L—04", label: "Research & benchmarks" },
+];
+---
+
+<BaseLayout title="AI / ML Lab" section="/lab" description="AI and machine-learning experiments by Praveen Tak.">
+  <PageHeader section="/lab" title="AI / ML Lab" lead="Experiments in generative models, computer vision and agentic systems." />
+  {entries.length === 0 && <EmptyChapter areas={areas} note="The lab notebook is being written up — first entries land with the Phase 3 release." />}
+</BaseLayout>

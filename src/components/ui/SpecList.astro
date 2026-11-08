@@ -1,0 +1,53 @@
+---
+/** Mono specification list with a vertical rule (Braun reference). */
+interface Props {
+  items: { label: string; value: string }[];
+  title?: string;
+}
+const { items, title } = Astro.props;
+---
+
+<div class="spec">
+  {title && <p class="micro spec-title">{title}</p>}
+  <dl>
+    {
+      items.map((i) => (
+        <div class="spec-row">
+          <dt class="micro">{i.label}</dt>
+          <dd class="micro">{i.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</div>
+
+<style>
+  .spec {
+    border-left: 1px solid var(--line-strong);
+    padding-left: 16px;
+  }
+  .spec-title {
+    margin: 0 0 12px;
+    color: var(--fg-muted);
+  }
+  dl {
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .spec-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  dt {
+    color: var(--fg-muted);
+  }
+  dt::after {
+    content: ":";
+  }
+  dd {
+    margin: 0;
+    font-weight: 700;
+  }
+</style>

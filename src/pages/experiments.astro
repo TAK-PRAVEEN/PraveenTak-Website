@@ -1,0 +1,20 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/layout/PageHeader.astro";
+import EmptyChapter from "../components/layout/EmptyChapter.astro";
+
+const entries = await getCollection("experiments");
+const areas = [
+  { code: "X—01", label: "Blender renders" },
+  { code: "X—02", label: "Shaders" },
+  { code: "X—03", label: "Generative art" },
+  { code: "X—04", label: "Typography" },
+  { code: "X—05", label: "Motion & prototypes" },
+];
+---
+
+<BaseLayout title="Experiments" section="/experiments" description="Creative technology experiments by Praveen Tak: 3D, shaders, motion.">
+  <PageHeader section="/experiments" title="Experiments" lead="Creative technology — 3D, shaders, generative systems and motion." />
+  {entries.length === 0 && <EmptyChapter areas={areas} note="Renders and prototypes are in production — first pieces land with the Phase 3 release." />}
+</BaseLayout>

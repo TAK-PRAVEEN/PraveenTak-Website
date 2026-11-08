@@ -1,0 +1,157 @@
+---
+import { getCollection, getEntry } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/layout/PageHeader.astro";
+import { period, month, byStartDesc } from "../lib/format";
+
+const work = (await getCollection("experience", (e) => e.data.kind === "work")).sort(byStartDesc);
+const certs = (await getCollection("certifications")).sort((a, b) => b.data.date.localeCompare(a.data.date));
+const profile = (await getEntry("profile", "main"))!.data;
+---
+
+<BaseLayout title="Experience" section="/experience" description="Professional experience, internships and certifications of Praveen Tak.">
+  <PageHeader section="/experience" title="Experience" lead="Internships and research across forecasting, LLM tooling, computer vision and generative models." />
+
+  <section class="frame" aria-labelledby="work-title">
+    <h2 id="work-title" class="sr-only">Work experience</h2>
+    <ol class="timeline">
+      {
+        work.map((e, i) => (
+          <li class="entry grid-12">
+            <div class="col-span-4 md:col-span-3 entry-when">
+              <span class="micro">{period(e.data.start, e.data.end)}</span>
+              {e.data.end === null && <span class="micro now">Current</span>}
+              <span class="micro text-muted">{e.data.location}</span>
+            </div>
+            <div class="col-span-4 md:col-span-9">
+              <p class="micro text-muted entry-index">E—{String(work.length - i).padStart(2, "0")}</p>
+              <h3 class="heading entry-org">{e.data.org}</h3>
+              <p class="entry-title">{e.data.title}</p>
+              <ul class="entry-points">
+                {e.data.highlights.map((h) => <li>{h}</li>)}
+              </ul>
+              <ul class="entry-stack">
+                {e.data.stack.map((s) => <li class="micro">{s}</li>)}
+              </ul>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="frame block" aria-labelledby="cert-title">
+    <div class="block-head">
+      <h2 id="cert-title" class="micro">Certifications</h2>
+      <span class="micro text-muted">{certs.length} total</span>
+    </div>
+    <ul class="certs">
+      {
+        certs.map((c) => (
+          <li class="cert">
+            <span class="micro text-muted">{month(c.data.date)}</span>
+            <span>{c.data.name}</span>
+            <span class="micro text-muted">{c.data.provider}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="frame block" aria-labelledby="extra-title">
+    <div class="block-head">
+      <h2 id="extra-title" class="micro">Beyond work</h2>
+    </div>
+    <ul class="extras">
+      {profile.activities.map((a) => <li>{a}</li>)}
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .entry {
+    row-gap: 16px;
+    padding-block: clamp(32px, 5vw, 72px);
+    border-bottom: 1px solid var(--line);
+  }
+  .entry-when {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .now {
+    width: fit-content;
+    padding: 4px 6px;
+    background: var(--charcoal);
+    color: var(--paper);
+  }
+  .entry-index {
+    margin: 0;
+  }
+  .entry-org {
+    font-size: var(--text-h2);
+    margin: 8px 0 0;
+  }
+  .entry-title {
+    font-size: var(--text-lead);
+    margin: 8px 0 24px;
+  }
+  .entry-points {
+    margin: 0;
+    padding-left: 1.1em;
+    max-width: 70ch;
+    display: grid;
+    gap: 10px;
+    color: var(--fg-muted);
+  }
+  .entry-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    list-style: none;
+    margin: 24px 0 0;
+    padding: 0;
+  }
+  .block {
+    padding-top: clamp(64px, 8vw, 128px);
+  }
+  .block-head {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .block-head h2 {
+    margin: 0;
+  }
+  .certs,
+  .extras {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .cert {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px 24px;
+    padding-block: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 768px) {
+    .cert {
+      grid-template-columns: 120px 1fr 280px;
+      align-items: baseline;
+    }
+  }
+  .extras li {
+    padding-block: 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-lead);
+  }
+</style>

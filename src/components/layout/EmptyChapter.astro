@@ -1,0 +1,70 @@
+---
+/**
+ * Shown when a collection has no entries yet. Lists the planned areas so the
+ * page reads as a deliberate index, not a broken page. No invented content.
+ */
+interface Props {
+  areas: { code: string; label: string }[];
+  note: string;
+}
+const { areas, note } = Astro.props;
+---
+
+<section class="frame empty" aria-label="Planned areas">
+  <ol class="areas">
+    {
+      areas.map((a) => (
+        <li class="area">
+          <span class="micro code">{a.code}</span>
+          <span class="heading area-label">{a.label}</span>
+          <span class="micro status">Entries in preparation</span>
+        </li>
+      ))
+    }
+  </ol>
+  <p class="micro note">{note}</p>
+</section>
+
+<style>
+  .empty {
+    padding-bottom: clamp(48px, 8vw, 128px);
+  }
+  .areas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .area {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 6px 16px;
+    align-items: baseline;
+    padding-block: clamp(20px, 3vw, 36px);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 768px) {
+    .area {
+      grid-template-columns: 120px 1fr auto;
+    }
+  }
+  .code {
+    color: var(--accent-as-text);
+  }
+  .area-label {
+    font-size: clamp(2rem, 1rem + 4vw, 4.5rem);
+  }
+  .status {
+    grid-column: 2;
+    color: var(--fg-muted);
+  }
+  @media (min-width: 768px) {
+    .status {
+      grid-column: 3;
+    }
+  }
+  .note {
+    margin-top: 32px;
+    color: var(--fg-muted);
+  }
+</style>

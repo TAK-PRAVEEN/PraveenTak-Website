@@ -1,0 +1,335 @@
+---
+import { getCollection, getEntry } from "astro:content";
+import { ArrowUpRight } from "@lucide/astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import StatusDot from "../components/ui/StatusDot.astro";
+import LinkButton from "../components/ui/LinkButton.astro";
+import { EXPERIENCES, SITE } from "../config/site";
+
+const profile = (await getEntry("profile", "main"))!.data;
+const featured = (await getCollection("projects", (p) => p.data.featured)).sort((a, b) => a.data.order - b.data.order);
+const chapters = EXPERIENCES.filter((e) => e.href !== "/");
+---
+
+<BaseLayout section="/">
+  <!-- 01 — HERO ----------------------------------------------------------- -->
+  <section class="hero frame" aria-labelledby="hero-title">
+    <div class="hero-meta micro">
+      <span>01 — Portfolio {SITE.year}</span>
+      <span class="text-muted">{profile.location.coords}</span>
+      <StatusDot open={profile.availability.open} label={profile.availability.label} />
+    </div>
+    <hr class="rule-strong" />
+
+    <div class="grid-12 hero-grid">
+      <div class="hero-copy col-span-4 md:col-span-7">
+        <p class="micro text-muted hero-hi">Hi, I'm</p>
+        <!-- Phase 2: charcoal-recoloured signature animation (D3) mounts here. -->
+        <div class="signature-slot" data-slot="name-animation" aria-hidden="true"></div>
+        <h1 id="hero-title" class="display hero-name">
+          Praveen<br />Tak
+        </h1>
+        <ul class="roles" aria-label="Roles">
+          {profile.roles.map((r, i) => <li class="micro"><span class="text-muted">0{i + 1}</span> {r}</li>)}
+        </ul>
+      </div>
+
+      <figure class="portrait-slot col-span-4 md:col-span-5" data-slot="binary-portrait">
+        <!-- Phase 2: binary particle portrait (D1 reconstruct, D2 hover + scroll). -->
+        <svg class="orbit" viewBox="0 0 400 520" aria-hidden="true">
+          <ellipse cx="200" cy="260" rx="190" ry="70" transform="rotate(-24 200 260)" />
+          <ellipse cx="200" cy="260" rx="170" ry="58" transform="rotate(-18 200 260)" />
+          <path d="M318 132 l0 -10 m0 20 l0 10 m-10 -10 l-10 0 m20 0 l10 0" />
+        </svg>
+        <div class="portrait-glow" aria-hidden="true"></div>
+        <figcaption class="micro portrait-caption">
+          <span>Fig. 01 — Binary portrait</span>
+          <span class="text-muted">010101 / SYS_{SITE.year}</span>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="grid-12 hero-foot">
+      <p class="hero-intro col-span-4 md:col-span-6">{profile.intro}</p>
+      <div class="hero-actions col-span-4 md:col-span-5 md:col-start-8">
+        <LinkButton href="/work">Selected work</LinkButton>
+        <LinkButton href="/contact" variant="outline">Get in touch</LinkButton>
+      </div>
+    </div>
+  </section>
+
+  <!-- INDEX OF EXPERIENCES ------------------------------------------------- -->
+  <section class="frame chapters" aria-labelledby="chapters-title">
+    <div class="section-meta micro">
+      <h2 id="chapters-title">Index</h2>
+      <span class="text-muted">{chapters.length} chapters</span>
+    </div>
+    <ol class="chapter-list">
+      {
+        chapters.map((c) => (
+          <li>
+            <a href={c.href} class="chapter">
+              <span class="micro chapter-index">{c.index}</span>
+              <span class="heading chapter-label">{c.label}</span>
+              <span class="chapter-summary">{c.summary}</span>
+              <ArrowUpRight class="chapter-arrow" size={28} aria-hidden="true" />
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <!-- FEATURED WORK -------------------------------------------------------- -->
+  <section class="frame featured" aria-labelledby="featured-title">
+    <div class="section-meta micro">
+      <h2 id="featured-title">Selected work</h2>
+      <a href="/work" class="link-underline">All projects →</a>
+    </div>
+    <div class="grid-12 featured-grid">
+      {
+        featured.map((p, i) => (
+          <a href={`/work/${p.id}`} class="feature col-span-4">
+            <span class="micro text-muted">P—0{i + 1}</span>
+            <h3 class="heading feature-title">{p.data.title}</h3>
+            <p class="feature-summary">{p.data.summary}</p>
+            {p.data.metrics[0] && (
+              <p class="feature-metric">
+                <span class="display">{p.data.metrics[0].value}</span>
+                <span class="micro text-muted">{p.data.metrics[0].label}</span>
+              </p>
+            )}
+          </a>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ---- Hero ---- */
+  .hero {
+    padding-top: calc(var(--nav-h) + 24px);
+    /* One screen tall, but never stretched on very tall displays. */
+    min-height: min(100svh, 1080px);
+    display: flex;
+    flex-direction: column;
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding-bottom: 12px;
+  }
+  .hero-grid {
+    flex: 1;
+    align-items: center;
+    padding-block: clamp(24px, 4vw, 48px);
+    row-gap: 32px;
+  }
+  .hero-hi {
+    margin: 0 0 8px;
+  }
+  .signature-slot {
+    min-height: 0;
+  }
+  .hero-name {
+    font-size: clamp(4.5rem, 1rem + 14vw, 15rem);
+    margin: 0;
+  }
+  .roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    list-style: none;
+    margin: clamp(20px, 3vw, 40px) 0 0;
+    padding: 0;
+  }
+
+  /* Portrait placeholder: Warp-gradient heat + orbit lines */
+  .portrait-slot {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 4 / 5;
+    width: 100%;
+    max-width: 520px;
+    justify-self: center;
+    isolation: isolate;
+  }
+  .portrait-glow {
+    position: absolute;
+    inset: 12% 18%;
+    z-index: -1;
+    border-radius: 50%;
+    background:
+      radial-gradient(40% 50% at 55% 40%, var(--charcoal) 0%, transparent 70%),
+      radial-gradient(60% 70% at 50% 50%, var(--orange) 0%, transparent 72%);
+    filter: blur(28px);
+    opacity: 0.85;
+  }
+  .orbit {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--concrete);
+    stroke-width: 0.75;
+  }
+  .orbit path {
+    stroke: var(--charcoal);
+  }
+  .portrait-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .hero-foot {
+    padding-block: 24px 40px;
+    border-top: 1px solid var(--line);
+    row-gap: 24px;
+    align-items: end;
+  }
+  .hero-intro {
+    margin: 0;
+    font-size: var(--text-lead);
+    line-height: 1.45;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-start;
+  }
+  @media (min-width: 768px) {
+    .hero-actions {
+      justify-content: flex-end;
+    }
+  }
+
+  /* ---- Shared section meta ---- */
+  .section-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .section-meta h2 {
+    font: inherit;
+    margin: 0;
+  }
+
+  /* ---- Chapters ---- */
+  .chapters {
+    padding-block: clamp(64px, 10vw, 160px) 0;
+  }
+  .chapter-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .chapter {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    align-items: center;
+    gap: 8px 16px;
+    padding: clamp(16px, 2vw, 28px) 8px;
+    border-bottom: 1px solid var(--line);
+    transition:
+      background-color var(--dur) var(--ease-out),
+      color var(--dur) var(--ease-out),
+      padding var(--dur) var(--ease-out);
+  }
+  .chapter-label {
+    font-size: clamp(2rem, 1rem + 4vw, 4.5rem);
+  }
+  .chapter-summary {
+    grid-column: 2;
+    color: var(--fg-muted);
+  }
+  .chapter :global(.chapter-arrow) {
+    grid-column: 3;
+    grid-row: 1;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  @media (min-width: 768px) {
+    .chapter {
+      grid-template-columns: 80px minmax(0, 5fr) minmax(0, 4fr) auto;
+    }
+    .chapter-summary {
+      grid-column: 3;
+    }
+    .chapter :global(.chapter-arrow) {
+      grid-column: 4;
+    }
+  }
+  .chapter:hover,
+  .chapter:focus-visible {
+    background: var(--charcoal);
+    color: var(--paper);
+    padding-inline: 24px;
+  }
+  .chapter:hover .chapter-summary,
+  .chapter:focus-visible .chapter-summary {
+    color: var(--mist);
+  }
+  .chapter:hover :global(.chapter-arrow) {
+    transform: rotate(45deg);
+  }
+
+  /* ---- Featured ---- */
+  .featured {
+    padding-top: clamp(64px, 10vw, 160px);
+  }
+  .featured-grid {
+    row-gap: 0;
+  }
+  .feature {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px 0 32px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 768px) {
+    .feature {
+      padding: 24px 24px 32px 0;
+      border-bottom: 0;
+      border-right: 1px solid var(--line);
+    }
+    .feature:last-child {
+      border-right: 0;
+    }
+  }
+  .feature-title {
+    font-size: var(--text-h3);
+    margin: 0;
+  }
+  .feature:hover .feature-title {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+  .feature-summary {
+    margin: 0;
+    color: var(--fg-muted);
+  }
+  .feature-metric {
+    margin: auto 0 0;
+    padding-top: 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .feature-metric .display {
+    font-size: clamp(3rem, 2rem + 3vw, 5rem);
+  }
+</style>

@@ -1,0 +1,110 @@
+---
+import { getEntry } from "astro:content";
+import { ArrowUpRight } from "@lucide/astro";
+import { EXPERIENCES, SITE } from "../../config/site";
+import StatusDot from "../ui/StatusDot.astro";
+import Barcode from "../ui/Barcode.astro";
+
+const profile = (await getEntry("profile", "main"))!.data;
+---
+
+<footer class="footer">
+  <div class="frame">
+    <hr class="rule-strong" />
+    <div class="grid-12 footer-top">
+      <div class="col-span-4 md:col-span-7">
+        <p class="micro text-muted">07 — Contact</p>
+        <a href="/contact" class="display footer-cta">
+          Let's build<br />something <span class="editorial">rare.</span>
+        </a>
+      </div>
+      <div class="col-span-4 md:col-span-5 footer-meta">
+        <StatusDot open={profile.availability.open} label={profile.availability.label} />
+        <a href={`mailto:${profile.contact.email}`} class="footer-email link-underline">{profile.contact.email}</a>
+        <ul class="footer-socials">
+          {
+            profile.socials.map((s) => (
+              <li>
+                <a href={s.href} class="micro footer-social" rel="me noopener" target="_blank">
+                  {s.label}
+                  <ArrowUpRight size={12} aria-hidden="true" />
+                  <span class="sr-only">(opens in a new tab)</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <hr class="rule" />
+    <div class="footer-bottom micro text-muted">
+      <span>© {SITE.year} {SITE.name}</span>
+      <span>{profile.location.city}, {profile.location.country} · {profile.location.coords}</span>
+      <nav aria-label="Footer" class="footer-index">
+        {EXPERIENCES.map((e) => <a href={e.href} class="link-underline">{e.index} {e.label}</a>)}
+      </nav>
+      <Barcode value={`${SITE.name}-${SITE.year}`} />
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding-block: clamp(64px, 10vw, 160px) 32px;
+  }
+  .footer-top {
+    padding-block: 32px 64px;
+    row-gap: 48px;
+  }
+  .footer-cta {
+    display: block;
+    margin-top: 24px;
+    font-size: clamp(3rem, 1.5rem + 6vw, 7.5rem);
+    transition: color var(--dur) var(--ease-out);
+  }
+  .footer-cta:hover {
+    color: var(--accent-as-text);
+  }
+  .footer-cta .editorial {
+    letter-spacing: -0.02em;
+  }
+  .footer-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    justify-content: end;
+  }
+  .footer-email {
+    font-family: var(--font-display);
+    font-size: var(--text-lead);
+    width: fit-content;
+  }
+  .footer-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .footer-social {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+  }
+  .footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 32px;
+    padding-top: 20px;
+  }
+  .footer-index {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+  }
+</style>
