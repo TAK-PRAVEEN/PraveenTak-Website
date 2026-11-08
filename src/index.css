@@ -132,6 +132,23 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+/* Subtle, slowly-shifting gradient band behind the hero Name.gif (all views) */
+.name-gradient-band {
+  background-color: #05060f;
+  background-image: linear-gradient(120deg, #16337a 0%, #0e1f52 38%, #2c2a6b 68%, #123a86 100%);
+  background-size: 220% 220%;
+  animation: nameGradientShift 8s ease-in-out infinite;
+}
+@keyframes nameGradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 @layer utilities {
   /* Ambient radial glow behind the particle portrait canvas */
   .particle-portrait-glow {

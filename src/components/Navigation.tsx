@@ -82,12 +82,15 @@ const Navigation = () => {
               />
             </button>
 
-            {/* Logo */}
-            <Link to="/" className="">
+            {/* Logo — centered on mobile (over the pill), left on desktop */}
+            <Link
+              to="/"
+              className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
+            >
               <img
                 src={`${import.meta.env.BASE_URL}Name.gif`}
                 alt="Name Logo"
-                className="h-16 w-auto object-contain"
+                className="h-12 w-auto object-contain md:h-16"
               />
             </Link>
           </div>
@@ -185,17 +188,17 @@ const Navigation = () => {
               className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
               onClick={toggleSidebar}
             />
-            {/* Sidebar */}
+            {/* Sidebar — floating rounded panel (below the nav pill) */}
             <motion.div
               key="sidebar"
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed top-0 left-0 h-full w-64 bg-black/50 backdrop-blur-2xl backdrop-saturate-150 border-r border-white/20 shadow-2xl z-50 p-6 flex flex-col justify-between"
+              className="fixed top-20 left-4 bottom-4 w-[min(17rem,calc(100vw-2rem))] rounded-3xl bg-black/60 backdrop-blur-2xl backdrop-saturate-150 border border-white/15 shadow-2xl z-50 p-6 flex flex-col justify-between overflow-hidden"
               variants={sidebarVariants}
             >
-              {/* Links */}
-              <div className="flex flex-col space-y-6 mt-10">
+              {/* Links (sections at the top) */}
+              <div className="flex flex-col space-y-4">
                 <motion.div variants={itemVariants}>
                   <Link to="/" onClick={toggleSidebar}>
                     <Button

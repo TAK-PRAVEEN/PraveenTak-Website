@@ -43,7 +43,10 @@ const QuantumCursor = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (window.matchMedia("(pointer: coarse)").matches) return;
+    // Only skip on pure touch devices (no mouse/trackpad at all). Touchscreen
+    // laptops / big touch monitors report `pointer: coarse` yet have a fine
+    // pointer too — we still want the custom cursor there.
+    if (!window.matchMedia("(any-pointer: fine)").matches) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -194,16 +197,17 @@ const QuantumCursor = () => {
       const cx = mouse.x;
       const cy = mouse.y;
       const TILT = -0.5; // ring tilt (radians)
-      const BALL_R = 4.2;
+      const BALL_R = 5.5;
 
-      // Small soft glow behind the planet.
+      // Soft glow behind the planet (bright enough to read on dark bg).
       ctx.globalCompositeOperation = "lighter";
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 14);
-      glow.addColorStop(0, "rgba(139, 92, 246, 0.28)");
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 22);
+      glow.addColorStop(0, "rgba(180, 200, 255, 0.5)");
+      glow.addColorStop(0.5, "rgba(139, 92, 246, 0.28)");
       glow.addColorStop(1, "rgba(139, 92, 246, 0)");
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 22, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalCompositeOperation = "source-over";
 

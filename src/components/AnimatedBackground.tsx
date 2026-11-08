@@ -59,6 +59,30 @@ const DotGrid = () => {
       mouse.y = -9999;
     };
 
+    // Tap/click → an immediate outward burst near the point (tactile on touch,
+    // and a fun pop on desktop clicks too).
+    const burst = (px: number, py: number) => {
+      for (const d of dots) {
+        const dx = d.x + d.ox - px;
+        const dy = d.y + d.oy - py;
+        const dist = Math.hypot(dx, dy);
+        if (dist < RADIUS && dist > 0.01) {
+          const f = (1 - dist / RADIUS) * FORCE * 1.6;
+          d.vx += (dx / dist) * f;
+          d.vy += (dy / dist) * f;
+        }
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      burst(e.clientX, e.clientY);
+    };
+    // On touch, settle the grid once the finger lifts (mouse keeps following).
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") onLeave();
+    };
+
     const tick = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -96,6 +120,9 @@ const DotGrid = () => {
     build();
     window.addEventListener("resize", build);
     window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    window.addEventListener("pointerup", onUp, { passive: true });
+    window.addEventListener("pointercancel", onUp, { passive: true });
     document.addEventListener("pointerleave", onLeave);
     raf = requestAnimationFrame(tick);
 
@@ -103,6 +130,9 @@ const DotGrid = () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", build);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
       document.removeEventListener("pointerleave", onLeave);
     };
   }, []);

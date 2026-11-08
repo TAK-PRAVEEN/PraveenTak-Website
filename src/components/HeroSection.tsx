@@ -109,6 +109,59 @@ const HeroSection = () => {
   );
 
   // ---- Content blocks (declared once, placed by each layout) --------
+  // ---- Content pieces (composed differently on desktop vs mobile) ----
+  const availabilityBadge = (
+    <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium tracking-wide text-foreground">
+      <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+      AVAILABLE FOR OPPORTUNITIES
+    </span>
+  );
+
+  const nameBlock = (
+    <div className="w-full space-y-2">
+      <span className="block text-2xl font-medium text-muted-foreground md:text-3xl">Hi, I'm</span>
+      {/* Original animated Name.gif on its original blue gradient band */}
+      <Link to="/" aria-label="Praveen Tak" className="block">
+        <div className="name-gradient-band mx-auto flex w-[min(92vw,420px)] items-center justify-center overflow-hidden rounded-2xl px-4 py-1.5 shadow-[0_10px_30px_-14px_rgba(0,60,180,0.45)] md:mx-0 md:w-fit md:max-w-[80vw] md:px-6 md:py-2">
+          <img
+            src={`${import.meta.env.BASE_URL}Name.gif`}
+            alt="Praveen Tak"
+            className="w-full object-contain md:h-56 md:w-auto"
+          />
+        </div>
+      </Link>
+    </div>
+  );
+
+  const subtitle = (
+    <p className="text-lg text-muted-foreground md:text-xl">Computer Science Graduate</p>
+  );
+
+  const tagline = (
+    <p className="max-w-sm leading-relaxed text-muted-foreground">
+      Passionate about Data Science, Machine Learning and building intelligent systems that solve
+      real-world problems.
+    </p>
+  );
+
+  const ctas = (
+    <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
+      <Link to="/experience" className="w-full sm:w-auto">
+        <Button size="lg" className="group w-full shadow-glow sm:w-auto">
+          View Experience
+          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </Button>
+      </Link>
+      <a href={RESUME_URL} target="_blank" rel="noreferrer" className="w-full sm:w-auto">
+        <Button size="lg" variant="outline" className="w-full sm:w-auto">
+          Download Resume
+          <Download className="ml-2 h-4 w-4" />
+        </Button>
+      </a>
+    </div>
+  );
+
+  // Desktop intro block (left column) — assembled pieces, left-aligned.
   const intro = (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -116,54 +169,11 @@ const HeroSection = () => {
       transition={{ duration: 0.7, ease: "easeOut" }}
       className="max-w-md space-y-6"
     >
-      <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium tracking-wide text-foreground">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-        AVAILABLE FOR OPPORTUNITIES
-      </span>
-
-      <div className="space-y-2">
-        <span className="block text-2xl font-medium text-muted-foreground md:text-3xl">Hi, I'm</span>
-        {/* Original animated Name.gif on its original blue gradient band,
-            in place of the "Praveen Tak" text heading (restored per request). */}
-        <Link to="/" aria-label="Praveen Tak" className="block">
-          <div
-            className="flex w-full items-center justify-center rounded-2xl px-4 py-2 shadow-[0_10px_30px_-12px_rgba(0,85,255,0.5)] md:w-fit md:max-w-[80vw]"
-            style={{
-              background: "#000000",
-              backgroundImage:
-                "linear-gradient( 288deg, rgba(0,85,255,1) 1.5%, rgba(4,56,115,1) 91.6% )",
-            }}
-          >
-            <img
-              src={`${import.meta.env.BASE_URL}Name.gif`}
-              alt="Praveen Tak"
-              className="h-32 max-w-full object-contain md:h-56"
-            />
-          </div>
-        </Link>
-      </div>
-
-      <p className="text-lg text-muted-foreground md:text-xl">Computer Science Graduate</p>
-
-      <p className="max-w-sm leading-relaxed text-muted-foreground">
-        Passionate about Data Science, Machine Learning and building intelligent systems that solve
-        real-world problems.
-      </p>
-
-      <div className="flex flex-wrap items-center gap-4">
-        <Link to="/experience">
-          <Button size="lg" className="group shadow-glow">
-            View Experience
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Button>
-        </Link>
-        <a href={RESUME_URL} target="_blank" rel="noreferrer">
-          <Button size="lg" variant="outline">
-            Download Resume
-            <Download className="ml-2 h-4 w-4" />
-          </Button>
-        </a>
-      </div>
+      {availabilityBadge}
+      {nameBlock}
+      {subtitle}
+      {tagline}
+      {ctas}
     </motion.div>
   );
 
@@ -216,7 +226,7 @@ const HeroSection = () => {
   const achievementsCard = (
     <GlassCard>
       <CardEyebrow>ACHIEVEMENTS</CardEyebrow>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {ACHIEVEMENTS.map((a) => (
           <div key={a.label} className="space-y-1">
             <a.icon className="h-5 w-5 text-primary" />
@@ -231,7 +241,7 @@ const HeroSection = () => {
   const scrollHint = (
     <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
       <Mouse className="h-5 w-5 animate-bounce" />
-      <span>Move your cursor over my portrait</span>
+      <span>{isLg ? "Move your cursor over my portrait" : "Tap & drag anywhere to play"}</span>
     </div>
   );
 
@@ -279,11 +289,15 @@ const HeroSection = () => {
           </div>
         </>
       ) : (
-        /* ---------------- Mobile / tablet: stacked ---------------- */
-        <div className="relative z-10 mx-auto flex max-w-2xl flex-col items-center gap-8 px-6 pb-16 pt-24 text-center">
-          <div className="text-left">{intro}</div>
-          <div className="aspect-[3/4] w-full max-w-[340px]">{portrait}</div>
-          <div className="w-full max-w-sm space-y-6">
+        /* ---------------- Mobile / tablet: clean stacked ---------------- */
+        <div className="relative z-10 mx-auto flex max-w-xl flex-col items-center gap-6 px-5 pb-16 pt-24 text-center">
+          {availabilityBadge}
+          {nameBlock}
+          <div className="aspect-[3/4] w-full max-w-[300px]">{portrait}</div>
+          {subtitle}
+          {tagline}
+          {ctas}
+          <div className="mt-2 w-full space-y-5">
             {expertiseCard}
             {techCard}
             {achievementsCard}
