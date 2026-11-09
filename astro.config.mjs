@@ -19,7 +19,8 @@ export default defineConfig({
   }),
   // No feature uses sessions yet; avoid auto-provisioning a KV namespace on deploy.
   session: { driver: sessionDrivers.lruCache() },
-  integrations: [sitemap()],
+  // Internal tools (the font/background playground) never go in the sitemap.
+  integrations: [sitemap({ filter: (page) => !page.includes("/playground") })],
   vite: {
     plugins: [tailwindcss()],
   },

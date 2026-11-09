@@ -24,9 +24,11 @@ interface Props {
   accent?: Accent;
   /** Hide the footer (e.g. on a full-bleed experience). */
   bare?: boolean;
+  /** Keep this page out of search engines (internal tools such as /playground). */
+  noindex?: boolean;
 }
 
-const { title, description = SITE.description, section = Astro.url.pathname, bare = false } = Astro.props;
+const { title, description = SITE.description, section = Astro.url.pathname, bare = false, noindex = false } = Astro.props;
 const exp = experienceFor("/" + (section.split("/")[1] ?? ""));
 const surface = Astro.props.surface ?? exp.surface;
 const accent = Astro.props.accent ?? exp.accent;
@@ -42,6 +44,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <slot name="head" />
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content={surface === "ink" ? "#080809" : "#f0f0ee"} />
     <meta name="color-scheme" content="light dark" />

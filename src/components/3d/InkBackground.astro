@@ -22,8 +22,10 @@ import { MOTION } from "../../config/site";
     canvas.dataset.mounted = "true";
     try {
       const { mountInkFluid } = await import("./ink-fluid");
-      mountInkFluid(canvas);
+      const ink = mountInkFluid(canvas);
+      (window as unknown as { __ink?: typeof ink }).__ink = ink;
       document.documentElement.classList.add("ink-bg-on");
+      document.dispatchEvent(new CustomEvent("ink:ready"));
     } catch (err) {
       console.warn("[ink] background disabled:", err);
       canvas.remove();

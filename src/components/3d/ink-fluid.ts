@@ -68,9 +68,23 @@ const FS = {
 };
 
 type FBO = { tex: WebGLTexture; fb: WebGLFramebuffer; w: number; h: number };
+
+export type InkAccent = "orange" | "blue" | "lime" | "lavender";
+/** Live controls (used by the /playground page; production uses the defaults). */
+export interface InkController {
+  /** Which accent inks are dropped (default: all four). */
+  setPalette(accents: InkAccent[]): void;
+  /** Fast scrolling drags the ink in streaks. */
+  setScrollReactive(on: boolean): void;
+  /** A burst of colour wherever the visitor clicks. */
+  setClickDrops(on: boolean): void;
+  /** Show / hide (and pause) the simulation. */
+  setEnabled(on: boolean): void;
+  destroy(): void;
+}
 type Double = { read: FBO; write: FBO; swap(): void };
 
-export function mountInkFluid(canvas: HTMLCanvasElement): () => void {
+export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
   const gl = canvas.getContext("webgl2", { alpha: false, antialias: false, depth: false, preserveDrawingBuffer: false });
   if (!gl || !gl.getExtension("EXT_color_buffer_float")) throw new Error("float render targets unavailable");
 
@@ -151,8 +165,17 @@ export function mountInkFluid(canvas: HTMLCanvasElement): () => void {
 
   // ---------- palette & theme ----------
   const css = getComputedStyle(document.documentElement);
-  const PALETTE = ["--orange", "--blue", "--lime", "--lavender"].map((v) => rgb(css.getPropertyValue(v) || "#ff5a1f"));
+  const ACCENTS: Record<InkAccent, [number, number, number]> = {
+    orange: rgb(css.getPropertyValue("--orange") || "#ff5a1f"),
+    blue: rgb(css.getPropertyValue("--blue") || "#386bff"),
+    lime: rgb(css.getPropertyValue("--lime") || "#c8ff00"),
+    lavender: rgb(css.getPropertyValue("--lavender") || "#a78bfa"),
+  };
+  let PALETTE = (["orange", "blue", "lime", "lavender"] as InkAccent[]).map((k) => ACCENTS[k]);
   let ci = 0;
+  let enabled = true;
+  let scrollReactive = false;
+  let clickDrops = false;
   const nextColor = (k: number) => {
     const c = PALETTE[ci++ % PALETTE.length];
     return [c[0] * k, c[1] * k, c[2] * k] as [number, number, number];
@@ -204,6 +227,27 @@ export function mountInkFluid(canvas: HTMLCanvasElement): () => void {
   };
   window.addEventListener("pointermove", onMove, { passive: true });
 
+  // Optional: click drops a burst of ink.
+  const onDown = (e: PointerEvent) => {
+    if (!clickDrops || !enabled) return;
+    const x = e.clientX / window.innerWidth;
+    const y = 1 - e.clientY / window.innerHeight;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      splat(x, y, Math.cos(a) * 1400, Math.sin(a) * 1400, nextColor(0.5), 0.0035);
+    }
+  };
+  window.addEventListener("pointerdown", onDown, { passive: true });
+
+  // Optional: scrolling drags the ink in vertical streaks.
+  let lastScroll = window.scrollY;
+  let scrollVel = 0;
+  const onScrollInk = () => {
+    scrollVel += window.scrollY - lastScroll;
+    lastScroll = window.scrollY;
+  };
+  window.addEventListener("scroll", onScrollInk, { passive: true });
+
   // A few drops to start, so the water is never empty.
   const drop = () => {
     const a = Math.random() * Math.PI * 2;
@@ -227,7 +271,13 @@ export function mountInkFluid(canvas: HTMLCanvasElement): () => void {
 
   const CURL = 22;
   const stop = onFrame((_t, dtRaw) => {
+    if (!enabled) return;
     const dt = Math.min(dtRaw, 1 / 60);
+    if (scrollReactive && Math.abs(scrollVel) > 2) {
+      const v = Math.max(-80, Math.min(80, scrollVel));
+      for (let i = 0; i < 2; i++) splat(Math.random(), 0.2 + Math.random() * 0.6, 0, v * 60, nextColor(0.3), 0.003);
+    }
+    scrollVel *= 0.5;
     resize();
 
     colorTimer += dt;
@@ -318,13 +368,28 @@ export function mountInkFluid(canvas: HTMLCanvasElement): () => void {
   };
   window.addEventListener("resize", onResizeSim);
 
-  return () => {
+  const destroy = () => {
     stop();
     offTheme();
     window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerdown", onDown);
+    window.removeEventListener("scroll", onScrollInk);
     window.removeEventListener("resize", resize);
     window.removeEventListener("resize", onResizeSim);
     document.removeEventListener("astro:after-swap", applyTheme);
     gl.getExtension("WEBGL_lose_context")?.loseContext();
+  };
+  return {
+    setPalette(accents) {
+      if (accents.length) PALETTE = accents.map((k) => ACCENTS[k]);
+      current = nextColor(0.35);
+    },
+    setScrollReactive: (on) => void (scrollReactive = on),
+    setClickDrops: (on) => void (clickDrops = on),
+    setEnabled(on) {
+      enabled = on;
+      canvas.style.visibility = on ? "" : "hidden";
+    },
+    destroy,
   };
 }

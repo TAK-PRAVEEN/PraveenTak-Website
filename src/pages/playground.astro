@@ -1,0 +1,669 @@
+---
+/**
+ * Internal playground (not linked, noindex, not in the sitemap):
+ * try font combinations per role and background treatments, live.
+ * Hover = preview, click = choose. Candidate fonts load from Google Fonts on
+ * this page only; the chosen ones get self-hosted afterwards.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/layout/PageHeader.astro";
+
+type Font = { name: string; axes?: string; current?: boolean; local?: boolean };
+const ROLES: { key: string; label: string; vars: string[]; fallback: string; fonts: Font[] }[] = [
+  {
+    key: "script",
+    label: "Script / signature accent",
+    vars: ["--font-script"],
+    fallback: "cursive",
+    fonts: [
+      { name: "Kaushan Script", current: true, local: true },
+      { name: "Mrs Saint Delafield" },
+      { name: "Herr Von Muellerhoff" },
+      { name: "Monsieur La Doulaise" },
+      { name: "Ms Madi" },
+      { name: "Mr Dafoe" },
+      { name: "Allison" },
+      { name: "Alex Brush" },
+      { name: "Great Vibes" },
+      { name: "Sacramento" },
+      { name: "Parisienne" },
+      { name: "Birthstone" },
+      { name: "Hurricane" },
+      { name: "The Nautigal" },
+      { name: "WindSong" },
+      { name: "Comforter Brush" },
+      { name: "Petemoss" },
+      { name: "Meow Script" },
+      { name: "Ephesis" },
+      { name: "Yellowtail" },
+    ],
+  },
+  {
+    key: "display",
+    label: "Headlines",
+    vars: ["--font-display"],
+    fallback: "sans-serif",
+    fonts: [
+      { name: "Space Grotesk", current: true, local: true },
+      { name: "Syne", axes: "wght@400;700;800" },
+      { name: "Unbounded", axes: "wght@400;600;800" },
+      { name: "Bricolage Grotesque", axes: "wght@400;600;800" },
+      { name: "Familjen Grotesk", axes: "wght@400;600;700" },
+      { name: "Inter Tight", axes: "wght@400;600;800" },
+      { name: "Archivo", axes: "wght@400;600;800" },
+      { name: "Michroma", local: true },
+    ],
+  },
+  {
+    key: "body",
+    label: "Body text",
+    vars: ["--font-sans"],
+    fallback: "sans-serif",
+    fonts: [
+      { name: "Manrope", current: true, local: true },
+      { name: "Inter", axes: "wght@400;500;600" },
+      { name: "DM Sans", axes: "wght@400;500;600" },
+      { name: "Plus Jakarta Sans", axes: "wght@400;500;600" },
+      { name: "Instrument Sans", axes: "wght@400;500;600" },
+      { name: "IBM Plex Sans", axes: "wght@400;500;600" },
+    ],
+  },
+  {
+    key: "mono",
+    label: "Labels (technical)",
+    vars: ["--font-mono"],
+    fallback: "monospace",
+    fonts: [
+      { name: "Space Mono", current: true, local: true },
+      { name: "JetBrains Mono", axes: "wght@400;700" },
+      { name: "IBM Plex Mono", axes: "wght@400;700" },
+      { name: "Share Tech Mono" },
+      { name: "Major Mono Display" },
+      { name: "DM Mono", axes: "wght@400;500" },
+    ],
+  },
+  {
+    key: "hud",
+    label: "Numbers / HUD",
+    vars: ["--font-hud"],
+    fallback: "sans-serif",
+    fonts: [
+      { name: "Michroma", current: true, local: true },
+      { name: "Orbitron", axes: "wght@400;700" },
+      { name: "Chakra Petch", axes: "wght@400;600" },
+      { name: "Oxanium", axes: "wght@400;600" },
+      { name: "Audiowide" },
+      { name: "Space Grotesk", local: true },
+    ],
+  },
+];
+
+const remote = [...new Set(ROLES.flatMap((r) => r.fonts.filter((f) => !f.local).map((f) => `${f.name.replace(/ /g, "+")}${f.axes ? `:${f.axes}` : ""}`)))];
+
+const BACKGROUNDS = [
+  { key: "ink", n: "01", title: "Ink — all accents", note: "Current. Cursor stirs water; orange, blue, lime and lavender inks." },
+  { key: "tinted", n: "02", title: "Section-tinted ink", note: "One accent per page — tells you where you are. Pick the accent:" },
+  { key: "scroll", n: "03", title: "Scroll-reactive ink", note: "Fast scrolling drags the ink in streaks, like a brush through water." },
+  { key: "gradient", n: "04", title: "Drifting gradient", note: "Slow, soft accent blobs drifting on their own. Cheapest; good for phones." },
+  { key: "plain", n: "05", title: "Plain paper", note: "No background effect — pure Swiss." },
+];
+const LAYERS = [
+  { key: "grain", title: "+ Paper grain", note: "Fine film/paper texture over everything." },
+  { key: "click", title: "+ Ink drop on click", note: "A burst of colour wherever you click (needs an ink background)." },
+];
+---
+
+<BaseLayout title="Playground" description="Internal font and background playground." noindex>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    {remote.map((f) => <link rel="stylesheet" href={`https://fonts.googleapis.com/css2?family=${f}&display=swap`} />)}
+  </Fragment>
+
+  <div class="pg-gradient" aria-hidden="true" data-pg-gradient>
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="pg-grain" aria-hidden="true" data-pg-grain></div>
+
+  <PageHeader section="/" title="Playground" lead="Hover any option to preview it across the whole page. Click to choose. Your picks are summarised at the bottom — copy them and send them to me." />
+
+  <!-- ===================== FONTS ===================== -->
+  <section class="frame block" aria-labelledby="fonts-title">
+    <div class="head micro">
+      <h2 id="fonts-title">01 — Fonts</h2>
+      <button class="micro reset" type="button" data-reset-fonts>Reset to current</button>
+    </div>
+
+    <div class="fonts-grid">
+    <div class="specimen" data-specimen aria-label="Live specimen">
+      <div class="spec-row spec-meta">
+        <span class="micro">01 — Portfolio 2026</span>
+        <span class="micro dim">N 26°54′ / E 75°47′</span>
+        <span class="hud">IST 18:20:00 · CH 01/07</span>
+      </div>
+      <div class="spec-sig">
+        <img src="/media/signature-still.webp" alt="Your signature animation (reference)" width="1200" height="342" />
+        <span class="micro dim">Reference — your signature</span>
+      </div>
+      <p class="spec-band">
+        <span class="display">Ideas become</span>
+        <span class="script spec-script">experiences.</span>
+      </p>
+      <p class="spec-statement script">Ideas become experiences.</p>
+      <p class="display spec-cta">Let's build something <span class="script spec-rare">rare.</span></p>
+      <div class="spec-row">
+        <p class="spec-body">
+          Computer Science graduate from Jaipur, India, specialising in Data Science and Machine Learning — turning data into real-world systems.
+        </p>
+        <p class="spec-nums"><span class="numeral">3,567</span><span class="numeral">85.2%</span></p>
+      </div>
+    </div>
+
+    <div class="roles">
+    {
+      ROLES.map((r) => (
+        <div class="role" data-role={r.key} data-vars={r.vars.join(",")} data-fallback={r.fallback}>
+          <p class="micro role-label">{r.label}</p>
+          <div class="chips" role="radiogroup" aria-label={r.label}>
+            {r.fonts.map((f) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={f.current ? "true" : "false"}
+                class:list={["chip", { script: r.key === "script" }]}
+                data-font={f.name}
+                style={`font-family: "${f.name}", ${r.fallback}`}
+              >
+                {r.key === "script" ? "rare." : f.name}
+                <span class="chip-name micro">{f.name}{f.current ? " · current" : ""}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+    </div>
+    </div>
+  </section>
+
+  <!-- ===================== BACKGROUNDS ===================== -->
+  <section class="frame block" aria-labelledby="bg-title">
+    <div class="head micro">
+      <h2 id="bg-title">02 — Backgrounds</h2>
+      <span class="dim">Move the mouse on empty paper to stir the ink</span>
+    </div>
+    <div class="bgs" role="radiogroup" aria-label="Background">
+      {
+        BACKGROUNDS.map((b) => (
+          <button type="button" role="radio" aria-checked={b.key === "ink" ? "true" : "false"} class="bg-card" data-bg={b.key}>
+            <span class="hud">{b.n}</span>
+            <span class="heading bg-title">{b.title}</span>
+            <span class="bg-note">{b.note}</span>
+            {b.key === "tinted" && (
+              <span class="swatches">
+                {["orange", "blue", "lime", "lavender"].map((a, i) => (
+                  <span class="swatch" role="button" tabindex="0" data-accent-pick={a} aria-pressed={i === 0 ? "true" : "false"} style={`--sw: var(--${a})`}>
+                    {a}
+                  </span>
+                ))}
+              </span>
+            )}
+          </button>
+        ))
+      }
+    </div>
+    <div class="layers">
+      {
+        LAYERS.map((l) => (
+          <button type="button" class="layer" aria-pressed="false" data-layer={l.key}>
+            <span class="heading">{l.title}</span>
+            <span class="bg-note">{l.note}</span>
+          </button>
+        ))
+      }
+    </div>
+    <div class="scroll-room" aria-hidden="true">
+      <p class="micro dim">Scroll space — try “Scroll-reactive ink” and scroll fast here ↓↑</p>
+    </div>
+  </section>
+
+  <!-- ===================== SUMMARY ===================== -->
+  <div class="summary" data-summary>
+    <p class="micro summary-text" data-summary-text></p>
+    <button type="button" class="micro copy" data-copy>Copy my picks</button>
+  </div>
+</BaseLayout>
+
+<script>
+  type Ink = {
+    setPalette(a: string[]): void;
+    setScrollReactive(on: boolean): void;
+    setClickDrops(on: boolean): void;
+    setEnabled(on: boolean): void;
+  };
+  const getInk = () => (window as unknown as { __ink?: Ink }).__ink;
+
+  function init() {
+    const root = document.documentElement;
+    if (!document.querySelector("[data-specimen]")) return;
+
+    // ---------- Fonts ----------
+    const picks: Record<string, string> = {};
+    const apply = (role: HTMLElement, font: string) => {
+      const vars = (role.dataset.vars ?? "").split(",");
+      vars.forEach((v) => root.style.setProperty(v, `"${font}", ${role.dataset.fallback}`));
+    };
+    document.querySelectorAll<HTMLElement>("[data-role]").forEach((role) => {
+      const chips = Array.from(role.querySelectorAll<HTMLButtonElement>("[data-font]"));
+      const chosen = () => chips.find((c) => c.getAttribute("aria-checked") === "true")?.dataset.font ?? "";
+      picks[role.dataset.role!] = chosen();
+      chips.forEach((chip) => {
+        chip.addEventListener("pointerenter", () => apply(role, chip.dataset.font!));
+        chip.addEventListener("focus", () => apply(role, chip.dataset.font!));
+        chip.addEventListener("click", () => {
+          chips.forEach((c) => c.setAttribute("aria-checked", String(c === chip)));
+          picks[role.dataset.role!] = chip.dataset.font!;
+          apply(role, chip.dataset.font!);
+          summarise();
+        });
+      });
+      role.querySelector(".chips")!.addEventListener("pointerleave", () => apply(role, chosen()));
+    });
+    document.querySelector("[data-reset-fonts]")?.addEventListener("click", () => {
+      document.querySelectorAll<HTMLElement>("[data-role]").forEach((role) => {
+        const cur = Array.from(role.querySelectorAll<HTMLButtonElement>("[data-font]"));
+        cur.forEach((c) => c.setAttribute("aria-checked", String(c.textContent?.includes("current"))));
+        const first = cur.find((c) => c.querySelector(".chip-name")?.textContent?.includes("current"));
+        if (first) {
+          picks[role.dataset.role!] = first.dataset.font!;
+          (role.dataset.vars ?? "").split(",").forEach((v) => root.style.removeProperty(v));
+        }
+      });
+      summarise();
+    });
+
+    // ---------- Backgrounds ----------
+    const gradient = document.querySelector<HTMLElement>("[data-pg-gradient]")!;
+    const grain = document.querySelector<HTMLElement>("[data-pg-grain]")!;
+    let bg = "ink";
+    let accent = "orange";
+    const layers = { grain: false, click: false };
+    const showBg = (key: string) => {
+      const ink = getInk();
+      const inkOn = key === "ink" || key === "tinted" || key === "scroll";
+      ink?.setEnabled(inkOn);
+      ink?.setPalette(key === "tinted" ? [accent] : ["orange", "blue", "lime", "lavender"]);
+      ink?.setScrollReactive(key === "scroll");
+      gradient.classList.toggle("on", key === "gradient");
+    };
+    const cards = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-bg]"));
+    cards.forEach((card) => {
+      card.addEventListener("pointerenter", () => showBg(card.dataset.bg!));
+      card.addEventListener("focus", () => showBg(card.dataset.bg!));
+      card.addEventListener("click", () => {
+        bg = card.dataset.bg!;
+        cards.forEach((c) => c.setAttribute("aria-checked", String(c === card)));
+        showBg(bg);
+        summarise();
+      });
+    });
+    document.querySelector(".bgs")!.addEventListener("pointerleave", () => showBg(bg));
+    document.querySelectorAll<HTMLElement>("[data-accent-pick]").forEach((sw) => {
+      const pick = (e: Event) => {
+        e.stopPropagation();
+        accent = sw.dataset.accentPick!;
+        document.querySelectorAll("[data-accent-pick]").forEach((s) => s.setAttribute("aria-pressed", String(s === sw)));
+        bg = "tinted";
+        cards.forEach((c) => c.setAttribute("aria-checked", String(c.dataset.bg === "tinted")));
+        showBg(bg);
+        summarise();
+      };
+      sw.addEventListener("click", pick);
+      sw.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && pick(e));
+    });
+    document.querySelectorAll<HTMLButtonElement>("[data-layer]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const k = btn.dataset.layer as "grain" | "click";
+        layers[k] = !layers[k];
+        btn.setAttribute("aria-pressed", String(layers[k]));
+        if (k === "grain") grain.classList.toggle("on", layers.grain);
+        if (k === "click") getInk()?.setClickDrops(layers.click);
+        summarise();
+      });
+    });
+
+    // ---------- Summary ----------
+    const out = document.querySelector<HTMLElement>("[data-summary-text]")!;
+    const summarise = () => {
+      const bgLabel = bg === "tinted" ? `Section-tinted ink (${accent})` : cards.find((c) => c.dataset.bg === bg)?.querySelector(".bg-title")?.textContent;
+      out.textContent =
+        `Script: ${picks.script} · Headlines: ${picks.display} · Body: ${picks.body} · Labels: ${picks.mono} · Numbers: ${picks.hud} · ` +
+        `Background: ${bgLabel}${layers.grain ? " + paper grain" : ""}${layers.click ? " + ink drop on click" : ""}`;
+    };
+    summarise();
+    document.querySelector("[data-copy]")?.addEventListener("click", async (e) => {
+      await navigator.clipboard?.writeText(out.textContent ?? "").catch(() => {});
+      (e.currentTarget as HTMLElement).textContent = "Copied ✓";
+    });
+
+    // Leaving the playground restores the real site's defaults.
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        const ink = getInk();
+        ink?.setEnabled(true);
+        ink?.setPalette(["orange", "blue", "lime", "lavender"]);
+        ink?.setScrollReactive(false);
+        ink?.setClickDrops(false);
+      },
+      { once: true },
+    );
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .block {
+    padding-bottom: clamp(48px, 7vw, 112px);
+  }
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: 24px;
+  }
+  .head h2 {
+    font: inherit;
+    margin: 0;
+  }
+  .dim {
+    color: var(--fg-muted);
+  }
+  .reset,
+  .copy {
+    padding: 8px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+
+  /* ---- Specimen pinned in its own column; font choices scroll beside it ---- */
+  .fonts-grid {
+    display: grid;
+    gap: 24px;
+  }
+  @media (min-width: 1000px) {
+    .fonts-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+    .specimen {
+      position: sticky;
+      top: calc(var(--nav-h) + 12px);
+      max-height: calc(100svh - var(--nav-h) - 110px);
+      overflow: auto;
+    }
+  }
+  .specimen {
+    display: grid;
+    gap: 18px;
+    padding: 24px;
+    margin-bottom: 28px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: color-mix(in oklab, var(--bg) 88%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  .spec-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: 12px 32px;
+  }
+  .spec-sig {
+    display: flex;
+    align-items: end;
+    gap: 16px;
+  }
+  .spec-sig img {
+    width: min(340px, 50vw);
+    height: auto;
+  }
+  :global(:root[data-theme="dark"]) .spec-sig img {
+    filter: invert(1);
+  }
+  .spec-band {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.3em;
+    font-size: clamp(2.2rem, 1rem + 4vw, 4.6rem);
+  }
+  .spec-script {
+    font-size: 1.25em;
+    color: var(--orange);
+  }
+  .spec-statement {
+    margin: 0;
+    font-size: clamp(1.8rem, 1rem + 2vw, 3rem);
+  }
+  .spec-cta {
+    margin: 0;
+    font-size: clamp(1.8rem, 1rem + 2.6vw, 3.4rem);
+  }
+  .spec-rare {
+    font-size: 1.15em;
+  }
+  .spec-body {
+    margin: 0;
+    max-width: 52ch;
+    font-size: var(--text-lead);
+    line-height: 1.45;
+  }
+  .spec-nums {
+    margin: 0;
+    display: flex;
+    gap: 24px;
+    font-size: clamp(1.8rem, 1rem + 2vw, 3rem);
+  }
+
+  /* ---- Font chips ---- */
+  .role {
+    padding-block: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .role-label {
+    margin: 0 0 12px;
+    color: var(--fg-muted);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 150px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--panel);
+    color: var(--fg);
+    font-size: 20px;
+    line-height: 1.1;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color var(--dur-fast);
+  }
+  .chip.script {
+    font-size: 40px;
+    min-width: 170px;
+  }
+  .chip:hover {
+    border-color: var(--line-strong);
+  }
+  .chip[aria-checked="true"] {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 1px var(--orange);
+  }
+  .chip-name {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+
+  /* ---- Background cards ---- */
+  .bgs {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  }
+  .bg-card,
+  .layer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 18px;
+    min-height: 170px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: color-mix(in oklab, var(--panel) 80%, transparent);
+    color: var(--fg);
+    text-align: left;
+    cursor: pointer;
+  }
+  .bg-card[aria-checked="true"],
+  .layer[aria-pressed="true"] {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 1px var(--orange);
+  }
+  .bg-title {
+    font-size: 22px;
+  }
+  .bg-note {
+    color: var(--fg-muted);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: auto;
+  }
+  .swatch {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    background: var(--sw);
+    color: var(--charcoal);
+    border: 2px solid transparent;
+  }
+  .swatch[aria-pressed="true"] {
+    border-color: var(--fg);
+  }
+  .layers {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    margin-top: 12px;
+  }
+  .layer {
+    min-height: 110px;
+  }
+  .scroll-room {
+    height: 120vh;
+    display: grid;
+    place-items: center;
+  }
+
+  /* ---- Drifting gradient (preview of option 04) ---- */
+  .pg-gradient {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s var(--ease-out);
+    overflow: hidden;
+  }
+  .pg-gradient.on {
+    opacity: 1;
+  }
+  .pg-gradient span {
+    position: absolute;
+    width: 55vmax;
+    height: 55vmax;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.32;
+    animation: drift 26s ease-in-out infinite alternate;
+  }
+  .pg-gradient span:nth-child(1) { background: var(--orange); left: -10vmax; top: -15vmax; }
+  .pg-gradient span:nth-child(2) { background: var(--blue); right: -15vmax; top: 10vmax; animation-duration: 31s; animation-delay: -6s; }
+  .pg-gradient span:nth-child(3) { background: var(--lime); left: 20vmax; bottom: -25vmax; animation-duration: 36s; animation-delay: -12s; opacity: 0.22; }
+  .pg-gradient span:nth-child(4) { background: var(--lavender); right: 10vmax; bottom: -10vmax; animation-duration: 29s; animation-delay: -3s; }
+  @keyframes drift {
+    to {
+      transform: translate(18vmax, 12vmax) scale(1.25);
+    }
+  }
+
+  /* ---- Paper grain (option + layer) ---- */
+  .pg-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 85;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply;
+  }
+  :global(:root[data-theme="dark"]) .pg-grain {
+    mix-blend-mode: screen;
+    filter: invert(1);
+  }
+  .pg-grain.on {
+    opacity: 0.35;
+  }
+
+  /* ---- Summary bar ---- */
+  .summary {
+    position: sticky;
+    bottom: 8px;
+    z-index: 30;
+    margin: 0 var(--margin) 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 20px;
+    padding: 10px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    background: color-mix(in oklab, var(--bg) 90%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .summary-text {
+    margin: 0;
+    flex: 1;
+    min-width: 240px;
+    line-height: 1.6;
+  }
+</style>
