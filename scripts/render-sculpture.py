@@ -38,6 +38,7 @@ ap.add_argument("--spin", choices=["turntable", "bangle"], default="turntable",
                 help="turntable: rotate about the world vertical; bangle: the ring revolves about its own axis, like a bracelet on a wrist")
 ap.add_argument("--seed", type=int, default=7)
 ap.add_argument("--orb-style", choices=["chrome", "glass"], default="chrome")
+ap.add_argument("--wavy", type=int, default=0, help="1 = wavy liquid silhouette on the glass orb")
 ap.add_argument("--wires", type=int, default=0, help="glowing filament strands inside the orb (ref: wire sphere)")
 ap.add_argument("--core", type=float, default=0.55, help="how pale the facing core is (1 = white, 0 = full tint)")
 ap.add_argument("--film", type=float, default=380.0, help="thin-film thickness in nm (0 = off; it shifts hues toward blue)")
@@ -171,18 +172,19 @@ def orb():
         d2 = o.modifiers.new("Ripple", "DISPLACE")
         d2.texture, d2.texture_coords, d2.texture_coords_object = t2, "OBJECT", FLOW
         d2.strength, d2.mid_level = 0.012, 0.5
-        # Wavy, liquid silhouette (ref B's edge): a slow swell + soft marble ripples, flowing.
-        tw = bpy.data.textures.new("edgeSwell", type="CLOUDS")
-        tw.noise_scale, tw.noise_depth = 0.7, 1
-        dw = o.modifiers.new("EdgeSwell", "DISPLACE")
-        dw.texture, dw.texture_coords, dw.texture_coords_object = tw, "OBJECT", FLOW
-        dw.strength, dw.mid_level = 0.11, 0.5
-        tr = bpy.data.textures.new("edgeRipple", type="MARBLE")
-        tr.marble_type, tr.noise_basis_2 = "SOFT", "SIN"
-        tr.noise_scale, tr.turbulence, tr.noise_depth = 0.45, 3.0, 1
-        dr = o.modifiers.new("EdgeRipple", "DISPLACE")
-        dr.texture, dr.texture_coords, dr.texture_coords_object = tr, "OBJECT", FLOW
-        dr.strength, dr.mid_level = 0.045, 0.5
+        # Wavy, liquid silhouette (ref B's edge) — optional.
+        if a.wavy:
+            tw = bpy.data.textures.new("edgeSwell", type="CLOUDS")
+            tw.noise_scale, tw.noise_depth = 0.7, 1
+            dw = o.modifiers.new("EdgeSwell", "DISPLACE")
+            dw.texture, dw.texture_coords, dw.texture_coords_object = tw, "OBJECT", FLOW
+            dw.strength, dw.mid_level = 0.11, 0.5
+            tr = bpy.data.textures.new("edgeRipple", type="MARBLE")
+            tr.marble_type, tr.noise_basis_2 = "SOFT", "SIN"
+            tr.noise_scale, tr.turbulence, tr.noise_depth = 0.45, 3.0, 1
+            dr = o.modifiers.new("EdgeRipple", "DISPLACE")
+            dr.texture, dr.texture_coords, dr.texture_coords_object = tr, "OBJECT", FLOW
+            dr.strength, dr.mid_level = 0.045, 0.5
     o.modifiers.new("Smooth", "SUBSURF").levels = 2
     bpy.ops.object.shade_smooth()
     o.rotation_euler = (math.radians(18), math.radians(-24), 0)
@@ -201,22 +203,29 @@ def wires(n, radius=0.98):
     cu.dimensions = "3D"
     cu.bevel_depth = 0.0009
     cu.bevel_resolution = 1
+    # Vortex swirl (ref: wire sphere): strands wrap around a tilted axis and are pulled
+    # toward the shell, curving like fingerprint ridges; a twist makes them sweep inward.
+    ax = (0.25, 0.35, 0.9)
+    al = math.sqrt(sum(c * c for c in ax))
+    ax = tuple(c / al for c in ax)
     def field(x, y, z):
-        return (
-            math.sin(1.7 * y + 0.6) + 0.6 * math.cos(2.3 * z),
-            math.sin(1.9 * z + 1.3) + 0.6 * math.cos(2.1 * x),
-            math.sin(1.5 * x + 2.1) + 0.6 * math.cos(2.7 * y),
-        )
+        cx = ax[1] * z - ax[2] * y
+        cy = ax[2] * x - ax[0] * z
+        cz = ax[0] * y - ax[1] * x
+        r = math.sqrt(x * x + y * y + z * z) or 1
+        k = 0.55 * math.sin(2.2 * x + 1.4 * y)  # gentle wobble
+        pull = 0.55 * (r - 0.15)  # spiral inward to a bright knot
+        return (cx + k * x / r - pull * x / r, cy + k * y / r - pull * y / r, cz + k * z / r - pull * z / r)
     for _ in range(n):
         # start anywhere inside, more near the shell (as in the reference)
         while True:
             p = [rng.uniform(-1, 1) for _ in range(3)]
             r = math.sqrt(sum(c * c for c in p))
-            if 0.35 < r < 1.0:
+            if 0.7 < r < 1.0:
                 break
         p = [c * radius for c in p]
         pts = []
-        for _ in range(70):
+        for _ in range(110):
             pts.append(tuple(p))
             v = field(*p)
             l = math.sqrt(sum(c * c for c in v)) or 1
@@ -238,7 +247,7 @@ def wires(n, radius=0.98):
         nodes.remove(nd)
     em = nodes.new("ShaderNodeEmission")
     em.inputs["Color"].default_value = (1, 1, 1, 1)
-    em.inputs["Strength"].default_value = 0.7
+    em.inputs["Strength"].default_value = 0.55
     out = nodes.new("ShaderNodeOutputMaterial")
     m.node_tree.links.new(em.outputs[0], out.inputs[0])
     cu.materials.append(m)
@@ -355,7 +364,7 @@ if a.shape == "orb":
         b.inputs["Metallic"].default_value = 0.0
         b.inputs["Roughness"].default_value = 0.02
         b.inputs["Transmission Weight"].default_value = 1.0
-        b.inputs["IOR"].default_value = 1.45
+        b.inputs["IOR"].default_value = 1.12  # thin shell: wires inside stay readable
         if "Thin Film Thickness" in b.inputs:
             b.inputs["Thin Film Thickness"].default_value = 380.0
         ramp.color_ramp.elements[0].color = (0.0, 0.0, 0.0, 1)

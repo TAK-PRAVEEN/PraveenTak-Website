@@ -1,0 +1,45 @@
+---
+/** Particle rock (see rock-particles.ts): hover scatters slowly, leave returns slowly. */
+---
+
+<div class="rock" data-rock>
+  <canvas aria-hidden="true"></canvas>
+  <span class="micro hint">Hover to scatter</span>
+</div>
+
+<script>
+  import { prefersReducedMotion } from "../../lib/frame";
+  document.addEventListener("astro:page-load", async () => {
+    const root = document.querySelector<HTMLElement>("[data-rock]");
+    if (!root || root.dataset.mounted) return;
+    root.dataset.mounted = "1";
+    if (prefersReducedMotion()) return;
+    try {
+      const { mountRock } = await import("./rock-particles");
+      const off = mountRock(root.querySelector("canvas")!, root);
+      document.addEventListener("astro:before-swap", off, { once: true });
+    } catch {
+      root.remove();
+    }
+  });
+</script>
+
+<style>
+  .rock {
+    position: relative;
+    aspect-ratio: 1;
+    width: 100%;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .hint {
+    position: absolute;
+    left: 50%;
+    bottom: 4%;
+    transform: translateX(-50%);
+    color: var(--fg-muted);
+    font-size: 9px;
+  }
+</style>

@@ -4,12 +4,13 @@ import { ArrowUpRight } from "@lucide/astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
 import StatusDot from "../components/ui/StatusDot.astro";
+import InkBloom from "../components/3d/InkBloom.astro";
 
 const profile = (await getEntry("profile", "main"))!.data;
 ---
 
 <BaseLayout title="Contact" section="/contact" description="Get in touch with Praveen Tak." bare>
-  <PageHeader section="/contact" title="Let's talk" />
+  <PageHeader section="/contact" title="Let's talk"><InkBloom slot="visual" class="contact-bloom" /></PageHeader>
 
   <section class="frame grid-12 contact" aria-label="Contact">
     <div class="col-span-4 md:col-span-5 details">
@@ -162,5 +163,8 @@ const profile = (await getEntry("profile", "main"))!.data;
     background: var(--orange);
     border-color: var(--orange);
     color: var(--charcoal);
+  }
+  .contact-bloom {
+    width: 100%;
   }
 </style>

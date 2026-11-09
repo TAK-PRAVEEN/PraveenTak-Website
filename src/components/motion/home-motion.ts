@@ -113,7 +113,7 @@ function windowScene(): () => void {
   const before = sec.querySelector<HTMLElement>("[data-win-before]");
 
   // Looping Blender sequence: wavy glass orb with glowing filaments inside.
-  const TOTAL = 60;
+  const TOTAL = 90;
   const small = window.matchMedia("(max-width: 767px)").matches;
   const stepBy = small ? 2 : 1; // phones load every 2nd frame
   const seq = (name: string) => ({ name, frames: new Array<HTMLImageElement | null>(TOTAL).fill(null) });
@@ -193,7 +193,7 @@ function windowScene(): () => void {
   const tick = (_t: number, dt: number) => {
     if (!visible) return;
     st.scrollVel *= 0.9;
-    st.pos += (dt / 1000) * 18 + Math.max(-6, Math.min(6, st.scrollVel));
+    st.pos += (dt / 1000) * 8 + Math.max(-6, Math.min(6, st.scrollVel));
     draw();
   };
   gsap.ticker.add(tick);

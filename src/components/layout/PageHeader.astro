@@ -16,7 +16,8 @@ const exp = experienceFor(section);
 const long = title.length > 12;
 ---
 
-<header class:list={["frame page-header", { "has-visual": visual }]}>
+<header class:list={["frame page-header", { "has-visual": visual || Astro.slots.has("visual") }]}>
+  {Astro.slots.has("visual") && <div class="visual visual-slot"><slot name="visual" /></div>}
   {visual && <img class="visual" src={visual} alt="" width="1600" height="1600" decoding="async" fetchpriority="high" aria-hidden="true" />}
   <div class="meta micro">
     <span data-decode>{exp.index} — {exp.label}</span>
@@ -24,7 +25,7 @@ const long = title.length > 12;
     <span class="text-muted caret">SYS_{new Date().getFullYear()}</span>
   </div>
   <hr class="rule-strong" />
-  <h1 class:list={["display title", { long }]} data-reveal-lines>{title}</h1>
+  <h1 class:list={["display title", { long }]} style={`--chars:${Math.max(...title.split(" ").map((w) => w.length))}`} data-reveal-lines>{title}</h1>
   {
     (lead || statement) && (
       <div class="grid-12 below">
@@ -82,9 +83,10 @@ const long = title.length > 12;
     padding-bottom: 12px;
   }
   .title {
-    font-size: var(--text-display);
+    /* Never wider than the frame: the longest word always fits on one line. */
+    font-size: min(var(--text-display), calc((100vw - 2 * var(--margin)) / (var(--chars, 6) * 0.6)));
     margin: 0.12em 0 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
     text-wrap: balance;
   }
   .title.long {
@@ -114,5 +116,13 @@ const long = title.length > 12;
     line-height: 1.45;
     color: var(--fg-muted);
     margin: 0;
+  }
+  .visual-slot {
+    animation: none;
+    aspect-ratio: 1;
+    pointer-events: auto;
+    width: min(30vw, 400px);
+    top: calc(var(--nav-h) + 30px);
+    right: 0;
   }
 </style>
