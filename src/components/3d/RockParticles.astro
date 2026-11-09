@@ -8,26 +8,27 @@
 ---
 
 <div class="rock" data-rock>
-  <img class="still" src="/media/rock/rock-00.webp" alt="" width="480" height="480" decoding="async" />
+  <img class="still" src="/media/ref/rock-00.webp" alt="" width="480" height="480" decoding="async" />
   <canvas aria-hidden="true"></canvas>
   <span class="micro hint">Hover to scatter</span>
 </div>
 
 <script>
   import { prefersReducedMotion } from "../../lib/frame";
-  const TOTAL = 30;
+  const TOTAL = 60;
   document.addEventListener("astro:page-load", () => {
     const root = document.querySelector<HTMLElement>("[data-rock]");
     if (!root || root.dataset.mounted) return;
     root.dataset.mounted = "1";
     if (prefersReducedMotion()) return;
     const canvas = root.querySelector("canvas")!;
+    canvas.addEventListener("contextmenu", (e) => e.preventDefault());
     const ctx = canvas.getContext("2d")!;
     const frames: (HTMLImageElement | null)[] = new Array(TOTAL).fill(null);
     for (let i = 0; i < TOTAL; i += 1) {
       const img = new Image();
       img.decoding = "async";
-      img.src = `/media/rock/rock-${String(i).padStart(2, "0")}.webp`;
+      img.src = `/media/ref/rock-${String(i).padStart(2, "0")}.webp`;
       img.onload = () => {
         frames[i] = img;
         if (i === 0) root.classList.add("ready");
@@ -95,7 +96,7 @@
     opacity: 0;
   }
   :global(:root[data-theme="dark"]) .rock {
-    filter: brightness(1.35);
+    filter: invert(1);
   }
   .hint {
     position: absolute;

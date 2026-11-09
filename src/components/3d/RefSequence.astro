@@ -1,0 +1,99 @@
+---
+/**
+ * Plays a reference frame sequence (public/media/ref/<name>-NN.webp) on a canvas:
+ * loops at the reference's own speed, hover speeds it up, scroll velocity spins it.
+ * Drawn to a canvas (no <video>/<img> element to right-click-save).
+ * Frames carry their own transparency (baked from the reference backgrounds).
+ */
+interface Props {
+  name: string;
+  frames: number;
+  fps: number;
+  class?: string;
+}
+const { name, frames, fps, class: className } = Astro.props;
+---
+
+<div class:list={["refseq", className]} data-refseq data-name={name} data-frames={frames} data-fps={fps} aria-hidden="true">
+  <canvas></canvas>
+</div>
+
+<script>
+  import { prefersReducedMotion } from "../../lib/frame";
+
+  function mount(root: HTMLElement) {
+    if (root.dataset.mounted) return;
+    root.dataset.mounted = "1";
+    const canvas = root.querySelector("canvas")!;
+    const ctx = canvas.getContext("2d")!;
+    const name = root.dataset.name!;
+    const total = Number(root.dataset.frames);
+    const fps = Number(root.dataset.fps);
+    const frames: (HTMLImageElement | null)[] = new Array(total).fill(null);
+    let loaded = false;
+    const load = () => {
+      if (loaded) return;
+      loaded = true;
+      for (let i = 0; i < total; i++) {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = `/media/ref/${name}-${String(i).padStart(2, "0")}.webp`;
+        img.onload = () => (frames[i] = img);
+      }
+    };
+    const nearest = (i: number) => {
+      for (let d = 0; d < total; d++) {
+        const f = frames[(i + d) % total] ?? frames[(i - d + total) % total];
+        if (f) return f;
+      }
+      return null;
+    };
+    let pos = 0, boost = 1, target = 1, scrollV = 0, lastY = scrollY, visible = false, last = performance.now();
+    canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+    window.addEventListener(
+      "pointermove",
+      (e) => {
+        const r = root.getBoundingClientRect();
+        target = e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom ? 2.6 : 1;
+      },
+      { passive: true },
+    );
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible) load();
+    }, { rootMargin: "200px" }).observe(root);
+    const reduced = prefersReducedMotion();
+    const draw = (now: number) => {
+      requestAnimationFrame(draw);
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (!visible) return;
+      scrollV += (scrollY - lastY) * 0.02;
+      lastY = scrollY;
+      scrollV *= 0.9;
+      boost += (target - boost) * 0.06;
+      if (!reduced) pos += dt * fps * boost + Math.max(-4, Math.min(4, scrollV));
+      const img = nearest(((Math.floor(pos) % total) + total) % total);
+      if (!img) return;
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      const w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+      if (canvas.width !== w || canvas.height !== h) ((canvas.width = w), (canvas.height = h));
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+    };
+    requestAnimationFrame(draw);
+  }
+  document.addEventListener("astro:page-load", () => document.querySelectorAll<HTMLElement>("[data-refseq]").forEach(mount));
+</script>
+
+<style>
+  .refseq {
+    aspect-ratio: 1;
+    width: 100%;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>

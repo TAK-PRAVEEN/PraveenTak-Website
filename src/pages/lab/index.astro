@@ -4,6 +4,7 @@ import { ArrowUpRight } from "@lucide/astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/layout/PageHeader.astro";
 import EmptyChapter from "../../components/layout/EmptyChapter.astro";
+import RefSequence from "../../components/3d/RefSequence.astro";
 import { month } from "../../lib/format";
 
 const entries = (await getCollection("lab")).sort((a, b) => a.data.order - b.data.order);
@@ -20,7 +21,7 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
 ---
 
 <BaseLayout title="AI / ML Lab" section="/lab" description="AI and machine-learning research and experiments by Praveen Tak.">
-  <PageHeader section="/lab" title="AI / ML Lab" lead="Research and experiments in generative models, computer vision and agentic systems." visual="/media/sculpture-blue.webp" />
+  <PageHeader section="/lab" title="AI / ML Lab" lead="Research and experiments in generative models, computer vision and agentic systems."><RefSequence slot="visual" name="wires" frames={55} fps={7.5} /></PageHeader>
 
   {
     entries.length > 0 && (

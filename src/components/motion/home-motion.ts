@@ -113,11 +113,11 @@ function windowScene(): () => void {
   const before = sec.querySelector<HTMLElement>("[data-win-before]");
 
   // Looping Blender sequence: wavy glass orb with glowing filaments inside.
-  const TOTAL = 90;
+  const TOTAL = 36;
   const small = window.matchMedia("(max-width: 767px)").matches;
   const stepBy = small ? 2 : 1; // phones load every 2nd frame
   const seq = (name: string) => ({ name, frames: new Array<HTMLImageElement | null>(TOTAL).fill(null) });
-  const outside = seq("orb-glass");
+  const outside = seq("glass");
   let loaded = false;
   const load = () => {
     if (loaded) return;
@@ -126,7 +126,7 @@ function windowScene(): () => void {
       for (let i = 0; i < TOTAL; i += stepBy) {
         const img = new Image();
         img.decoding = "async";
-        img.src = `/media/turntable/${s.name}-${String(i).padStart(2, "0")}.webp`;
+        img.src = `/media/ref/${s.name}-${String(i).padStart(2, "0")}.webp`;
         img.onload = () => {
           s.frames[i] = img;
           if (s === outside && i === 0) document.documentElement.classList.add("win-ready");
@@ -193,7 +193,7 @@ function windowScene(): () => void {
   const tick = (_t: number, dt: number) => {
     if (!visible) return;
     st.scrollVel *= 0.9;
-    st.pos += (dt / 1000) * 12.3 + /* loop ≈ 7.3 s, matching the wire-sphere reference */ Math.max(-6, Math.min(6, st.scrollVel));
+    st.pos += (dt / 1000) * 25 + /* reference speed: 36 frames / 1.44 s */ Math.max(-6, Math.min(6, st.scrollVel));
     draw();
   };
   gsap.ticker.add(tick);

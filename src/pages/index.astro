@@ -58,6 +58,7 @@ const statementLead = statementWords.join(" ");
   <!-- PAPER → INK: scroll transition out of the hero ----------------------- -->
   <section class="band" data-surface="ink" data-accent="orange" data-band aria-labelledby="statement">
     <div class="band-ink" data-band-ink data-ink-dark aria-hidden="true"></div>
+    <div class="band-nebula" aria-hidden="true"></div>
     <div class="frame band-inner" data-band-inner>
       <div class="band-meta micro">
         <span data-decode>01.1 — Statement</span>
@@ -102,7 +103,7 @@ const statementLead = statementWords.join(" ");
   .hero {
     padding-top: calc(var(--nav-h) + 24px);
     /* One screen tall, but never stretched on very tall displays. */
-    min-height: min(100svh, 1080px);
+    min-height: min(88svh, 960px);
     display: flex;
     flex-direction: column;
   }
@@ -115,9 +116,8 @@ const statementLead = statementWords.join(" ");
     padding-bottom: 12px;
   }
   .hero-grid {
-    flex: 1;
     align-items: center;
-    padding-block: clamp(24px, 4vw, 48px);
+    padding-block: clamp(16px, 2.5vw, 32px) clamp(8px, 1.5vw, 16px);
     row-gap: 32px;
   }
   .hero-hi {
@@ -231,5 +231,21 @@ const statementLead = statementWords.join(" ");
   /* Ink running: the canvas paints true black + neon ink inside this shape (data-ink-dark). */
   :global(html.ink-bg-on) .band-ink {
     background: transparent;
+  }
+  /* Stardust nebula (reference image) drifting behind the statement. */
+  .band-nebula {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: url("/media/ref/nebula.webp") center / cover no-repeat;
+    mix-blend-mode: screen;
+    opacity: 0.85;
+    animation: nebula-drift 60s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes nebula-drift {
+    to {
+      transform: scale(1.12) translate(-2%, 1%);
+    }
   }
 </style>

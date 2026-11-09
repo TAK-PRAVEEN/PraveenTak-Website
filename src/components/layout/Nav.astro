@@ -18,8 +18,11 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
 <header class="nav" data-nav transition:persist="nav">
   <div class="frame nav-row">
     <a href="/" class="brand" aria-label={`${SITE.name} — home`}>
-      <span class="brand-mark" aria-hidden="true">PT</span>
-      <span class="micro brand-name">{SITE.name}</span>
+      <span class="brand-mark" aria-hidden="true">PT<i class="brand-dot"></i></span>
+      <span class="brand-sig" aria-hidden="true">
+        <video class="brand-sig-media" src="/media/signature.webm" poster="/media/signature-still.webp" autoplay muted loop playsinline preload="metadata"></video>
+      </span>
+      <span class="sr-only">{SITE.name}</span>
     </a>
 
     <!-- Instrument panel: live Jaipur time + current chapter (desktop). -->
@@ -628,6 +631,41 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     .nav::before {
       background: var(--bg);
       backdrop-filter: none;
+    }
+  }
+  /* PT monogram: square box, neon-orange square completing the T at the top right. */
+  .brand-mark {
+    position: relative;
+  }
+  .brand-dot {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 5px;
+    height: 5px;
+    background: var(--orange);
+    box-shadow: 0 0 6px var(--orange);
+  }
+  /* Animated signature in the bar (same artwork as the hero). */
+  .brand-sig {
+    display: block;
+    width: 108px;
+    height: 32px;
+  }
+  .brand-sig-media {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: left center;
+    pointer-events: none;
+  }
+  :global(:root[data-theme="dark"]) .brand-sig-media,
+  .nav[data-surface="ink"] .brand-sig-media {
+    filter: invert(1);
+  }
+  @media (max-width: 420px) {
+    .brand-sig {
+      width: 84px;
     }
   }
 </style>
