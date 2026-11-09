@@ -592,4 +592,35 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     box-shadow: 0 0 0 1px var(--line-strong);
     border-radius: 999px;
   }
+  /* Glassmorphism, always on: frosted, tinted, with a hairline highlight, so the
+     links stay legible over ink, renders and dark sections. */
+  .nav {
+    background: color-mix(in oklab, var(--bg) 58%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6) brightness(1.04);
+    backdrop-filter: blur(22px) saturate(1.6) brightness(1.04);
+    border-bottom: 1px solid color-mix(in oklab, var(--fg) 10%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 35%, transparent),
+      0 10px 30px -18px rgb(0 0 0 / 0.35);
+  }
+  .nav[data-scrolled] {
+    background: color-mix(in oklab, var(--bg) 66%, transparent);
+  }
+  :global(:root[data-theme="dark"]) .nav,
+  .nav[data-surface="ink"] {
+    background: color-mix(in oklab, var(--ink) 55%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 8%, transparent),
+      0 10px 30px -18px rgb(0 0 0 / 0.6);
+  }
+  /* Links inherit full contrast on glass. */
+  .nav .nav-link {
+    color: color-mix(in oklab, var(--fg) 72%, transparent);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .nav {
+      background: var(--bg);
+      backdrop-filter: none;
+    }
+  }
 </style>
