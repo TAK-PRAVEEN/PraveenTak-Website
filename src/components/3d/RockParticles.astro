@@ -1,7 +1,7 @@
 ---
 /**
  * Matte stone that disintegrates (Blender render, scripts/render-rock.py):
- * a 24-frame sequence, solid → dust. Hover plays it forward slowly, leaving
+ * a 30-frame sequence, faceted sphere → stone → membranes → smoke wisps. Hover plays it forward slowly, leaving
  * plays it back into the stone, slowly. Idle: a gentle float.
  * Reduced motion / before load: the solid stone (frame 0) as a still image.
  */
@@ -15,7 +15,7 @@
 
 <script>
   import { prefersReducedMotion } from "../../lib/frame";
-  const TOTAL = 24;
+  const TOTAL = 30;
   document.addEventListener("astro:page-load", () => {
     const root = document.querySelector<HTMLElement>("[data-rock]");
     if (!root || root.dataset.mounted) return;

@@ -57,7 +57,7 @@ def mat_stone():
     m = bpy.data.materials.new("Stone")
     m.use_nodes = True
     b = m.node_tree.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.008, 0.008, 0.009, 1)
+    b.inputs["Base Color"].default_value = (0.045, 0.045, 0.048, 1)  # dark grey, facets stay visible
     b.inputs["Roughness"].default_value = 0.9
     nt = m.node_tree
     v = nt.nodes.new("ShaderNodeTexVoronoi"); v.inputs["Scale"].default_value = 300.0
@@ -229,23 +229,6 @@ sc.camera = cam
 if a.test:
     for i, t in enumerate(float(x) for x in a.test.split(",")):
         T.outputs[0].default_value = t
-        dg = bpy.context.evaluated_depsgraph_get(); dg.update()
-        ev = obj.evaluated_get(dg)
-        for g in dg.object_instances:
-            pass
-        pc = [o for o in dg.objects if o.name.startswith(obj.name)]
-        try:
-            import mathutils
-            geo = ev.evaluated_geometry()
-            pts = geo.pointcloud
-            if pts:
-                co = [v.vector for v in pts.attributes["position"].data]
-                xs = [c.x for c in co]; zs = [c.z for c in co]
-                print("DEBUG T", t, "points", len(co), "x", round(min(xs),2), round(max(xs),2), "z", round(min(zs),2), round(max(zs),2))
-            else:
-                print("DEBUG T", t, "no pointcloud")
-        except Exception as e:
-            print("DEBUG err", e)
         sc.render.filepath = f"{a.out}{i:02d}"
         bpy.ops.render.render(write_still=True)
 else:

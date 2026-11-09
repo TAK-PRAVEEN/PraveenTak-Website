@@ -193,7 +193,7 @@ function windowScene(): () => void {
   const tick = (_t: number, dt: number) => {
     if (!visible) return;
     st.scrollVel *= 0.9;
-    st.pos += (dt / 1000) * 8 + Math.max(-6, Math.min(6, st.scrollVel));
+    st.pos += (dt / 1000) * 12.3 + /* loop ≈ 7.3 s, matching the wire-sphere reference */ Math.max(-6, Math.min(6, st.scrollVel));
     draw();
   };
   gsap.ticker.add(tick);

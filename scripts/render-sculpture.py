@@ -166,7 +166,7 @@ def orb():
         t.distance_metric = "DISTANCE"
         d = o.modifiers.new("Cells", "DISPLACE")
         d.texture, d.texture_coords = t, "LOCAL"
-        d.strength, d.mid_level = -0.035, 0.0
+        d.strength, d.mid_level = -0.085, 0.0
         t2 = bpy.data.textures.new("ripple", type="CLOUDS")
         t2.noise_scale, t2.noise_depth = 0.35, 2
         d2 = o.modifiers.new("Ripple", "DISPLACE")
@@ -366,20 +366,32 @@ if a.shape == "orb":
         b.inputs["Transmission Weight"].default_value = 1.0
         b.inputs["IOR"].default_value = 1.12  # thin shell: wires inside stay readable
         if "Thin Film Thickness" in b.inputs:
-            b.inputs["Thin Film Thickness"].default_value = 380.0
+            b.inputs["Thin Film Thickness"].default_value = 0.0  # no rainbow patches (ref A is clear smoky glass)
         ramp.color_ramp.elements[0].color = (0.0, 0.0, 0.0, 1)
-        ramp.color_ramp.elements[1].color = (0.55, 0.57, 0.6, 1)
+        ramp.color_ramp.elements[1].color = (0.75, 0.77, 0.8, 1)
         # Bubble craters as surface relief (silhouette stays a clean circle, like ref A).
         nt2 = m.node_tree
         vor = nt2.nodes.new("ShaderNodeTexVoronoi")
         vor.feature = "SMOOTH_F1"
-        vor.inputs["Scale"].default_value = 3.2
-        vor.inputs["Smoothness"].default_value = 0.6
+        vor.inputs["Scale"].default_value = 3.4
+        vor.inputs["Smoothness"].default_value = 1.0
         bump = nt2.nodes.new("ShaderNodeBump")
-        bump.inputs["Strength"].default_value = 0.85
-        bump.inputs["Distance"].default_value = 0.25
+        bump.inputs["Strength"].default_value = 1.0
+        bump.inputs["Distance"].default_value = 0.4
         nt2.links.new(vor.outputs["Distance"], bump.inputs["Height"])
-        nt2.links.new(bump.outputs["Normal"], b.inputs["Normal"])
+        # fine crinkles on top of the craters (ref A's busy interior)
+        crk = nt2.nodes.new("ShaderNodeTexNoise"); crk.inputs["Scale"].default_value = 22.0; crk.inputs["Detail"].default_value = 6.0
+        bump2 = nt2.nodes.new("ShaderNodeBump"); bump2.inputs["Strength"].default_value = 0.12; bump2.inputs["Distance"].default_value = 0.05
+        nt2.links.new(crk.outputs["Fac"], bump2.inputs["Height"])
+        nt2.links.new(bump.outputs["Normal"], bump2.inputs["Normal"])
+        nt2.links.new(bump2.outputs["Normal"], b.inputs["Normal"])
+        # busy grey surroundings for the glass to refract (instead of a flat gradient)
+        envn = nt.nodes.new("ShaderNodeTexNoise"); envn.inputs["Scale"].default_value = 6.0; envn.inputs["Detail"].default_value = 8.0
+        envr = nt.nodes.new("ShaderNodeValToRGB")
+        envr.color_ramp.elements[0].color = (0.06, 0.065, 0.08, 1); envr.color_ramp.elements[1].color = (0.8, 0.82, 0.88, 1)
+        envr.color_ramp.elements[0].position = 0.42; envr.color_ramp.elements[1].position = 0.68
+        nt.links.new(envn.outputs["Fac"], envr.inputs["Fac"])
+        nt.links.new(envr.outputs["Color"], bg.inputs["Color"])
         softbox("GlintOrange", (-2.6, 1.5, 0.4), (80, 0, -130), (3.0, 0.3), 900, color=(1.0, 0.45, 0.15))
         softbox("GlintBlue", (2.6, 1.8, 1.0), (75, 0, 130), (3.0, 0.3), 900, color=(0.3, 0.5, 1.0))
         scene.cycles.transmission_bounces = 12
