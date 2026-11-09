@@ -22,17 +22,17 @@ void main() {
   float k = smoothstep(0.0, 1.0, clamp(uScatter * 1.4 - aSeed * 0.4, 0.0, 1.0));
   vec3 dir = normalize(p + 1e-4);
   vec3 drift = vec3(sin(aSeed * 31.0 + uTime * 0.3), cos(aSeed * 17.0 + uTime * 0.25), sin(aSeed * 23.0 - uTime * 0.2));
-  p += (dir * (0.18 + aSeed * 0.42) + drift * 0.16) * k;
+  p += (dir * (0.1 + aSeed * 0.26) + drift * 0.08) * k;
   // slow rotation
   float a = uTime * 0.12, b = 0.35;
   p = vec3(cos(a) * p.x + sin(a) * p.z, p.y, -sin(a) * p.x + cos(a) * p.z);
   p = vec3(p.x, cos(b) * p.y - sin(b) * p.z, sin(b) * p.y + cos(b) * p.z);
   float w = 3.2 - p.z;
-  gl_Position = vec4(p.x * 2.1 / uAspect, p.y * 2.1, 0.0, w);
+  gl_Position = vec4(p.x * 2.35 / uAspect, p.y * 2.35, 0.0, w);
   // matte rock: lit from the upper left
-  vShade = clamp(0.15 + 0.85 * dot(normalize(aPos), normalize(vec3(-0.5, 0.6, 0.6))), 0.0, 1.0) * 0.6;
+  vShade = clamp(0.25 + 0.75 * dot(normalize(aPos), normalize(vec3(-0.5, 0.6, 0.6))), 0.0, 1.0);
   vSpark = step(0.985, hash(aSeed * 91.0 + floor(uTime * 2.0 + aSeed * 7.0)));
-  gl_PointSize = uSize * (1.6 + 1.0 * aSeed) * (3.2 / w) * (1.0 - 0.45 * k);
+  gl_PointSize = uSize * (0.8 + 0.6 * aSeed) * (3.2 / w);
 }`;
 
 const FS = /* glsl */ `#version 300 es
@@ -46,7 +46,7 @@ void main() {
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
   vec3 c = mix(uDark, uLight, vShade * 0.55) + vSpark * vec3(0.9);
-  float a = (1.0 - smoothstep(0.38, 0.5, d)) * uAlpha;
+  float a = (1.0 - smoothstep(0.3, 0.5, d)) * uAlpha;
   o = vec4(c * a, a);
 }`;
 
@@ -58,14 +58,15 @@ export function mountRock(canvas: HTMLCanvasElement, hoverEl: HTMLElement): () =
   const gl = createContext(canvas);
   if (!gl) throw new Error("WebGL2 unavailable");
   const small = window.matchMedia("(max-width: 767px)").matches;
-  const N = small ? 12000 : 30000;
+  const N = small ? 8000 : 18000;
   const pos = new Float32Array(N * 3);
   const seed = new Float32Array(N);
+  const golden = Math.PI * (3 - Math.sqrt(5));
   for (let i = 0; i < N; i++) {
-    // random (not spiral) distribution: no moire rings, reads as solid grainy stone
-    const y = Math.random() * 2 - 1;
+    // fine, even dot lattice (the light "engraved" look)
+    const y = 1 - (i / (N - 1)) * 2;
     const r = Math.sqrt(1 - y * y);
-    const t = Math.random() * Math.PI * 2;
+    const t = golden * i;
     const x = Math.cos(t) * r, z = Math.sin(t) * r;
     // lumpy rock surface: low-frequency bulges + facets
     const f = 0.82 + 0.12 * vnoise(x * 1.3, y * 1.3, z * 1.3) + 0.05 * vnoise(x * 4, y * 4, z * 4);
