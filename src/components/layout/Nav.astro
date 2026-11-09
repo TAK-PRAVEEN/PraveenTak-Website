@@ -592,9 +592,21 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     box-shadow: 0 0 0 1px var(--line-strong);
     border-radius: 999px;
   }
-  /* Glassmorphism, always on: frosted, tinted, with a hairline highlight, so the
-     links stay legible over ink, renders and dark sections. */
-  .nav {
+  /* Glassmorphism, always on. The blur lives on a pseudo-layer: backdrop-filter on
+     .nav itself would make it the containing block of the fixed mobile menu panel
+     (squashing the menu into the 64 px bar). */
+  .nav,
+  .nav[data-scrolled] {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .nav::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: var(--nav-h);
+    z-index: -1;
     background: color-mix(in oklab, var(--bg) 58%, transparent);
     -webkit-backdrop-filter: blur(22px) saturate(1.6) brightness(1.04);
     backdrop-filter: blur(22px) saturate(1.6) brightness(1.04);
@@ -602,12 +614,13 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     box-shadow:
       inset 0 1px 0 color-mix(in oklab, white 35%, transparent),
       0 10px 30px -18px rgb(0 0 0 / 0.35);
+    pointer-events: none;
   }
-  .nav[data-scrolled] {
+  .nav[data-scrolled]::before {
     background: color-mix(in oklab, var(--bg) 66%, transparent);
   }
-  :global(:root[data-theme="dark"]) .nav,
-  .nav[data-surface="ink"] {
+  :global(:root[data-theme="dark"]) .nav::before,
+  .nav[data-surface="ink"]::before {
     background: color-mix(in oklab, var(--ink) 55%, transparent);
     box-shadow:
       inset 0 1px 0 color-mix(in oklab, white 8%, transparent),
@@ -618,7 +631,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     color: color-mix(in oklab, var(--fg) 72%, transparent);
   }
   @media (prefers-reduced-transparency: reduce) {
-    .nav {
+    .nav::before {
       background: var(--bg);
       backdrop-filter: none;
     }

@@ -103,7 +103,10 @@ const FS = {
       for (int k = 0; k < 4; k++) { if (k >= uCount) break;
         inDark = max(inDark, 1.0 - smoothstep(-1.0, 1.0, sdRound(gl_FragCoord.xy, uRect[k], uRad[k]))); }
       vec3 dyeRaw = texture(uDye, vUv).rgb;
-      vec3 neon = uInkBg + dyeRaw * 0.45 + sc * 0.3 * (body * 0.8 + rim) * uPaper;
+      // Faded, light washes on black (same softness as on paper): desaturate + lighten.
+      vec3 dyeSoft = mix(dyeRaw, vec3(dot(dyeRaw, vec3(0.333))), 0.35);
+      vec3 stSoft = mix(sc, vec3(dot(sc, vec3(0.333))), 0.35);
+      vec3 neon = uInkBg + dyeSoft * 0.3 + stSoft * 0.2 * (body * 0.8 + rim) * uPaper;
       o = vec4(mix(lit, neon, max(uDark, inDark)), 1.0);
     }`,
 };
