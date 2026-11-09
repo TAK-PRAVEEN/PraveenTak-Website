@@ -65,7 +65,7 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
 </header>
 
 <script>
-  import { currentTheme, followSystem, onThemeChange, setTheme } from "../../lib/theme";
+  import { currentTheme, onThemeChange, setTheme } from "../../lib/theme";
   import { inkTransition } from "../../lib/ink-transition";
 
   function setupNav() {
@@ -103,7 +103,6 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     const syncThemeLabel = () =>
       themeBtn?.setAttribute("aria-label", currentTheme() === "dark" ? "Switch to light theme" : "Switch to dark theme");
     syncThemeLabel();
-    followSystem();
     onThemeChange(syncThemeLabel);
     // Ink drops from the button and spreads across the page (see ink-transition.ts).
     let switching = false;

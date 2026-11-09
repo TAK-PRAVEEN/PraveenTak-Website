@@ -15,7 +15,7 @@ const profile = (await getEntry("profile", "main"))!.data;
       <div class="col-span-4 md:col-span-7">
         <p class="micro text-muted">07 — Contact</p>
         <a href="/contact" class="display footer-cta">
-          Let's build<br />something <span class="editorial">rare.</span>
+          Let's build<br />something <span class="script script-bold">rare.</span>
         </a>
       </div>
       <div class="col-span-4 md:col-span-5 footer-meta">
@@ -66,8 +66,10 @@ const profile = (await getEntry("profile", "main"))!.data;
   .footer-cta:hover {
     color: var(--accent-as-text);
   }
-  .footer-cta .editorial {
-    letter-spacing: -0.02em;
+  .footer-cta .script {
+    font-size: 1.45em;
+    line-height: 0.6;
+    color: var(--accent-as-text);
   }
   .footer-meta {
     display: flex;

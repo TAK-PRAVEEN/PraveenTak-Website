@@ -11,7 +11,7 @@ import LinkButton from "../components/ui/LinkButton.astro";
     <p class="micro text-muted">Error — Signal lost</p>
     <hr class="rule-strong" />
     <h1 class="display code">404</h1>
-    <p class="editorial line">This page drifted out of orbit.</p>
+    <p class="script line">This page drifted out of orbit.</p>
     <LinkButton href="/">Back to home</LinkButton>
   </section>
 </BaseLayout>
@@ -30,7 +30,7 @@ import LinkButton from "../components/ui/LinkButton.astro";
     margin: 0;
   }
   .line {
-    font-size: var(--text-h3);
+    font-size: clamp(2.5rem, 1.6rem + 3vw, 4.5rem);
     margin: 0 0 16px;
   }
 </style>

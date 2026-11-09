@@ -35,17 +35,17 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Instrument Serif";
-  src: url("/fonts/instrument-serif-400.woff2") format("woff2");
+  font-family: "Corinthia";
+  src: url("/fonts/corinthia-400.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Instrument Serif";
-  src: url("/fonts/instrument-serif-400-italic.woff2") format("woff2");
-  font-weight: 400;
-  font-style: italic;
+  font-family: "Corinthia";
+  src: url("/fonts/corinthia-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -187,7 +187,8 @@
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Space Mono", ui-monospace, "Cascadia Mono", monospace;
-  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+  /* Script accent — pairs with the handwritten signature. */
+  --font-script: "Corinthia", "Segoe Script", cursive;
 
   /* Fluid type scale */
   --text-micro: 0.6875rem;
@@ -268,22 +269,28 @@
   }
   .display {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 700;
     letter-spacing: -0.045em;
     line-height: 0.85;
   }
   .heading {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: -0.03em;
     line-height: 0.95;
   }
-  .editorial {
-    font-family: var(--font-serif);
-    font-style: italic;
+  /* Script accent (Corinthia): used sparingly for personal, hand-written moments.
+     Script faces read small, so sizes are set ~1.4x larger than the text they accompany. */
+  .editorial,
+  .script {
+    font-family: var(--font-script);
+    font-style: normal;
     font-weight: 400;
-    letter-spacing: -0.01em;
-    line-height: 1.05;
+    letter-spacing: 0;
+    line-height: 0.9;
+  }
+  .script-bold {
+    font-weight: 700;
   }
   .rule {
     border: 0;

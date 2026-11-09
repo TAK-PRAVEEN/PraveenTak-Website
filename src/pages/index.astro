@@ -11,6 +11,10 @@ import { EXPERIENCES, SITE } from "../config/site";
 const profile = (await getEntry("profile", "main"))!.data;
 const featured = (await getCollection("projects", (p) => p.data.featured)).sort((a, b) => a.data.order - b.data.order);
 const chapters = EXPERIENCES.filter((e) => e.href !== "/");
+// Statement typography: bold display words, the last word hand-written in script.
+const statementWords = (profile.statement ?? "").trim().split(/\s+/);
+const statementLast = statementWords.pop() ?? "";
+const statementLead = statementWords.join(" ");
 ---
 
 <BaseLayout section="/">
@@ -57,7 +61,10 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
         <span class="text-muted">{profile.location.coords}</span>
       </div>
       <!-- Slot for Praveen's own one-liner (pending); falls back to the brief's statement. -->
-      <p id="statement" class="editorial band-statement" data-band-statement>{profile.statement}</p>
+      <p id="statement" class="band-statement" data-band-statement>
+        <span class="display band-lead">{statementLead}</span>
+        <span class="script script-bold band-script">{statementLast}</span>
+      </p>
       <ul class="band-pillars micro" aria-label="Disciplines">
         <li><span class="band-index">A</span> AI / ML engineering</li>
         <li><span class="band-index">B</span> Full-stack systems</li>
@@ -193,9 +200,20 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
   }
   .band-statement {
     margin: 0;
-    font-size: clamp(3.5rem, 1rem + 10vw, 12rem);
-    line-height: 0.92;
-    max-width: 12ch;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .band-lead {
+    font-size: clamp(3.25rem, 1rem + 9vw, 10.5rem);
+    line-height: 0.9;
+    max-width: 10ch;
+  }
+  .band-script {
+    font-size: clamp(5rem, 1.5rem + 14vw, 17rem);
+    line-height: 0.75;
+    color: var(--accent-as-text);
+    margin: -0.08em 0 0 0.12em;
   }
   .band-pillars {
     display: flex;

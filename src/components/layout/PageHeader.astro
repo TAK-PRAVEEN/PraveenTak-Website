@@ -25,7 +25,7 @@ const long = title.length > 12;
   {
     (lead || statement) && (
       <div class="grid-12 below">
-        {statement && <p class="editorial statement col-span-4 md:col-span-5">{statement}</p>}
+        {statement && <p class="script statement col-span-4 md:col-span-5">{statement}</p>}
         {lead && <p class="lead col-span-4 md:col-span-6 md:col-start-7">{lead}</p>}
       </div>
     )
@@ -60,7 +60,7 @@ const long = title.length > 12;
     row-gap: 24px;
   }
   .statement {
-    font-size: var(--text-h3);
+    font-size: clamp(2.5rem, 1.6rem + 3vw, 4.5rem);
     margin: 0;
   }
   .lead {

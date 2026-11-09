@@ -27,17 +27,3 @@ export function onThemeChange(cb: (t: Theme) => void): () => void {
   window.addEventListener("themechange", h);
   return () => window.removeEventListener("themechange", h);
 }
-
-/** Follow the OS setting live, unless the visitor has chosen explicitly. */
-export function followSystem() {
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  mq.addEventListener("change", (e) => {
-    let stored: string | null = null;
-    try {
-      stored = localStorage.getItem(KEY);
-    } catch {
-      /* ignore */
-    }
-    if (stored !== "light" && stored !== "dark") setTheme(e.matches ? "dark" : "light", false);
-  });
-}
