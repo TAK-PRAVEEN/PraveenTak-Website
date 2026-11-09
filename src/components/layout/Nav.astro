@@ -66,6 +66,7 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
 
 <script>
   import { currentTheme, followSystem, onThemeChange, setTheme } from "../../lib/theme";
+  import { inkTransition } from "../../lib/ink-transition";
 
   function setupNav() {
     const nav = document.querySelector<HTMLElement>("[data-nav]");
@@ -104,7 +105,16 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     syncThemeLabel();
     followSystem();
     onThemeChange(syncThemeLabel);
-    if (themeBtn) themeBtn.onclick = () => setTheme(currentTheme() === "dark" ? "light" : "dark");
+    // Ink drops from the button and spreads across the page (see ink-transition.ts).
+    let switching = false;
+    if (themeBtn)
+      themeBtn.onclick = async () => {
+        if (switching) return;
+        switching = true;
+        const next = currentTheme() === "dark" ? "light" : "dark";
+        await inkTransition(themeBtn, () => setTheme(next));
+        switching = false;
+      };
     toggle.onclick = () => void setOpen(toggle.getAttribute("aria-expanded") !== "true");
     panel.onclick = (e) => {
       // Navigating away: close instantly so the next page isn't covered.

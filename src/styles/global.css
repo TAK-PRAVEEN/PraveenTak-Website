@@ -326,6 +326,31 @@
   }
 }
 
+/* ---------- Ink-drop theme transition (src/lib/ink-transition.ts) ----------
+   Old page stays put underneath; the new page is revealed through a JS-driven
+   mask. The keyframes only keep the transition alive for the mask's duration. */
+@keyframes ink-hold {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+html.ink-transition::view-transition-old(root),
+html.ink-transition::view-transition-new(root) {
+  animation: ink-hold 1.3s linear both;
+  mix-blend-mode: normal;
+}
+html.ink-transition::view-transition-new(root) {
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+html.ink-transition::view-transition-old(root) {
+  z-index: 0;
+}
+html.ink-transition::view-transition-new(root) {
+  z-index: 1;
+}
+
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,
