@@ -1,0 +1,154 @@
+---
+/**
+ * Home scene: sideways strip. The chapters travel horizontally while the page
+ * scrolls vertically (desktop pin; see home-motion.ts). On phones and under
+ * reduced motion it is a native horizontal scroller with snap points.
+ */
+import { EXPERIENCES } from "../../config/site";
+
+const VISUAL: Record<string, string> = {
+  "/about": "/media/portrait-still.webp",
+  "/lab": "/media/turntable/blue-30.webp",
+  "/experiments": "/media/sculpture-lavender.webp",
+};
+const chapters = EXPERIENCES.filter((e) => e.href !== "/");
+---
+
+<section class="strip" data-strip aria-labelledby="strip-title">
+  <div class="strip-sticky">
+    <div class="frame strip-head micro">
+      <h2 id="strip-title" data-decode>Index — {chapters.length} chapters</h2>
+      <span class="dim">Scroll →</span>
+    </div>
+    <ol class="strip-track" data-strip-track>
+      {
+        chapters.map((c) => (
+          <li class="strip-cell" data-surface={c.surface} data-accent={c.accent}>
+            <a href={c.href} class="chapter" data-liquid data-decode-hover>
+              <span class="numeral outline chapter-num" aria-hidden="true">{c.index}</span>
+              {VISUAL[c.href] && <img class="chapter-visual" src={VISUAL[c.href]} alt="" loading="lazy" decoding="async" />}
+              <span class="chapter-text">
+                <span class="hud chapter-kicker" data-decode-target>{c.index} / {c.label}</span>
+                <span class="display chapter-label">{c.label}</span>
+                <span class="chapter-summary">{c.summary}</span>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .strip {
+    padding-top: clamp(64px, 10vw, 160px);
+  }
+  .strip-head {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: 28px;
+  }
+  .strip-head h2 {
+    font: inherit;
+    margin: 0;
+  }
+  .dim {
+    color: var(--fg-muted);
+  }
+  .strip-track {
+    list-style: none;
+    margin: 0;
+    padding: 0 var(--margin);
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .strip-track::-webkit-scrollbar {
+    display: none;
+  }
+  .strip-cell {
+    flex: 0 0 min(78vw, 460px);
+    scroll-snap-align: start;
+  }
+  .chapter {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: min(64svh, 600px);
+    padding: 24px;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--fg);
+    overflow: hidden;
+    isolation: isolate;
+    transition: border-color var(--dur) var(--ease-out);
+  }
+  .chapter:hover {
+    border-color: var(--line-strong);
+  }
+  .chapter-num {
+    font-size: clamp(6rem, 4rem + 6vw, 11rem);
+    -webkit-text-stroke-color: var(--accent);
+  }
+  [data-accent="mono"] .chapter-num {
+    -webkit-text-stroke-color: var(--fg);
+  }
+  .chapter-visual {
+    position: absolute;
+    right: -8%;
+    top: 4%;
+    width: 78%;
+    z-index: -1;
+    opacity: 0.9;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .chapter:hover .chapter-visual {
+    transform: scale(1.06) rotate(-3deg);
+  }
+  :global(:root[data-theme="dark"]) [data-surface="paper"] .chapter-visual[src*="portrait"] {
+    filter: invert(1);
+    mix-blend-mode: screen;
+  }
+  [data-surface="paper"] .chapter-visual[src*="portrait"] {
+    mix-blend-mode: multiply;
+  }
+  .chapter-text {
+    display: grid;
+    gap: 10px;
+  }
+  .chapter-kicker {
+    color: var(--accent-as-text);
+  }
+  .chapter-label {
+    font-size: clamp(2.4rem, 1.6rem + 2.4vw, 3.8rem);
+  }
+  .chapter-summary {
+    color: var(--fg-muted);
+  }
+
+  /* Desktop with motion: the track is pinned and translated by scroll instead of scrolled. */
+  @media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
+    .strip-sticky {
+      height: 100svh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .strip-head {
+      width: 100%;
+    }
+    .strip-track {
+      overflow: visible;
+      scroll-snap-type: none;
+      width: max-content;
+      will-change: transform;
+    }
+  }
+</style>

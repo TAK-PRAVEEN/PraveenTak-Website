@@ -119,6 +119,8 @@ export function animatePanel(panel: HTMLElement, origin: HTMLElement, open: bool
   const r = origin.getBoundingClientRect();
   const at = `${r.left + r.width / 2}px ${r.top + r.height / 2 - panel.getBoundingClientRect().top}px`;
   if (reduced()) return Promise.resolve();
+  // Interrupting (e.g. Close tapped while opening) cancels the running animation.
+  gsap.killTweensOf(panel);
   return new Promise((resolve) => {
     gsap.fromTo(
       panel,

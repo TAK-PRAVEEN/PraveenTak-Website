@@ -1,0 +1,209 @@
+---
+/**
+ * Home scene: "Through the window" → scroll-rotating sculpture (Lab, electric blue).
+ * A rounded window opens from the centre to full screen; inside, a Blender-rendered
+ * chrome sculpture turns as you scroll (90-frame image sequence on a canvas).
+ * Choreography lives in components/motion/home-motion.ts.
+ * Reduced motion: no pin, window already open, one still frame.
+ */
+import { getCollection } from "astro:content";
+
+const lab = (await getCollection("lab")).sort((a, b) => a.data.order - b.data.order);
+const gans = lab.find((l) => l.id === "gans-under-data-scarcity");
+const stats = gans?.data.metrics.slice(0, 3) ?? [];
+---
+
+<section class="win" data-win aria-labelledby="win-title">
+  <div class="win-sticky">
+    <p class="hud win-before" aria-hidden="true" data-win-before>Look through ↓</p>
+    <div class="win-pane" data-win-pane data-surface="ink" data-accent="blue">
+      <div class="win-glow" aria-hidden="true"></div>
+      <img class="win-still" src="/media/turntable/blue-00.webp" alt="" width="900" height="900" loading="lazy" decoding="async" data-win-still />
+      <canvas class="win-canvas" aria-hidden="true" data-win-canvas></canvas>
+
+      <div class="frame win-inner">
+        <div class="win-top hud">
+          <span data-decode>04 — AI / ML Lab</span>
+          <span><span class="dim">ROT</span> <span data-win-rot>000</span>° · <span class="dim">F</span> <span data-win-frame>00</span>/90</span>
+        </div>
+
+        <div class="win-copy">
+          <h2 id="win-title" class="display win-title">Research,<br />rendered.</h2>
+          <p class="win-lead">{gans?.data.summary ?? "Research and experiments in generative models, computer vision and agentic systems."}</p>
+          <dl class="win-stats">
+            {
+              stats.map((m) => (
+                <div>
+                  <dt class="hud">{m.label}</dt>
+                  <dd class="numeral">{m.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+          <a href="/lab" class="hud win-link" data-liquid data-decode-hover><span data-decode-target>Enter the lab</span> →</a>
+        </div>
+
+        <p class="hud win-cap">Fig. 02 — Liquid chrome, Blender · Cycles · 90 frames</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .win {
+    position: relative;
+  }
+  .win-sticky {
+    position: relative;
+    height: 100svh;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .win {
+      height: 340svh;
+    }
+    .win-sticky {
+      position: sticky;
+      top: 0;
+    }
+  }
+  .win-before {
+    position: absolute;
+    left: 54%;
+    top: 18%;
+    color: var(--fg-muted);
+  }
+  .win-pane {
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    color: var(--fg);
+    overflow: hidden;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .win-pane {
+      clip-path: inset(24% 6% 24% 54% round 28px);
+    }
+  }
+  .win-glow {
+    position: absolute;
+    right: 8%;
+    top: 50%;
+    width: 60vmin;
+    aspect-ratio: 1;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in oklab, var(--blue) 40%, transparent), transparent 65%);
+    filter: blur(40px);
+  }
+  .win-still,
+  .win-canvas {
+    position: absolute;
+    right: max(2vw, 16px);
+    top: 50%;
+    width: min(62vmin, 720px);
+    height: min(62vmin, 720px);
+    transform: translateY(-50%);
+    object-fit: contain;
+  }
+  .win-canvas {
+    opacity: 0;
+  }
+  :global(html.win-ready) .win-canvas {
+    opacity: 1;
+  }
+  :global(html.win-ready) .win-still {
+    opacity: 0;
+  }
+  @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+    .win-pane {
+      clip-path: inset(46% 10% 6% 10% round 24px);
+    }
+  }
+  @media (max-width: 767px) {
+    .win-still,
+    .win-canvas {
+      top: auto;
+      bottom: 4%;
+      right: 50%;
+      transform: translateX(50%);
+      width: 86vw;
+      height: 86vw;
+    }
+  }
+  .win-inner {
+    position: relative;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding-block: calc(var(--nav-h) + 20px) 24px;
+  }
+  .win-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .dim {
+    color: var(--fg-muted);
+  }
+  .win-copy {
+    align-self: center;
+    max-width: min(560px, 100%);
+    display: grid;
+    gap: 22px;
+  }
+  .win-title {
+    margin: 0;
+    font-size: clamp(3rem, 1.4rem + 6vw, 7rem);
+  }
+  .win-lead {
+    margin: 0;
+    color: var(--fg-muted);
+    font-size: var(--text-lead);
+    line-height: 1.45;
+  }
+  .win-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 36px;
+    margin: 0;
+  }
+  .win-stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 6px;
+  }
+  .win-stats dd {
+    margin: 0;
+    font-size: clamp(1.6rem, 1rem + 1.8vw, 2.6rem);
+    color: var(--accent-as-text);
+  }
+  .win-stats dt {
+    color: var(--fg-muted);
+    font-size: 9px;
+  }
+  .win-link {
+    width: fit-content;
+    padding: 12px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+  }
+  .win-link:hover {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .win-cap {
+    color: var(--fg-muted);
+    font-size: 9px;
+  }
+  @media (max-width: 767px) {
+    .win-copy {
+      align-self: start;
+      margin-top: 24px;
+    }
+  }
+</style>

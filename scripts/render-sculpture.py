@@ -35,6 +35,8 @@ ap.add_argument("--size", type=int, default=1600)
 ap.add_argument("--samples", type=int, default=160)
 ap.add_argument("--frames", type=int, default=0, help="render an N-frame 360° turntable instead of a still")
 ap.add_argument("--seed", type=int, default=7)
+ap.add_argument("--core", type=float, default=0.55, help="how pale the facing core is (1 = white, 0 = full tint)")
+ap.add_argument("--film", type=float, default=380.0, help="thin-film thickness in nm (0 = off; it shifts hues toward blue)")
 a = ap.parse_args(argv)
 
 
@@ -76,14 +78,14 @@ def chrome_material():
     fres = nodes.new("ShaderNodeLayerWeight")
     fres.inputs["Blend"].default_value = 0.35
     ramp = nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].color = tuple(0.55 + 0.45 * c for c in TINT[:3]) + (1,)
+    ramp.color_ramp.elements[0].color = tuple(a.core + (1 - a.core) * c for c in TINT[:3]) + (1,)
     ramp.color_ramp.elements[1].color = TINT
     links.new(fres.outputs["Facing"], ramp.inputs["Fac"])
     links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
     bsdf.inputs["Metallic"].default_value = 1.0
     bsdf.inputs["Roughness"].default_value = 0.05
-    if "Thin Film Thickness" in bsdf.inputs:
-        bsdf.inputs["Thin Film Thickness"].default_value = 380.0
+    if "Thin Film Thickness" in bsdf.inputs and a.film > 0:
+        bsdf.inputs["Thin Film Thickness"].default_value = a.film
         bsdf.inputs["Thin Film IOR"].default_value = 1.4
     return mat
 
@@ -143,7 +145,7 @@ def text_object():
     curve.extrude = 0.22
     curve.bevel_depth = 0.035
     curve.bevel_resolution = 5
-    curve.size = 1.9
+    curve.size = 3.3
     obj = bpy.data.objects.new("Sculpture", curve)
     bpy.context.collection.objects.link(obj)
     obj.rotation_euler = (math.radians(78), math.radians(0), math.radians(-14))

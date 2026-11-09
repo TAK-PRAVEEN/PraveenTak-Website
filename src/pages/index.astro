@@ -1,23 +1,26 @@
 ---
-import { getCollection, getEntry } from "astro:content";
-import { ArrowUpRight } from "@lucide/astro";
+import { getEntry } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import StatusDot from "../components/ui/StatusDot.astro";
 import LinkButton from "../components/ui/LinkButton.astro";
 import Signature from "../components/motion/Signature.astro";
 import BinaryPortrait from "../components/3d/BinaryPortrait.astro";
-import { EXPERIENCES, SITE } from "../config/site";
+import WindowScene from "../components/home/WindowScene.astro";
+import StackedWork from "../components/home/StackedWork.astro";
+import ChapterStrip from "../components/home/ChapterStrip.astro";
+import BigNumbers from "../components/home/BigNumbers.astro";
+import Intro from "../components/motion/Intro.astro";
+import { SITE } from "../config/site";
 
 const profile = (await getEntry("profile", "main"))!.data;
-const featured = (await getCollection("projects", (p) => p.data.featured)).sort((a, b) => a.data.order - b.data.order);
-const chapters = EXPERIENCES.filter((e) => e.href !== "/");
 // Statement typography: bold display words, the last word hand-written in script.
 const statementWords = (profile.statement ?? "").trim().split(/\s+/);
 const statementLast = statementWords.pop() ?? "";
 const statementLead = statementWords.join(" ");
 ---
 
-<BaseLayout section="/">
+<BaseLayout section="/" showcase>
+  <Intro />
   <!-- 01 — HERO ----------------------------------------------------------- -->
   <section id="hero" class="hero frame" aria-labelledby="hero-title">
     <div class="hero-meta micro">
@@ -73,52 +76,11 @@ const statementLead = statementWords.join(" ");
     </div>
   </section>
 
-  <!-- INDEX OF EXPERIENCES ------------------------------------------------- -->
-  <section class="frame chapters" aria-labelledby="chapters-title">
-    <div class="section-meta micro">
-      <h2 id="chapters-title" data-decode>Index</h2>
-      <span class="text-muted">{chapters.length} chapters</span>
-    </div>
-    <ol class="chapter-list">
-      {
-        chapters.map((c) => (
-          <li>
-            <a href={c.href} class="chapter" data-liquid data-decode-hover>
-              <span class="micro chapter-index" data-decode-target>{c.index}</span>
-              <span class="heading chapter-label">{c.label}</span>
-              <span class="chapter-summary">{c.summary}</span>
-              <ArrowUpRight class="chapter-arrow" size={28} aria-hidden="true" />
-            </a>
-          </li>
-        ))
-      }
-    </ol>
-  </section>
-
-  <!-- FEATURED WORK -------------------------------------------------------- -->
-  <section class="frame featured" aria-labelledby="featured-title">
-    <div class="section-meta micro">
-      <h2 id="featured-title" data-decode>Selected work</h2>
-      <a href="/work" class="link-underline">All projects →</a>
-    </div>
-    <div class="grid-12 featured-grid">
-      {
-        featured.map((p, i) => (
-          <a href={`/work/${p.id}`} class="feature col-span-4">
-            <span class="micro text-muted">P—0{i + 1}</span>
-            <h3 class="heading feature-title">{p.data.title}</h3>
-            <p class="feature-summary">{p.data.summary}</p>
-            {p.data.metrics[0] && (
-              <p class="feature-metric">
-                <span class="display">{p.data.metrics[0].value}</span>
-                <span class="micro text-muted">{p.data.metrics[0].label}</span>
-              </p>
-            )}
-          </a>
-        ))
-      }
-    </div>
-  </section>
+  <!-- SCENES (home film): window → rotating sculpture, stacked work, sideways index, numbers -->
+  <WindowScene />
+  <StackedWork />
+  <ChapterStrip />
+  <BigNumbers />
 </BaseLayout>
 
 <script>
@@ -265,122 +227,4 @@ const statementLead = statementWords.join(" ");
     }
   }
 
-  /* ---- Shared section meta ---- */
-  .section-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--line-strong);
-  }
-  .section-meta h2 {
-    font: inherit;
-    margin: 0;
-  }
-
-  /* ---- Chapters ---- */
-  .chapters {
-    padding-block: clamp(64px, 10vw, 160px) 0;
-  }
-  .chapter-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .chapter {
-    display: grid;
-    grid-template-columns: 40px 1fr auto;
-    align-items: center;
-    gap: 8px 16px;
-    padding: clamp(16px, 2vw, 28px) 8px;
-    border-bottom: 1px solid var(--line);
-    transition:
-      background-color var(--dur) var(--ease-out),
-      color var(--dur) var(--ease-out),
-      padding var(--dur) var(--ease-out);
-  }
-  .chapter-label {
-    font-size: clamp(2rem, 1rem + 4vw, 4.5rem);
-  }
-  .chapter-summary {
-    grid-column: 2;
-    color: var(--fg-muted);
-  }
-  .chapter :global(.chapter-arrow) {
-    grid-column: 3;
-    grid-row: 1;
-    transition: transform var(--dur) var(--ease-out);
-  }
-  @media (min-width: 768px) {
-    .chapter {
-      grid-template-columns: 80px minmax(0, 5fr) minmax(0, 4fr) auto;
-    }
-    .chapter-summary {
-      grid-column: 3;
-    }
-    .chapter :global(.chapter-arrow) {
-      grid-column: 4;
-    }
-  }
-  .chapter:hover,
-  .chapter:focus-visible {
-    background: var(--fg);
-    color: var(--bg);
-    padding-inline: 24px;
-  }
-  .chapter:hover .chapter-summary,
-  .chapter:focus-visible .chapter-summary {
-    color: color-mix(in oklab, var(--bg) 75%, var(--fg));
-  }
-  .chapter:hover :global(.chapter-arrow) {
-    transform: rotate(45deg);
-  }
-
-  /* ---- Featured ---- */
-  .featured {
-    padding-top: clamp(64px, 10vw, 160px);
-  }
-  .featured-grid {
-    row-gap: 0;
-  }
-  .feature {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 24px 0 32px;
-    border-bottom: 1px solid var(--line);
-  }
-  @media (min-width: 768px) {
-    .feature {
-      padding: 24px 24px 32px 0;
-      border-bottom: 0;
-      border-right: 1px solid var(--line);
-    }
-    .feature:last-child {
-      border-right: 0;
-    }
-  }
-  .feature-title {
-    font-size: var(--text-h3);
-    margin: 0;
-  }
-  .feature:hover .feature-title {
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 6px;
-  }
-  .feature-summary {
-    margin: 0;
-    color: var(--fg-muted);
-  }
-  .feature-metric {
-    margin: auto 0 0;
-    padding-top: 24px;
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-  }
-  .feature-metric .display {
-    font-size: clamp(3rem, 2rem + 3vw, 5rem);
-  }
 </style>

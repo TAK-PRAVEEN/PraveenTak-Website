@@ -290,3 +290,27 @@ No push and no production deploy without your explicit go-ahead.
 
 Still needed from you before Phase 3: project list with links and real outcomes, current role
 and availability, résumé, social links, any Blender renders, chatbot AI provider, custom domain.
+
+---
+
+## 13. Sci-fi layer & home film (built 09 Nov 2026)
+
+| Piece | Where | Notes |
+|---|---|---|
+| Michroma (HUD/numerals) | `--font-hud`, `.hud`, `.numeral` | Instrument details and big numbers only |
+| Corinthia (script) | `--font-script`, `.script` | Human counterpoint to the machine type |
+| Decode text | `data-decode`, `data-decode-hover` | GSAP ScrambleText; aria-label keeps the real text |
+| Masked line reveal | `data-reveal-lines` | SplitText `mask: "lines"` on page titles |
+| Terminal caret | `.caret` | Blinking `_` after technical labels |
+| Instrument nav | `Nav.astro` + `Hud.astro` | IST clock, chapter 0X/07, progress line |
+| Side scale | `Hud.astro` | Tick rail + marker + % (desktop) |
+| Command palette | `CommandPalette.astro` | Ctrl/⌘K — pages, work, lab, actions |
+| Radial dial menu | `Nav.astro` (mobile) | Drag to spin, elastic snap, core opens |
+| Ink-drop theme switch | `lib/ink-transition.ts` | View Transition + animated SVG noise mask |
+| Home: window → sculpture | `home/WindowScene.astro` | 90-frame Blender turntable scrubbed by scroll |
+| Home: stacked work | `home/StackedWork.astro` | Sticky cards that recede as the next arrives |
+| Home: sideways index | `home/ChapterStrip.astro` | Pinned horizontal travel (desktop) / swipe (phone) |
+| Home: big numbers | `home/BigNumbers.astro` | Count-up; every figure sourced from content |
+| Home finale | `Footer.astro` (`showcase`) | Blender chrome "PT", pointer tilt |
+| First-visit intro | `motion/Intro.astro` | Once per browser, skippable; code not video |
+| Blender pipeline | `scripts/render-sculpture.py`, `prepare-renders.sh` | Cycles/OptiX on the RTX 4050 |

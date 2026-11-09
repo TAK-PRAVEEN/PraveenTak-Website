@@ -7,14 +7,17 @@ interface Props {
   title: string;
   lead?: string;
   statement?: string;
+  /** Optional 3D render (transparent PNG/WebP) floating beside the title. */
+  visual?: string;
 }
-const { section, title, lead, statement } = Astro.props;
+const { section, title, lead, statement, visual } = Astro.props;
 const exp = experienceFor(section);
 /** Long titles (case studies) get a smaller display size so they stay 1–2 lines. */
 const long = title.length > 12;
 ---
 
-<header class="frame page-header">
+<header class:list={["frame page-header", { "has-visual": visual }]}>
+  {visual && <img class="visual" src={visual} alt="" width="1600" height="1600" decoding="async" fetchpriority="high" aria-hidden="true" />}
   <div class="meta micro">
     <span data-decode>{exp.index} — {exp.label}</span>
     <span class="text-muted" data-decode>{exp.summary}</span>
@@ -34,8 +37,42 @@ const long = title.length > 12;
 
 <style>
   .page-header {
+    position: relative;
+    isolation: isolate;
     padding-top: calc(var(--nav-h) + clamp(32px, 6vw, 96px));
     padding-bottom: clamp(48px, 7vw, 112px);
+  }
+  /* Floating 3D render (Blender) beside the title. */
+  .visual {
+    position: absolute;
+    z-index: -1;
+    right: max(-4vw, -40px);
+    top: calc(var(--nav-h) + 24px);
+    width: min(48vw, 640px);
+    height: auto;
+    pointer-events: none;
+    animation: float 7s ease-in-out infinite;
+  }
+  @keyframes float {
+    50% {
+      transform: translateY(-16px) rotate(-2deg);
+    }
+  }
+  @media (max-width: 767px) {
+    .visual {
+      position: relative;
+      right: auto;
+      top: auto;
+      width: 86%;
+      margin: 0 auto -8%;
+      display: block;
+    }
+  }
+  /* With a visual, the lead moves to the left column so it never sits on the render. */
+  @media (min-width: 768px) {
+    .has-visual .lead {
+      grid-column: 1 / span 6;
+    }
   }
   .meta {
     display: flex;

@@ -23,9 +23,11 @@ interface Props {
   accent?: Accent;
   /** Hide the footer (e.g. on a full-bleed experience). */
   bare?: boolean;
+  /** Home: the footer becomes the finale (3D chrome lettering). */
+  showcase?: boolean;
 }
 
-const { title, description = SITE.description, section = Astro.url.pathname, bare = false } = Astro.props;
+const { title, description = SITE.description, section = Astro.url.pathname, bare = false, showcase = false } = Astro.props;
 const exp = experienceFor("/" + (section.split("/")[1] ?? ""));
 const surface = Astro.props.surface ?? exp.surface;
 const accent = Astro.props.accent ?? exp.accent;
@@ -84,7 +86,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
     <main id="main" tabindex="-1">
       <slot />
     </main>
-    {!bare && <Footer />}
+    {!bare && <Footer showcase={showcase} />}
     <LiquidFX />
     <TextFX />
     <Hud />

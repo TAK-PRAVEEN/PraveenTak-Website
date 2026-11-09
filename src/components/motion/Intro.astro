@@ -1,0 +1,150 @@
+---
+/**
+ * First-visit intro ("boot sequence"): Ink screen, HUD lines decode, a binary
+ * counter runs to 100, then the screen lifts like a shutter onto the hero.
+ * Shown once per browser (localStorage), skippable (click / any key),
+ * never under prefers-reduced-motion. ~2 s.
+ */
+---
+
+<script is:inline>
+  (function () {
+    try {
+      if (localStorage.getItem("intro-seen")) return;
+    } catch (e) {}
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Only on a real first page load — never when arriving via client-side navigation.
+    if (document.readyState !== "loading") return;
+    document.documentElement.classList.add("intro-on");
+  })();
+</script>
+
+<div class="intro" data-intro aria-hidden="true">
+  <div class="intro-frame">
+    <div class="intro-top hud">
+      <span data-intro-line>PRAVEEN_TAK // PORTFOLIO_2026</span>
+      <span data-intro-line>N 26°54′ / E 75°47′</span>
+    </div>
+    <div class="intro-mid">
+      <span class="numeral intro-count" data-intro-count>000</span>
+      <span class="hud intro-label" data-intro-line>INITIALISING BINARY PORTRAIT</span>
+    </div>
+    <div class="intro-bar"><span data-intro-bar></span></div>
+    <div class="intro-bottom hud">
+      <span data-intro-line>AI/ML · FULL-STACK · CREATIVE TECH</span>
+      <span class="intro-skip">PRESS ANY KEY TO SKIP</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
+  gsap.registerPlugin(ScrambleTextPlugin);
+
+  function run() {
+    const root = document.documentElement;
+    const el = document.querySelector<HTMLElement>("[data-intro]");
+    if (!el || !root.classList.contains("intro-on")) {
+      el?.remove();
+      return;
+    }
+    root.style.overflow = "hidden";
+    const count = el.querySelector<HTMLElement>("[data-intro-count]")!;
+    const bar = el.querySelector<HTMLElement>("[data-intro-bar]")!;
+    const state = { n: 0 };
+
+    const finish = () => {
+      try {
+        localStorage.setItem("intro-seen", "1");
+      } catch {
+        /* ignore */
+      }
+      root.style.overflow = "";
+      root.classList.remove("intro-on");
+      el.remove();
+      window.removeEventListener("keydown", skip);
+      el.removeEventListener("click", skip);
+    };
+    const tl = gsap.timeline({ onComplete: finish });
+    const skip = () => tl.progress(1);
+    window.addEventListener("keydown", skip, { once: true });
+    el.addEventListener("click", skip, { once: true });
+
+    el.querySelectorAll<HTMLElement>("[data-intro-line]").forEach((line, i) => {
+      tl.to(line, { duration: 0.7, scrambleText: { text: line.textContent ?? "", chars: "01", speed: 0.7 } }, i * 0.08);
+    });
+    tl.to(
+      state,
+      {
+        n: 100,
+        duration: 1.35,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          count.textContent = String(Math.round(state.n)).padStart(3, "0");
+          bar.style.transform = `scaleX(${state.n / 100})`;
+        },
+      },
+      0.1,
+    );
+    tl.to(el, { clipPath: "inset(0% 0% 100% 0%)", duration: 0.75, ease: "expo.inOut" }, "+=0.15");
+  }
+  // Runs on the first page load only (the intro is never re-shown by client navigation).
+  run();
+</script>
+
+<style>
+  .intro {
+    display: none;
+  }
+  :global(html.intro-on) .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: block;
+    background: var(--ink);
+    color: var(--paper);
+    clip-path: inset(0% 0% 0% 0%);
+    cursor: default;
+  }
+  .intro-frame {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    gap: 18px;
+    padding: 28px max(16px, var(--margin));
+  }
+  .intro-top,
+  .intro-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .intro-mid {
+    align-self: end;
+    display: grid;
+    gap: 14px;
+  }
+  .intro-count {
+    font-size: clamp(6rem, 3rem + 16vw, 18rem);
+    color: var(--paper);
+  }
+  .intro-label {
+    color: var(--orange);
+  }
+  .intro-bar {
+    height: 2px;
+    background: #2a2a2e;
+  }
+  .intro-bar span {
+    display: block;
+    height: 100%;
+    background: var(--orange);
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+  }
+  .intro-skip {
+    color: #a3a3a6;
+  }
+</style>

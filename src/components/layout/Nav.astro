@@ -187,9 +187,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     const label = document.querySelector<HTMLElement>("[data-nav-toggle-label]");
     if (!nav || !toggle || !panel || !label) return;
 
-    let busy = false;
     const setOpen = async (open: boolean, animate = true) => {
-      if (busy) return;
       toggle.setAttribute("aria-expanded", String(open));
       label.textContent = open ? "Close" : "Menu";
       document.documentElement.style.overflow = open ? "hidden" : "";
@@ -198,15 +196,11 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
         dialApi?.spinIn();
       }
       if (animate) {
-        busy = true;
-        try {
-          const { animatePanel } = await import("../motion/liquid");
-          await animatePanel(panel, toggle, open);
-        } finally {
-          busy = false;
-        }
+        const { animatePanel } = await import("../motion/liquid");
+        await animatePanel(panel, toggle, open);
       }
-      if (!open) panel.hidden = true;
+      // A newer toggle may have happened while this animation ran: obey the latest state.
+      if (toggle.getAttribute("aria-expanded") !== "true") panel.hidden = true;
     };
     void setOpen(false, false);
     dialApi = dialApi ?? setupDial();

@@ -1,0 +1,190 @@
+---
+/**
+ * Home scene: stacked work cards. Full-height panels stick under the nav and
+ * the next one slides up over the previous (which scales back and dims —
+ * see home-motion.ts). Works as a plain list without JS / with reduced motion.
+ */
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import { ArrowUpRight } from "@lucide/astro";
+import TagBlock from "../ui/TagBlock.astro";
+
+const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order).slice(0, 4);
+---
+
+<section class="stack" data-accent="lime" aria-labelledby="stack-title">
+  <div class="frame stack-head micro">
+    <h2 id="stack-title" data-decode>Selected work</h2>
+    <a href="/work" class="link-underline" data-decode-hover><span data-decode-target>All projects</span> →</a>
+  </div>
+  <ol class="stack-list">
+    {
+      projects.map((p, i) => (
+        <li class="stack-item" style={`--i:${i}`} data-stack-item>
+          <a href={`/work/${p.id}`} class="card frame" data-stack-card data-liquid>
+            <div class="card-inner grid-12">
+              <div class="card-copy col-span-4 md:col-span-6">
+                <p class="hud card-meta">
+                  <span>P—{String(i + 1).padStart(2, "0")}</span>
+                  {p.data.client && <span class="dim">{p.data.client}</span>}
+                  {p.data.year && <span class="dim">{p.data.year}</span>}
+                </p>
+                <h3 class="display card-title">{p.data.title}</h3>
+                <p class="card-summary">{p.data.summary}</p>
+                {p.data.metrics[0] && (
+                  <p class="card-metric">
+                    <TagBlock size="lg">{p.data.metrics[0].value}</TagBlock>
+                    <span class="micro dim">{p.data.metrics[0].label}</span>
+                  </p>
+                )}
+                <span class="hud card-cta">
+                  Open case study <ArrowUpRight size={14} aria-hidden="true" />
+                </span>
+              </div>
+              <div class="card-visual col-span-4 md:col-span-6" aria-hidden="true">
+                {p.data.cover ? (
+                  <Image src={p.data.cover} alt="" widths={[600, 1000, 1400]} sizes="(min-width: 768px) 46vw, 92vw" class="card-cover" loading="lazy" />
+                ) : (
+                  <div class="card-numeral">
+                    <span class="numeral outline">{String(i + 1).padStart(2, "0")}</span>
+                    <ul class="hud card-stack">
+                      {p.data.stack.slice(0, 6).map((s) => (
+                        <li>{s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  .stack {
+    padding-top: clamp(64px, 10vw, 160px);
+  }
+  .stack-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .stack-head h2 {
+    font: inherit;
+    margin: 0;
+  }
+  .stack-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .stack-item {
+    position: sticky;
+    top: calc(var(--nav-h) + var(--i) * 14px);
+    padding-top: 24px;
+  }
+  .card {
+    display: block;
+    transform-origin: 50% 0;
+    will-change: transform;
+  }
+  .card-inner {
+    position: relative;
+    min-height: min(76svh, 760px);
+    padding: clamp(24px, 3vw, 44px);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: var(--bg);
+    box-shadow: 0 -24px 60px -40px rgb(0 0 0 / 0.35);
+    row-gap: 28px;
+    align-items: stretch;
+  }
+  /* Receding cards darken (opaque) rather than turn see-through. */
+  .card-inner::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 24px;
+    background: var(--ink);
+    opacity: calc(var(--shade, 0) * 0.35);
+    pointer-events: none;
+  }
+  .card-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 0;
+  }
+  .dim {
+    color: var(--fg-muted);
+  }
+  .card-title {
+    margin: 0;
+    font-size: clamp(2.4rem, 1.2rem + 4vw, 5.5rem);
+    max-width: 14ch;
+  }
+  .card-summary {
+    margin: 0;
+    max-width: 46ch;
+    color: var(--fg-muted);
+    font-size: var(--text-lead);
+    line-height: 1.45;
+  }
+  .card-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin: auto 0 0;
+  }
+  .card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-visual {
+    position: relative;
+    min-height: 260px;
+  }
+  .card-visual :global(.card-cover) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 14px;
+    filter: grayscale(1) contrast(1.05);
+    transition: filter var(--dur-slow) var(--ease-out);
+  }
+  .card:is(:hover, :focus-visible) :global(.card-cover) {
+    filter: none;
+  }
+  .card-numeral {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+  .card-numeral .numeral {
+    font-size: clamp(7rem, 4rem + 14vw, 20rem);
+  }
+  .card-stack {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-align: right;
+    color: var(--fg-muted);
+    display: grid;
+    gap: 6px;
+  }
+</style>
