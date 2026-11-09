@@ -10,6 +10,7 @@ import StackedWork from "../components/home/StackedWork.astro";
 import ChapterStrip from "../components/home/ChapterStrip.astro";
 import BigNumbers from "../components/home/BigNumbers.astro";
 import Intro from "../components/motion/Intro.astro";
+import RefSequence from "../components/3d/RefSequence.astro";
 import { SITE } from "../config/site";
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -58,7 +59,7 @@ const statementLead = statementWords.join(" ");
   <!-- PAPER → INK: scroll transition out of the hero ----------------------- -->
   <section class="band" data-surface="ink" data-accent="orange" data-band aria-labelledby="statement">
     <div class="band-ink" data-band-ink data-ink-dark aria-hidden="true"></div>
-    <div class="band-nebula" aria-hidden="true"></div>
+    <div class="band-moon" data-band-moon aria-hidden="true"><RefSequence name="moon" frames={90} fps={6} /></div>
     <div class="frame band-inner" data-band-inner>
       <div class="band-meta micro">
         <span data-decode>01.1 — Statement</span>
@@ -232,20 +233,23 @@ const statementLead = statementWords.join(" ");
   :global(html.ink-bg-on) .band-ink {
     background: transparent;
   }
-  /* Stardust nebula (reference image) drifting behind the statement. */
-  .band-nebula {
+  /* Moon loop (Praveen's video) on the right of the statement; rises as you scroll. */
+  .band-moon {
     position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: url("/media/ref/nebula.webp") center / cover no-repeat;
-    mix-blend-mode: screen;
-    opacity: 0.85;
-    animation: nebula-drift 60s ease-in-out infinite alternate;
+    right: max(4vw, 16px);
+    top: 50%;
+    width: min(38vw, 520px);
+    margin-top: calc(min(38vw, 520px) / -2);
+    z-index: 0;
     pointer-events: none;
   }
-  @keyframes nebula-drift {
-    to {
-      transform: scale(1.12) translate(-2%, 1%);
+  @media (max-width: 767px) {
+    .band-moon {
+      position: relative;
+      right: auto;
+      top: auto;
+      margin: 0 auto -20%;
+      width: 80vw;
     }
   }
 </style>

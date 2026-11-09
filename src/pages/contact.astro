@@ -4,13 +4,14 @@ import { ArrowUpRight } from "@lucide/astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
 import StatusDot from "../components/ui/StatusDot.astro";
+import InkBloom from "../components/3d/InkBloom.astro";
 
 
 const profile = (await getEntry("profile", "main"))!.data;
 ---
 
 <BaseLayout title="Contact" section="/contact" description="Get in touch with Praveen Tak." bare>
-  <PageHeader section="/contact" title="Let's talk"><div slot="visual" class="contact-bloom" aria-hidden="true"><canvas data-bloom-img></canvas></div></PageHeader>
+  <PageHeader section="/contact" title="Let's talk"><InkBloom slot="visual" class="contact-bloom" /></PageHeader>
 
   <section class="frame grid-12 contact" aria-label="Contact">
     <div class="col-span-4 md:col-span-5 details">
@@ -53,42 +54,6 @@ const profile = (await getEntry("profile", "main"))!.data;
   </section>
 </BaseLayout>
 
-<script>
-  // Reference ink bloom, drawn on a canvas: slowly breathes and turns; hover spreads it.
-  document.addEventListener("astro:page-load", () => {
-    const c = document.querySelector<HTMLCanvasElement>("[data-bloom-img]");
-    if (!c || c.dataset.on) return;
-    c.dataset.on = "1";
-    c.addEventListener("contextmenu", (e) => e.preventDefault());
-    const ctx = c.getContext("2d")!;
-    const img = new Image();
-    img.src = "/media/ref/ink-bloom.webp";
-    let hover = 0, h = 0;
-    window.addEventListener("pointermove", (e) => {
-      const r = c.getBoundingClientRect();
-      hover = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) < r.width * 0.4 ? 1 : 0;
-    }, { passive: true });
-    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const draw = (t: number) => {
-      requestAnimationFrame(draw);
-      if (!img.complete) return;
-      const dpr = Math.min(devicePixelRatio || 1, 2);
-      const w = Math.round(c.clientWidth * dpr), hh = Math.round(c.clientHeight * dpr);
-      if (c.width !== w || c.height !== hh) ((c.width = w), (c.height = hh));
-      h += (hover - h) * 0.04;
-      const s = reduced ? 1 : 0.92 + 0.04 * Math.sin(t / 2600) + 0.08 * h;
-      ctx.clearRect(0, 0, w, hh);
-      ctx.save();
-      ctx.translate(w / 2, hh / 2);
-      ctx.rotate(reduced ? 0 : Math.sin(t / 9000) * 0.06);
-      ctx.scale(s, s);
-      const ih = hh, iw = (img.width / img.height) * ih;
-      ctx.drawImage(img, -iw / 2, -ih / 2, iw, ih);
-      ctx.restore();
-    };
-    requestAnimationFrame(draw);
-  });
-</script>
 
 <script>
   // Phase 1: no backend yet, so compose a mailto: instead of pretending to send.
@@ -203,13 +168,5 @@ const profile = (await getEntry("profile", "main"))!.data;
   }
   .contact-bloom {
     width: 100%;
-    aspect-ratio: 1;
-  }
-  .contact-bloom canvas {
-    width: 100%;
-    height: 100%;
-  }
-  :global(:root[data-theme="dark"]) .contact-bloom {
-    filter: invert(1);
   }
 </style>
