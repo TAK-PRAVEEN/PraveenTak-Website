@@ -412,6 +412,12 @@ html.ink-transition::view-transition-new(root) {
   z-index: 1;
 }
 
+/* Ink page transition covers the swap itself: no default cross-fade underneath. */
+html.ink-nav::view-transition-old(root),
+html.ink-nav::view-transition-new(root) {
+  animation: none;
+}
+
 /* ---------- Lenis smooth scroll (src/lib/smooth-scroll.ts) ---------- */
 html.lenis,
 html.lenis body {

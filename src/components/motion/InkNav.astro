@@ -1,0 +1,51 @@
+---
+/** Overlay for the ink page transition (see lib/ink-nav.ts). Persisted across navigations. */
+---
+
+<div class="ink-nav" data-ink-nav aria-hidden="true" transition:persist="ink-nav">
+  <div class="layer fringe" data-ink-nav-fringe></div>
+  <div class="layer core" data-ink-nav-core></div>
+</div>
+
+<script>
+  import { initInkNav } from "../../lib/ink-nav";
+  let ready = false;
+  document.addEventListener("astro:page-load", () => {
+    if (ready) return;
+    ready = true;
+    initInkNav();
+  });
+</script>
+
+<style>
+  .ink-nav {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .ink-nav:global(.on) {
+    visibility: visible;
+  }
+  .layer {
+    position: absolute;
+    inset: 0;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+  /* Coloured bleed at the wet edge, in the destination page's accent. */
+  .fringe {
+    background: var(--orange);
+    opacity: 0.85;
+  }
+  /* The ink itself: dark on paper, pale "milk" in dark mode. */
+  .core {
+    background: var(--ink);
+  }
+  :global(:root[data-theme="dark"]) .core {
+    background: var(--paper);
+  }
+</style>

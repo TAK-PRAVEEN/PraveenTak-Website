@@ -62,6 +62,8 @@ export function initTextFx(): () => void {
         aria: "auto",
         autoSplit: true,
         onSplit(self) {
+          // Masks clip overflow: give descenders (g, p, y) room below each line.
+          gsap.set(self.masks, { paddingBottom: "0.2em", marginBottom: "-0.2em" });
           return gsap.from(self.lines, {
             yPercent: 110,
             duration: 1.05,

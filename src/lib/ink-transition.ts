@@ -17,14 +17,14 @@
 const SCALE = 0.25; // mask resolution relative to the viewport
 const DURATION = 1250; // ms
 
-interface Drop {
+export interface Drop {
   angle: number;
   dist: number; // relative to main radius
   size: number; // relative to main radius
   delay: number; // 0..1 of the timeline
 }
 
-function maskSvg(w: number, h: number, cx: number, cy: number, r: number, drops: Drop[], seed: number): string {
+export function maskSvg(w: number, h: number, cx: number, cy: number, r: number, drops: Drop[], seed: number): string {
   const disp = Math.min(16, 3 + r * 0.18); // fibre tearing grows with the stain, then caps
   let shapes = `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}"/>`;
   for (const d of drops) {
