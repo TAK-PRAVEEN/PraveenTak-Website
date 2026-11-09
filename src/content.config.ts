@@ -77,7 +77,13 @@ const lab = defineCollection({
     title: z.string(),
     summary: z.string(),
     area: z.enum(["generative", "vision", "llm-agents", "research", "other"]),
-    date: z.string(),
+    /** "YYYY-MM" — when the work was done. */
+    date: z.string().regex(/^\d{4}-\d{2}$/),
+    order: z.number(),
+    /** Context line, e.g. "Independent research" or "DRDO, Jodhpur". */
+    context: z.string().optional(),
+    stack: z.array(z.string()).default([]),
+    metrics: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
     links: z.array(link).default([]),
   }),
 });

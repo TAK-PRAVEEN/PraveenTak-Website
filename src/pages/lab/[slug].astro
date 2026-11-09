@@ -1,0 +1,147 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/layout/PageHeader.astro";
+import SpecList from "../../components/ui/SpecList.astro";
+import LinkButton from "../../components/ui/LinkButton.astro";
+import { month } from "../../lib/format";
+
+export async function getStaticPaths() {
+  const entries = (await getCollection("lab")).sort((a, b) => a.data.order - b.data.order);
+  return entries.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: { entry, next: entries.length > 1 ? entries[(i + 1) % entries.length] : null },
+  }));
+}
+
+const { entry, next } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+---
+
+<BaseLayout title={d.title} section="/lab" description={d.summary}>
+  <PageHeader section="/lab" title={d.title} lead={d.summary} />
+
+  <article class="frame study grid-12">
+    <aside class="col-span-4 md:col-span-4 aside">
+      <p class="micro context">
+        <span>{month(d.date)}</span>
+        {d.context && <span>{d.context}</span>}
+      </p>
+      {
+        d.metrics.length > 0 && (
+          <dl class="metrics">
+            {d.metrics.map((m) => (
+              <div class="metric">
+                <dt class="micro label">{m.label}</dt>
+                <dd class="display value">{m.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )
+      }
+      {d.stack.length > 0 && <SpecList title="Stack" items={d.stack.map((s, i) => ({ label: String(i + 1).padStart(2, "0"), value: s }))} />}
+      <div class="links">
+        {d.links.map((l, i) => <LinkButton href={l.href} variant={i === 0 ? "solid" : "outline"} external>{l.label}</LinkButton>)}
+      </div>
+    </aside>
+
+    <div class="col-span-4 md:col-span-7 md:col-start-6 body">
+      <Content />
+    </div>
+  </article>
+
+  {
+    next && (
+      <nav class="frame next" aria-label="Next lab entry">
+        <a href={`/lab/${next.id}`} class="next-link">
+          <span class="micro text-muted">Next entry</span>
+          <span class="display next-title">{next.data.title}</span>
+        </a>
+      </nav>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .study {
+    row-gap: 48px;
+    padding-top: 40px;
+    padding-bottom: clamp(48px, 8vw, 128px);
+    border-top: 1px solid var(--line-strong);
+  }
+  .aside {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .context {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    color: var(--fg-muted);
+  }
+  .metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin: 0;
+  }
+  .metric {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
+  }
+  .value {
+    margin: 0;
+    font-size: clamp(2.25rem, 1.4rem + 2.6vw, 3.5rem);
+    color: var(--accent-as-text);
+  }
+  .label {
+    color: var(--fg-muted);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .body :global(p) {
+    margin: 0 0 1.2em;
+    font-size: var(--text-lead);
+    line-height: 1.5;
+    max-width: 62ch;
+  }
+  .body :global(strong) {
+    color: var(--accent-as-text);
+    font-weight: 600;
+  }
+  .body :global(ul) {
+    margin: 0 0 1.5em;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .body :global(li) {
+    padding-block: 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-lead);
+    line-height: 1.45;
+  }
+  .next {
+    border-top: 1px solid var(--line-strong);
+  }
+  .next-link {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-block: clamp(40px, 6vw, 96px);
+  }
+  .next-title {
+    font-size: clamp(3rem, 1rem + 7vw, 8rem);
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .next-link:hover .next-title {
+    transform: translateX(24px);
+  }
+</style>

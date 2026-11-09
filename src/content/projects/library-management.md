@@ -1,7 +1,7 @@
 ---
 title: Library Management System
 summary: Python desktop application for issuing, returning and tracking books.
-order: 4
+order: 7
 stack: [Python, Tkinter, JSON, GUI]
 links:
   code: https://github.com/TAK-PRAVEEN/Library-Management
