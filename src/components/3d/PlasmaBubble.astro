@@ -1,0 +1,110 @@
+---
+/**
+ * Plasma bubble (ref: glowing blue-violet sphere of tangled light strands).
+ * Live fragment shader, ~3 KB: domain-warped filaments inside a sphere with a
+ * bright rim; drifts slowly, brightens toward the pointer.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<div class:list={["plasma", className]} data-plasma aria-hidden="true"><canvas></canvas></div>
+
+<script>
+  import { createContext, createProgram, uniforms, fitCanvas } from "../../lib/gl";
+  import { onFrame, prefersReducedMotion } from "../../lib/frame";
+
+  const VS = `#version 300 es
+  in vec2 aPos; void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+  const FS = `#version 300 es
+  precision highp float;
+  uniform vec2 uRes, uPointer; uniform float uTime;
+  out vec4 o;
+  float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+  float fbm(vec2 p) { float s = 0.0, a = 0.5; for (int k = 0; k < 5; k++) { s += a * vn(p); p = p * 2.03 + 11.0; a *= 0.5; } return s; }
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / min(uRes.x, uRes.y) * 2.2;
+    float r = length(uv);
+    float t = uTime * 0.07;
+    // fake sphere: bend coordinates toward the rim for a curved, volumetric feel
+    vec2 sp = uv / (1.0 + 0.9 * (1.0 - sqrt(max(0.0, 1.0 - min(r, 0.999) * min(r, 0.999)))));
+    vec2 w = sp * 1.6 + vec2(fbm(sp * 1.4 + t), fbm(sp * 1.4 - t + 5.0)) * 1.8;
+    float f = fbm(w + t * 2.0);
+    // thin glowing strands = iso-lines of the warped field
+    float strands = pow(1.0 - abs(sin(f * 22.0)), 14.0) + 0.5 * pow(1.0 - abs(sin(f * 9.0 + 1.3)), 10.0);
+    float inside = 1.0 - smoothstep(0.92, 1.0, r);
+    float rim = smoothstep(0.78, 0.97, r) * (1.0 - smoothstep(0.97, 1.04, r));
+    float glow = exp(-pow(max(r - 1.0, 0.0) * 6.0, 2.0)) * 0.25;
+    float near = 1.0 - smoothstep(0.0, 0.9, length(uv - uPointer * 1.1));
+    vec3 blue = vec3(0.32, 0.42, 1.0), violet = vec3(0.62, 0.48, 1.0), white = vec3(0.9, 0.92, 1.0);
+    vec3 c = mix(blue, violet, fbm(w * 0.5)) * strands * inside * (0.55 + 0.6 * near);
+    c += white * strands * strands * inside * 0.35;
+    c += mix(blue, white, 0.3) * (rim * 0.45 + glow);
+    float a = clamp(max(c.r, max(c.g, c.b)), 0.0, 1.0);
+    o = vec4(c, a);
+  }`;
+
+  function mount(root: HTMLElement) {
+    const canvas = root.querySelector("canvas")!;
+    const gl = createContext(canvas);
+    if (!gl) return root.remove();
+    const prog = createProgram(gl, VS, FS);
+    gl.useProgram(prog);
+    gl.bindVertexArray(gl.createVertexArray());
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const u = uniforms(gl, prog, ["uRes", "uTime", "uPointer"] as const);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+    window.addEventListener(
+      "pointermove",
+      (e) => {
+        const r = root.getBoundingClientRect();
+        ptr.tx = ((e.clientX - r.left) / r.width) * 2 - 1;
+        ptr.ty = -(((e.clientY - r.top) / r.height) * 2 - 1);
+      },
+      { passive: true },
+    );
+    let visible = false;
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(root);
+    const draw = (t: number) => {
+      fitCanvas(canvas, 1.25);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform2f(u.uRes, canvas.width, canvas.height);
+      gl.uniform1f(u.uTime, t);
+      gl.uniform2f(u.uPointer, ptr.x, ptr.y);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+    if (prefersReducedMotion()) return draw(12);
+    const stop = onFrame((t) => {
+      if (!visible) return;
+      ptr.x += (ptr.tx - ptr.x) * 0.05;
+      ptr.y += (ptr.ty - ptr.y) * 0.05;
+      draw(t);
+    });
+    document.addEventListener("astro:before-swap", stop, { once: true });
+  }
+  document.addEventListener("astro:page-load", () => document.querySelectorAll<HTMLElement>("[data-plasma]").forEach(mount));
+</script>
+
+<style>
+  .plasma {
+    aspect-ratio: 1;
+    width: 100%;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+  }
+</style>
