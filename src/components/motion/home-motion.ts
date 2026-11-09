@@ -50,10 +50,6 @@ export function initHomeMotion(): () => void {
       { opacity: 1, ease: "none", scrollTrigger: { trigger: band, start: "top 55%", end: "top 20%", scrub: 0.6 } },
     );
 
-    // Moon rises through the band as you scroll.
-    const moon = band.querySelector("[data-band-moon]");
-    if (moon) gsap.fromTo(moon, { y: 160 }, { y: -160, ease: "none", scrollTrigger: { trigger: band, start: "top bottom", end: "bottom top", scrub: 0.8 } });
-
     // 3 — Statement words light up.
     const statement = band.querySelector<HTMLElement>("[data-band-statement]");
     if (statement) {

@@ -3,7 +3,6 @@ import { getCollection, getEntry } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
 import SpecList from "../components/ui/SpecList.astro";
-import RockParticles from "../components/3d/RockParticles.astro";
 import { period, byStartDesc } from "../lib/format";
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -11,7 +10,7 @@ const education = (await getCollection("experience", (e) => e.data.kind === "edu
 ---
 
 <BaseLayout title="About" section="/about" description={profile.intro}>
-  <PageHeader section="/about" title="About" statement={profile.statement} lead={profile.intro}><RockParticles slot="visual" /></PageHeader>
+  <PageHeader section="/about" title="About" statement={profile.statement} lead={profile.intro} />
 
   <section class="frame block" aria-labelledby="identity-title">
     <div class="grid-12">

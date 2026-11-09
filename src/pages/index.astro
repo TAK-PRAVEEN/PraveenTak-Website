@@ -11,6 +11,7 @@ import ChapterStrip from "../components/home/ChapterStrip.astro";
 import BigNumbers from "../components/home/BigNumbers.astro";
 import Intro from "../components/motion/Intro.astro";
 import RefSequence from "../components/3d/RefSequence.astro";
+import InkStamp from "../components/home/InkStamp.astro";
 import { SITE } from "../config/site";
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -56,10 +57,12 @@ const statementLead = statementWords.join(" ");
     </div>
   </section>
 
+  <InkStamp />
+
   <!-- PAPER → INK: scroll transition out of the hero ----------------------- -->
   <section class="band" data-surface="ink" data-accent="orange" data-band aria-labelledby="statement">
     <div class="band-ink" data-band-ink data-ink-dark aria-hidden="true"></div>
-    <div class="band-moon" data-band-moon aria-hidden="true"><RefSequence name="moon" frames={90} fps={6} /></div>
+    <div class="band-moon" data-band-moon aria-hidden="true"><RefSequence name="moon" frames={225} fps={15} plain /></div>
     <div class="frame band-inner" data-band-inner>
       <div class="band-meta micro">
         <span data-decode>01.1 — Statement</span>
@@ -233,7 +236,7 @@ const statementLead = statementWords.join(" ");
   :global(html.ink-bg-on) .band-ink {
     background: transparent;
   }
-  /* Moon loop (Praveen's video) on the right of the statement; rises as you scroll. */
+  /* Moon loop (Praveen's video) on the right of the statement, at its own speed. */
   .band-moon {
     position: absolute;
     right: max(4vw, 16px);

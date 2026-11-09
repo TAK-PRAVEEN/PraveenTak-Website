@@ -9,12 +9,14 @@ interface Props {
   name: string;
   frames: number;
   fps: number;
+  /** Play like a normal video: own speed only, no hover/scroll effects. */
+  plain?: boolean;
   class?: string;
 }
-const { name, frames, fps, class: className } = Astro.props;
+const { name, frames, fps, plain = false, class: className } = Astro.props;
 ---
 
-<div class:list={["refseq", className]} data-refseq data-name={name} data-frames={frames} data-fps={fps} aria-hidden="true">
+<div class:list={["refseq", className]} data-refseq data-name={name} data-frames={frames} data-fps={fps} data-plain={plain ? "1" : undefined} aria-hidden="true">
   <canvas></canvas>
 </div>
 
@@ -29,6 +31,8 @@ const { name, frames, fps, class: className } = Astro.props;
     const name = root.dataset.name!;
     const total = Number(root.dataset.frames);
     const fps = Number(root.dataset.fps);
+    const plain = root.dataset.plain === "1";
+    const pad = total > 99 ? 3 : 2;
     const frames: (HTMLImageElement | null)[] = new Array(total).fill(null);
     let loaded = false;
     const load = () => {
@@ -37,7 +41,7 @@ const { name, frames, fps, class: className } = Astro.props;
       for (let i = 0; i < total; i++) {
         const img = new Image();
         img.decoding = "async";
-        img.src = `/media/ref/${name}-${String(i).padStart(2, "0")}.webp`;
+        img.src = `/media/ref/${name}-${String(i).padStart(pad, "0")}.webp`;
         img.onload = () => (frames[i] = img);
       }
     };
@@ -72,7 +76,7 @@ const { name, frames, fps, class: className } = Astro.props;
       lastY = scrollY;
       scrollV *= 0.9;
       boost += (target - boost) * 0.06;
-      if (!reduced) pos += dt * fps * boost + Math.max(-4, Math.min(4, scrollV));
+      if (!reduced) pos += plain ? dt * fps : dt * fps * boost + Math.max(-4, Math.min(4, scrollV));
       const img = nearest(((Math.floor(pos) % total) + total) % total);
       if (!img) return;
       const dpr = Math.min(devicePixelRatio || 1, 2);
