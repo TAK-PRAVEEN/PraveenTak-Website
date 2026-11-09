@@ -107,6 +107,15 @@ const FS = {
       vec3 dyeSoft = mix(dyeRaw, vec3(dot(dyeRaw, vec3(0.333))), 0.35);
       vec3 stSoft = mix(sc, vec3(dot(sc, vec3(0.333))), 0.35);
       vec3 neon = uInkBg + dyeSoft * 0.3 + stSoft * 0.2 * (body * 0.8 + rim) * uPaper;
+      // Cosmic layer on black (refs: stardust galaxy, plasma glow): drifting nebula + twinkling dust.
+      vec2 q = gl_FragCoord.xy / 900.0 + vec2(uTime * 0.004, -uTime * 0.002);
+      float neb = fbm(q * 2.2 + fbm(q * 3.0 + uTime * 0.01));
+      vec3 nebCol = mix(vec3(0.18, 0.22, 0.55), vec3(0.42, 0.3, 0.7), fbm(q * 1.3 + 7.0));
+      neon += nebCol * smoothstep(0.45, 0.85, neb) * 0.09;
+      vec2 cell = floor(gl_FragCoord.xy / 3.0);
+      float star = step(0.9975, h(cell));
+      float tw = 0.5 + 0.5 * sin(uTime * (0.6 + 2.0 * h(cell + 3.1)) + h(cell) * 40.0);
+      neon += vec3(0.85, 0.88, 1.0) * star * tw * (0.35 + 0.65 * smoothstep(0.4, 0.8, neb));
       o = vec4(mix(lit, neon, max(uDark, inDark)), 1.0);
     }`,
 };
@@ -440,6 +449,7 @@ export function mountInkFluid(canvas: HTMLCanvasElement, opts: { mode?: "paper" 
       gl.uniform1fv(u("uRad"), rads);
       gl.uniform1i(u("uCount"), count);
       gl.uniform3f(u("uInkBg"), inkBg[0], inkBg[1], inkBg[2]);
+      gl.uniform1f(u("uTime"), performance.now() / 1000);
       gl.uniform1i(u("uDye"), bindTex(dye.read.tex));
       gl.uniform1i(u("uStain"), bindTex(stain.read.tex));
       gl.uniform1f(u("uPaper"), paperMode);

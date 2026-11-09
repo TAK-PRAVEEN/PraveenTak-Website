@@ -27,8 +27,9 @@ const long = title.length > 12;
   <hr class="rule-strong" />
   <h1 class:list={["display title", { long }]} style={`--chars:${Math.max(...title.split(" ").map((w) => w.length))}`} data-reveal-lines>{title}</h1>
   {
-    (lead || statement) && (
+    (lead || statement || Astro.slots.has("below")) && (
       <div class="grid-12 below">
+        {Astro.slots.has("below") && <div class="col-span-4 md:col-span-6 below-slot"><slot name="below" /></div>}
         {statement && <p class="script statement col-span-4 md:col-span-5">{statement}</p>}
         {lead && <p class="lead col-span-4 md:col-span-6 md:col-start-7">{lead}</p>}
       </div>
@@ -121,8 +122,10 @@ const long = title.length > 12;
     animation: none;
     aspect-ratio: 1;
     pointer-events: auto;
-    width: min(30vw, 400px);
-    top: calc(var(--nav-h) + 30px);
+    width: min(28vw, 400px);
+    /* sits in the open space beside the statement / lead, below the title rule */
+    top: calc(var(--nav-h) + clamp(140px, 16vw, 260px));
+    right: 4%;
     right: 0;
   }
 </style>

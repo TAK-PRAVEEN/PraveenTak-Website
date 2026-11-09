@@ -1,6 +1,6 @@
 ---
 import { getCollection } from "astro:content";
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 import { ArrowUpRight } from "@lucide/astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/layout/PageHeader.astro";
@@ -12,6 +12,20 @@ const GROUPS = [
   { key: "product", label: "Products", note: "My own products in development" },
   { key: "ml", label: "AI / ML projects", note: "Models, tools and applications" },
 ] as const;
+// Header stats + marquee, all derived from content.
+const stack = [...new Set(projects.flatMap((p) => p.data.stack.map((s) => s.split(/[ (/]/)[0])))].filter((s) => s.length > 1);
+const stats = [
+  { value: String(projects.length), label: "Projects" },
+  { value: String(projects.filter((p) => p.data.category === "client").length), label: "Client systems" },
+  { value: String(projects.filter((p) => /live|deployed/i.test(p.data.status ?? "")).length), label: "Live / deployed" },
+  { value: `${stack.length}+`, label: "Technologies" },
+];
+// Hover previews: small optimised covers that follow the cursor.
+const previews = Object.fromEntries(
+  await Promise.all(
+    projects.filter((p) => p.data.cover).map(async (p) => [p.id, (await getImage({ src: p.data.cover!, width: 520, format: "webp" })).src] as const),
+  ),
+);
 let n = 0;
 const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.category === g.key).map((p) => ({ p, i: ++n })) })).filter(
   (g) => g.items.length > 0,
@@ -19,7 +33,28 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
 ---
 
 <BaseLayout title="Work" section="/work" description="Selected client systems, products and AI/ML projects by Praveen Tak.">
-  <PageHeader section="/work" title="Selected work" lead="Client systems in production, products in development, and machine-learning work — from model to deployment." />
+  <PageHeader section="/work" title="Selected work" lead="Client systems in production, products in development, and machine-learning work — from model to deployment.">
+    <dl slot="below" class="stats">
+      {stats.map((s) => (
+        <div class="stat">
+          <dd class="numeral">{s.value}</dd>
+          <dt class="hud">{s.label}</dt>
+        </div>
+      ))}
+    </dl>
+  </PageHeader>
+
+  <div class="marquee" aria-label="Technologies used across projects">
+    <div class="marquee-track">
+      {[0, 1].map((k) => (
+        <ul class="hud" aria-hidden={k === 1 ? "true" : undefined}>
+          {stack.map((s) => <li>{s}</li>)}
+        </ul>
+      ))}
+    </div>
+  </div>
+
+  <img class="preview" src="" alt="" aria-hidden="true" data-preview-img />
 
   {
     groups.map((g) => (
@@ -31,7 +66,7 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
         <ol class="projects">
           {g.items.map(({ p, i }) => (
             <li>
-              <a href={`/work/${p.id}`} class="project grid-12" data-liquid>
+              <a href={`/work/${p.id}`} class="project grid-12" data-liquid data-preview={previews[p.id]}>
                 <span class="micro text-muted col-span-1">P—{String(i).padStart(2, "0")}</span>
                 <div class="col-span-3 md:col-span-6">
                   {(p.data.client || p.data.status) && (
@@ -70,7 +105,115 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
   }
 </BaseLayout>
 
+<script>
+  // Cover preview follows the cursor over project rows (mouse only).
+  document.addEventListener("astro:page-load", () => {
+    const img = document.querySelector<HTMLImageElement>("[data-preview-img]");
+    if (!img || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    let x = 0, y = 0, tx = 0, ty = 0, raf = 0, on = false;
+    const loop = () => {
+      x += (tx - x) * 0.14;
+      y += (ty - y) * 0.14;
+      img.style.transform = `translate3d(${x + 28}px, ${y - 120}px, 0) rotate(${(tx - x) * 0.03}deg)`;
+      raf = on || Math.abs(tx - x) > 0.5 ? requestAnimationFrame(loop) : 0;
+    };
+    document.querySelectorAll<HTMLElement>("[data-preview]").forEach((row) => {
+      row.addEventListener("pointerenter", (e) => {
+        img.src = row.dataset.preview!;
+        x = tx = e.clientX;
+        y = ty = e.clientY;
+        on = true;
+        img.classList.add("on");
+        if (!raf) raf = requestAnimationFrame(loop);
+      });
+      row.addEventListener("pointermove", (e) => ((tx = e.clientX), (ty = e.clientY)));
+      row.addEventListener("pointerleave", () => {
+        on = false;
+        img.classList.remove("on");
+      });
+    });
+  });
+</script>
+
 <style>
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 32px;
+    margin: 0;
+  }
+  @media (min-width: 900px) {
+    .stats {
+      grid-template-columns: repeat(4, minmax(0, max-content));
+    }
+  }
+  .stat {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+    padding-left: 14px;
+    border-left: 1px solid var(--line-strong);
+  }
+  .stat dd {
+    margin: 0;
+    font-size: clamp(2.2rem, 1.4rem + 2.2vw, 3.6rem);
+  }
+  .stat dt {
+    color: var(--fg-muted);
+    font-size: 9px;
+  }
+  .marquee {
+    overflow: hidden;
+    border-block: 1px solid var(--line);
+    margin-bottom: clamp(40px, 6vw, 80px);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 60s linear infinite;
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  .marquee ul {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+    margin: 0;
+    padding: 16px 20px;
+  }
+  .marquee li::before {
+    content: "◆ ";
+    color: var(--accent);
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .preview {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 30;
+    width: 280px;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    border-radius: 12px;
+    pointer-events: none;
+    opacity: 0;
+    scale: 0.9;
+    transition:
+      opacity 0.3s var(--ease-out),
+      scale 0.4s var(--ease-out);
+    box-shadow: 0 24px 50px -24px rgb(0 0 0 / 0.5);
+  }
+  .preview:global(.on) {
+    opacity: 1;
+    scale: 1;
+  }
   .group {
     padding-bottom: clamp(48px, 6vw, 96px);
   }

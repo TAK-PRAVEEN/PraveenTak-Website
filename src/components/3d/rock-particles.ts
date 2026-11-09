@@ -30,9 +30,11 @@ void main() {
   float w = 3.2 - p.z;
   gl_Position = vec4(p.x * 2.35 / uAspect, p.y * 2.35, 0.0, w);
   // matte rock: lit from the upper left
-  vShade = clamp(0.25 + 0.75 * dot(normalize(aPos), normalize(vec3(-0.5, 0.6, 0.6))), 0.0, 1.0);
-  vSpark = step(0.985, hash(aSeed * 91.0 + floor(uTime * 2.0 + aSeed * 7.0)));
-  gl_PointSize = uSize * (0.8 + 0.6 * aSeed) * (3.2 / w);
+  vec3 n = normalize(aPos);
+  float diff = max(dot(n, normalize(vec3(-0.45, 0.65, 0.6))), 0.0);
+  vShade = clamp(0.12 + 0.88 * pow(diff, 0.8), 0.0, 1.0);
+  vSpark = step(0.992, hash(aSeed * 91.0 + floor(uTime * 1.5 + aSeed * 7.0))) * 0.7;
+  gl_PointSize = uSize * (1.1 + 0.5 * aSeed) * (3.2 / w) * (1.0 - 0.5 * k);
 }`;
 
 const FS = /* glsl */ `#version 300 es
@@ -45,7 +47,7 @@ out vec4 o;
 void main() {
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
-  vec3 c = mix(uDark, uLight, vShade * 0.55) + vSpark * vec3(0.9);
+  vec3 c = mix(uDark, uLight, vShade) + vSpark * vec3(0.85);
   float a = (1.0 - smoothstep(0.3, 0.5, d)) * uAlpha;
   o = vec4(c * a, a);
 }`;
@@ -58,7 +60,7 @@ export function mountRock(canvas: HTMLCanvasElement, hoverEl: HTMLElement): () =
   const gl = createContext(canvas);
   if (!gl) throw new Error("WebGL2 unavailable");
   const small = window.matchMedia("(max-width: 767px)").matches;
-  const N = small ? 8000 : 18000;
+  const N = small ? 18000 : 42000;
   const pos = new Float32Array(N * 3);
   const seed = new Float32Array(N);
   const golden = Math.PI * (3 - Math.sqrt(5));
@@ -85,8 +87,9 @@ export function mountRock(canvas: HTMLCanvasElement, hoverEl: HTMLElement): () =
   const setColors = () => {
     gl.useProgram(prog);
     const dark = currentTheme() === "dark" || document.documentElement.dataset.surface === "ink";
-    gl.uniform3fv(u.uDark, dark ? rgb("#3a3a3e") : rgb("#0c0c0e"));
-    gl.uniform3fv(u.uLight, dark ? rgb("#d8d8d6") : rgb("#6a6a6d"));
+    // Matte charcoal stone (ref): soft shadow to mid-grey light side.
+    gl.uniform3fv(u.uDark, dark ? rgb("#2a2a2e") : rgb("#1a1a1c"));
+    gl.uniform3fv(u.uLight, dark ? rgb("#9a9a9e") : rgb("#6e6e72"));
   };
   setColors();
   const offTheme = onThemeChange(setColors);
