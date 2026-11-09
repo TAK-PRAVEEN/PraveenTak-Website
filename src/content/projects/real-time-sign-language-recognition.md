@@ -1,7 +1,8 @@
 ---
 title: Real-Time Sign Language Recognition
 summary: Webcam system that translates American Sign Language gestures (A–Z, 0–9) into text in real time.
-order: 4
+category: ml
+order: 8
 year: 2025
 role: AI Intern — Elevate Labs
 stack: [Python, TensorFlow / Keras, MobileNetV2, MediaPipe Hands, OpenCV, NumPy]

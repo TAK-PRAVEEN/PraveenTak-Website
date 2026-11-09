@@ -55,19 +55,28 @@ const certifications = defineCollection({
 
 const projects = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/projects" }),
-  schema: z.object({
-    title: z.string(),
-    summary: z.string(),
-    order: z.number(),
-    featured: z.boolean().default(false),
-    year: z.number().optional(),
-    role: z.string().optional(),
-    stack: z.array(z.string()),
-    /** Key numbers shown as a spec list — only real, sourced metrics. */
-    metrics: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
-    links: z.object({ demo: z.url().optional(), code: z.url().optional() }).default({}),
-    cover: z.string().optional(),
-  }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      summary: z.string(),
+      order: z.number(),
+      featured: z.boolean().default(false),
+      /** Work page grouping. */
+      category: z.enum(["client", "product", "ml"]).default("ml"),
+      /** Client or brand, when the work was done for someone. */
+      client: z.string().optional(),
+      /** Public, factual status line, e.g. "Live — wholeway.org". */
+      status: z.string().optional(),
+      year: z.number().optional(),
+      role: z.string().optional(),
+      stack: z.array(z.string()),
+      /** Key numbers shown as a spec list — only real, sourced metrics. */
+      metrics: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
+      links: z.object({ demo: z.url().optional(), code: z.url().optional() }).default({}),
+      cover: image().optional(),
+      coverAlt: z.string().optional(),
+      gallery: z.array(z.object({ src: image(), alt: z.string() })).default([]),
+    }),
 });
 
 /** AI/ML Lab and Experiments are empty until Praveen supplies entries. */

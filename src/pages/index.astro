@@ -175,7 +175,7 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: var(--ink);
+    background: var(--band-bg, var(--ink));
   }
   .band-inner {
     min-height: min(100svh, 980px);
@@ -306,13 +306,13 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
   }
   .chapter:hover,
   .chapter:focus-visible {
-    background: var(--charcoal);
-    color: var(--paper);
+    background: var(--fg);
+    color: var(--bg);
     padding-inline: 24px;
   }
   .chapter:hover .chapter-summary,
   .chapter:focus-visible .chapter-summary {
-    color: var(--mist);
+    color: color-mix(in oklab, var(--bg) 75%, var(--fg));
   }
   .chapter:hover :global(.chapter-arrow) {
     transform: rotate(45deg);

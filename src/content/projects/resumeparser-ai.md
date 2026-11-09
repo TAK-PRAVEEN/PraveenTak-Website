@@ -1,8 +1,9 @@
 ---
 title: ResumeParser.ai
 summary: NLP application that extracts structured data from résumés for optimisation and analysis.
-order: 3
-featured: true
+category: ml
+order: 7
+featured: false
 stack: [Python, spaCy, NLP, Google OAuth, MongoDB, Railway]
 metrics:
   - { label: "Export formats", value: "CSV · JSON · Excel" }

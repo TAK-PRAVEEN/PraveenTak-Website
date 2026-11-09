@@ -8,6 +8,7 @@
  */
 import { attribute, createContext, createProgram, fitCanvas, glyphAtlas, rgb, uniforms } from "../../lib/gl";
 import { onFrame, spring } from "../../lib/frame";
+import { currentTheme, onThemeChange } from "../../lib/theme";
 
 const VS = /* glsl */ `#version 300 es
 precision highp float;
@@ -161,7 +162,15 @@ export async function mountPortrait(canvas: HTMLCanvasElement, opts: PortraitOpt
   gl.uniform1i(u.uAtlas, 0);
 
   const css = getComputedStyle(document.documentElement);
-  gl.uniform3fv(u.uInk, rgb(css.getPropertyValue("--charcoal") || "#171719"));
+  // Glyph colour follows the theme: charcoal on paper, paper-white on ink.
+  // (Mapping stays "dark areas print strongest" in both themes — sampling is
+  // dense where the photo is dark, so that keeps the face recognisable.)
+  const setInk = () => {
+    gl.useProgram(program);
+    gl.uniform3fv(u.uInk, rgb(css.getPropertyValue(currentTheme() === "dark" ? "--paper" : "--charcoal") || "#171719"));
+  };
+  setInk();
+  const offTheme = onThemeChange(setInk);
   gl.uniform3fv(u.uAccentColor, rgb(css.getPropertyValue("--orange") || "#ff5a1f"));
 
   gl.enable(gl.BLEND);
@@ -248,6 +257,7 @@ export async function mountPortrait(canvas: HTMLCanvasElement, opts: PortraitOpt
 
   return () => {
     stop();
+    offTheme();
     io.disconnect();
     window.removeEventListener("pointermove", onMove);
     document.documentElement.removeEventListener("pointerleave", onLeave);

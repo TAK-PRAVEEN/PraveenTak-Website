@@ -1,7 +1,8 @@
 ---
 title: Mushroom Classification
 summary: Machine-learning classifier that separates edible from poisonous mushrooms.
-order: 6
+category: ml
+order: 10
 featured: false
 stack: [Python, Scikit-learn, Decision Tree, Model Evaluation]
 metrics:

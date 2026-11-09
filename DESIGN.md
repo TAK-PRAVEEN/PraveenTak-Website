@@ -2,7 +2,7 @@
 
 **Swiss Futurism / Digital Matter.** Editorial precision × computational art × cinematic 3D.
 
-Status: **Phase 2 complete (hero + signatures) — 09 Nov 2026.** Next: Phase 3 pages — needs your content (projects, lab, experiments, quote). Branch: `feature/redesign-2026`.
+Status: **Phase 3 in progress — 09 Nov 2026.** Work (11 projects incl. client systems) and Lab (2 entries) populated from GitHub + résumé; light/dark theme toggle added. Pending from Praveen: font combinations, one-liner quote, experiments media. Branch: `feature/redesign-2026`.
 Source brief: `Portfolio.pdf` (09 Nov 2026) and 14 reference images. This document adopts that
 brief and records where Phase 0 inspection changes or tightens it (marked **▲ change**).
 

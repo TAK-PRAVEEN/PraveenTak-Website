@@ -1,7 +1,8 @@
 ---
 title: GoldLens AI
 summary: AI-powered platform for real-time gold price prediction, multi-currency analytics and daily motivational quotes.
-order: 1
+category: ml
+order: 2
 featured: true
 stack: [Python, FastAPI, TensorFlow, LSTM / GRU / BiLSTM, Google OAuth, MySQL, Jinja2, Docker, Chart.js, Gemini AI]
 metrics:

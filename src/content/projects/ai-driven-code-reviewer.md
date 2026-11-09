@@ -1,7 +1,8 @@
 ---
 title: AI-Driven Code Reviewer
 summary: LLM-powered Python code reviewer that combines static analysis with Qwen 2.5 suggestions and a code-aware chat.
-order: 2
+category: ml
+order: 3
 featured: true
 year: 2026
 role: AI Intern — Infosys Springboard

@@ -64,6 +64,10 @@ const { class: className } = Astro.props;
     width: 100%;
     aspect-ratio: 1200 / 342;
   }
+  /* Single-colour artwork with alpha: inverting gives paper-white strokes on Ink. */
+  :global(:root[data-theme="dark"]) .signature :global(.sig-media) {
+    filter: invert(1);
+  }
   .signature :global(.sig-media) {
     width: 100%;
     height: 100%;

@@ -10,6 +10,8 @@ interface Props {
 }
 const { section, title, lead, statement } = Astro.props;
 const exp = experienceFor(section);
+/** Long titles (case studies) get a smaller display size so they stay 1–2 lines. */
+const long = title.length > 12;
 ---
 
 <header class="frame page-header">
@@ -19,7 +21,7 @@ const exp = experienceFor(section);
     <span class="text-muted">SYS_{new Date().getFullYear()}</span>
   </div>
   <hr class="rule-strong" />
-  <h1 class="display title">{title}</h1>
+  <h1 class:list={["display title", { long }]}>{title}</h1>
   {
     (lead || statement) && (
       <div class="grid-12 below">
@@ -46,6 +48,12 @@ const exp = experienceFor(section);
     font-size: var(--text-display);
     margin: 0.12em 0 0;
     overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+  .title.long {
+    font-size: clamp(3rem, 1.2rem + 6vw, 8.5rem);
+    line-height: 0.92;
+    max-width: 18ch;
   }
   .below {
     margin-top: clamp(32px, 4vw, 64px);

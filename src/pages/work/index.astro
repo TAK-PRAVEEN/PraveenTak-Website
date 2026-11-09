@@ -1,57 +1,107 @@
 ---
 import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
 import { ArrowUpRight } from "@lucide/astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/layout/PageHeader.astro";
 import TagBlock from "../../components/ui/TagBlock.astro";
 
 const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
+const GROUPS = [
+  { key: "client", label: "Client systems", note: "Built for businesses, in production" },
+  { key: "product", label: "Products", note: "My own products in development" },
+  { key: "ml", label: "AI / ML projects", note: "Models, tools and applications" },
+] as const;
+let n = 0;
+const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.category === g.key).map((p) => ({ p, i: ++n })) })).filter(
+  (g) => g.items.length > 0,
+);
 ---
 
-<BaseLayout title="Work" section="/work" description="Selected AI/ML and software projects by Praveen Tak.">
-  <PageHeader section="/work" title="Selected work" lead="Machine-learning systems, NLP tools and applications — from model to deployment." />
+<BaseLayout title="Work" section="/work" description="Selected client systems, products and AI/ML projects by Praveen Tak.">
+  <PageHeader section="/work" title="Selected work" lead="Client systems in production, products in development, and machine-learning work — from model to deployment." />
 
-  <section class="frame" aria-label="Projects">
-    <ol class="projects">
-      {
-        projects.map((p, i) => (
-          <li>
-            <a href={`/work/${p.id}`} class="project grid-12">
-              <span class="micro text-muted col-span-1 md:col-span-1">P—{String(i + 1).padStart(2, "0")}</span>
-              <div class="col-span-3 md:col-span-6">
-                <h2 class="heading project-title">{p.data.title}</h2>
-                <p class="project-summary">{p.data.summary}</p>
-              </div>
-              <div class="col-span-4 md:col-span-4 project-meta">
-                {p.data.metrics[0] && (
-                  <TagBlock size="lg">{p.data.metrics[0].value}</TagBlock>
-                )}
-                {p.data.metrics[0] && <span class="micro text-muted">{p.data.metrics[0].label}</span>}
-                <ul class="stack">
-                  {p.data.stack.slice(0, 5).map((s) => <li class="micro">{s}</li>)}
-                </ul>
-              </div>
-              <ArrowUpRight class="project-arrow" size={32} aria-hidden="true" />
-            </a>
-          </li>
-        ))
-      }
-    </ol>
-  </section>
+  {
+    groups.map((g) => (
+      <section class="frame group" aria-labelledby={`g-${g.key}`}>
+        <div class="group-head micro">
+          <h2 id={`g-${g.key}`}>{g.label}</h2>
+          <span class="text-muted">{g.note}</span>
+        </div>
+        <ol class="projects">
+          {g.items.map(({ p, i }) => (
+            <li>
+              <a href={`/work/${p.id}`} class="project grid-12" data-liquid>
+                <span class="micro text-muted col-span-1">P—{String(i).padStart(2, "0")}</span>
+                <div class="col-span-3 md:col-span-6">
+                  {(p.data.client || p.data.status) && (
+                    <p class="micro meta">
+                      {p.data.client && <span>{p.data.client}</span>}
+                      {p.data.status && <span class="text-muted">{p.data.status}</span>}
+                    </p>
+                  )}
+                  <h3 class="heading project-title">{p.data.title}</h3>
+                  <p class="project-summary">{p.data.summary}</p>
+                  <ul class="stack">
+                    {p.data.stack.slice(0, 5).map((s) => (
+                      <li class="micro">{s}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div class="col-span-4 md:col-span-4 project-side">
+                  {p.data.cover ? (
+                    <Image src={p.data.cover} alt="" widths={[480, 800]} sizes="(min-width: 768px) 30vw, 90vw" class="cover" loading="lazy" />
+                  ) : (
+                    p.data.metrics[0] && (
+                      <>
+                        <TagBlock size="lg">{p.data.metrics[0].value}</TagBlock>
+                        <span class="micro text-muted">{p.data.metrics[0].label}</span>
+                      </>
+                    )
+                  )}
+                </div>
+                <ArrowUpRight class="project-arrow" size={32} aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))
+  }
 </BaseLayout>
 
 <style>
+  .group {
+    padding-bottom: clamp(48px, 6vw, 96px);
+  }
+  .group-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .group-head h2 {
+    font: inherit;
+    margin: 0;
+  }
   .projects {
     list-style: none;
     margin: 0;
     padding: 0;
-    border-top: 1px solid var(--line-strong);
   }
   .project {
     position: relative;
     row-gap: 16px;
     padding-block: clamp(28px, 4vw, 56px);
     border-bottom: 1px solid var(--line);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin: 0 0 12px;
   }
   .project-title {
     font-size: var(--text-h2);
@@ -66,20 +116,32 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     max-width: 52ch;
     color: var(--fg-muted);
   }
-  .project-meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
   .stack {
     display: flex;
     flex-wrap: wrap;
     gap: 4px 14px;
     list-style: none;
-    margin: 12px 0 0;
+    margin: 16px 0 0;
     padding: 0;
     color: var(--fg-muted);
+  }
+  .project-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  /* Covers stay monochrome (Swiss discipline) until the row is hovered or focused. */
+  .project-side :global(.cover) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.05);
+    transition: filter var(--dur-slow) var(--ease-out);
+  }
+  .project:is(:hover, :focus-visible) .project-side :global(.cover) {
+    filter: none;
   }
   .project :global(.project-arrow) {
     position: absolute;
@@ -89,5 +151,13 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
   }
   .project:hover :global(.project-arrow) {
     transform: rotate(45deg);
+  }
+  @media (min-width: 768px) {
+    .project :global(.project-arrow) {
+      display: none;
+    }
+    .project:not(:has(.cover)) :global(.project-arrow) {
+      display: block;
+    }
   }
 </style>

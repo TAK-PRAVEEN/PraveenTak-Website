@@ -135,7 +135,7 @@ const { class: className, scrollTarget } = Astro.props;
     z-index: 2;
   }
   .orbit path {
-    stroke: var(--charcoal);
+    stroke: var(--fg);
   }
   .canvas,
   .still {
@@ -159,6 +159,10 @@ const { class: className, scrollTarget } = Astro.props;
   }
   .portrait[data-state="still"] .still {
     display: block;
+  }
+  :global(:root[data-theme="dark"]) .still {
+    filter: invert(1);
+    mix-blend-mode: screen;
   }
   .portrait[data-state="still"] .canvas,
   .portrait[data-state="still"] .hint {

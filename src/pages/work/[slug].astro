@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
+import { Image } from "astro:assets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/layout/PageHeader.astro";
 import SpecList from "../../components/ui/SpecList.astro";
@@ -22,8 +23,24 @@ const d = project.data;
 <BaseLayout title={d.title} section="/work" description={d.summary}>
   <PageHeader section="/work" title={d.title} lead={d.summary} />
 
+  {
+    d.cover && (
+      <figure class="frame cover">
+        <Image src={d.cover} alt={d.coverAlt ?? ""} widths={[800, 1400, 2000]} sizes="(min-width: 1440px) 1344px, 94vw" loading="eager" />
+      </figure>
+    )
+  }
+
   <article class="frame case grid-12">
     <aside class="col-span-4 md:col-span-4 case-aside">
+      {(d.client || d.status || d.year || d.role) && (
+        <dl class="facts micro">
+          {d.client && (<div><dt>Client</dt><dd>{d.client}</dd></div>)}
+          {d.role && (<div><dt>Role</dt><dd>{d.role}</dd></div>)}
+          {d.year && (<div><dt>Year</dt><dd>{d.year}</dd></div>)}
+          {d.status && (<div><dt>Status</dt><dd>{d.status}</dd></div>)}
+        </dl>
+      )}
       {d.metrics.length > 0 && (
         <div class="metrics">
           {d.metrics.map((m) => (
@@ -36,7 +53,7 @@ const d = project.data;
       )}
       <SpecList title="Stack" items={d.stack.map((s, i) => ({ label: String(i + 1).padStart(2, "0"), value: s }))} />
       <div class="links">
-        {d.links.demo && <LinkButton href={d.links.demo} external>Live demo</LinkButton>}
+        {d.links.demo && <LinkButton href={d.links.demo} external>{d.category === "ml" ? "Live demo" : "Visit site"}</LinkButton>}
         {d.links.code && <LinkButton href={d.links.code} variant="outline" external>Source</LinkButton>}
       </div>
     </aside>
@@ -49,6 +66,19 @@ const d = project.data;
     </div>
   </article>
 
+  {
+    d.gallery.length > 0 && (
+      <section class="frame gallery" aria-label="Gallery">
+        {d.gallery.map((g, i) => (
+          <figure class:list={["shot", { tall: g.src.height > g.src.width }]}>
+            <Image src={g.src} alt={g.alt} widths={[600, 1000, 1400]} sizes="(min-width: 768px) 45vw, 94vw" loading="lazy" />
+            <figcaption class="micro text-muted">Fig. {String(i + 1).padStart(2, "0")} — {g.alt}</figcaption>
+          </figure>
+        ))}
+      </section>
+    )
+  }
+
   <nav class="frame next" aria-label="Next project">
     <a href={`/work/${next.id}`} class="next-link">
       <span class="micro text-muted">Next project</span>
@@ -58,6 +88,75 @@ const d = project.data;
 </BaseLayout>
 
 <style>
+  .cover {
+    margin: 0 auto clamp(40px, 5vw, 72px);
+  }
+  .cover :global(img) {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+  }
+  .facts {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+  }
+  .facts div {
+    display: grid;
+    gap: 4px;
+  }
+  .facts dt {
+    color: var(--fg-muted);
+  }
+  .facts dd {
+    margin: 0;
+    color: var(--fg);
+    font-weight: 700;
+  }
+  .prose-body :global(p) {
+    margin: 0 0 1.1em;
+    font-size: var(--text-lead);
+    line-height: 1.5;
+    max-width: 62ch;
+  }
+  .prose-body :global(p strong) {
+    display: block;
+    margin-top: 1.6em;
+    font-family: var(--font-display);
+    font-size: var(--text-h3);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  .prose-body :global(ul + p) {
+    margin-top: 0.4em;
+  }
+  .gallery {
+    display: grid;
+    gap: 24px;
+    padding-bottom: clamp(48px, 8vw, 128px);
+  }
+  @media (min-width: 768px) {
+    .gallery {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+  .shot {
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .shot :global(img) {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+  }
+  .shot.tall :global(img) {
+    max-height: 760px;
+    width: auto;
+    margin-inline: auto;
+  }
   .case {
     row-gap: 48px;
     padding-bottom: clamp(48px, 8vw, 128px);

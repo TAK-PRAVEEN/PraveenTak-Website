@@ -1,7 +1,8 @@
 ---
 title: PlagiaGuard
 summary: AI code-plagiarism detector that compares program logic, not just text — built at Central India Hackathon 2.0.
-order: 5
+category: ml
+order: 9
 year: 2025
 role: Team Hash Splinters — Central India Hackathon 2.0 (Finalist)
 stack: [Python, FastAPI, AST, difflib, Sentence Transformers, GitHub Code Search API]

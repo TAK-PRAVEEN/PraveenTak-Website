@@ -144,6 +144,30 @@
 [data-surface="ink"][data-accent="lavender"] { --accent-as-text: var(--lavender); }
 [data-surface="ink"][data-accent="mono"] { --accent: var(--paper); --accent-text: var(--ink); --accent-as-text: var(--paper); }
 
+/* ---------- Dark theme (user toggle / system preference) ----------
+   html[data-theme="dark"] turns every Paper surface into the Ink palette.
+   Ink sections inside a page step up to Charcoal so they still read as a band.
+   Set before first paint by the inline script in BaseLayout. */
+:root[data-theme="dark"],
+:root[data-theme="dark"] [data-surface="paper"] {
+  --bg: var(--ink);
+  --fg: var(--paper);
+  --fg-muted: #a3a3a6;
+  --line: #2a2a2e;
+  --line-strong: var(--paper);
+  --panel: var(--charcoal);
+  color-scheme: dark;
+}
+:root[data-theme="dark"] [data-surface="ink"] {
+  --band-bg: var(--charcoal);
+}
+/* Accent used as text must switch to its on-dark variant. */
+:root[data-theme="dark"][data-accent="orange"] { --accent-as-text: var(--orange); }
+:root[data-theme="dark"][data-accent="lime"] { --accent-as-text: var(--lime); }
+:root[data-theme="dark"][data-accent="blue"] { --accent-as-text: var(--blue-on-ink); --accent: var(--blue-on-ink); }
+:root[data-theme="dark"][data-accent="lavender"] { --accent-as-text: var(--lavender); }
+:root[data-theme="dark"][data-accent="mono"] { --accent: var(--paper); --accent-text: var(--ink); --accent-as-text: var(--paper); }
+
 /* ---------- Tailwind theme bridge ---------- */
 @theme inline {
   --color-paper: var(--paper);

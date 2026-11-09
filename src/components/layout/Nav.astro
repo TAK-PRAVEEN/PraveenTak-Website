@@ -3,6 +3,7 @@
  * Global navigation. Swiss top rule on desktop, full-screen index on mobile.
  * Glass treatment appears only once the page scrolls (DESIGN.md §5).
  */
+import { Moon, Sun } from "@lucide/astro";
 import { EXPERIENCES, SITE } from "../../config/site";
 
 interface Props {
@@ -35,6 +36,11 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
       </ul>
     </nav>
 
+    <button class="theme-toggle" type="button" data-liquid data-theme-toggle aria-label="Switch to dark theme" title="Switch theme">
+      <Sun class="icon-sun" size={16} aria-hidden="true" />
+      <Moon class="icon-moon" size={16} aria-hidden="true" />
+    </button>
+
     <button class="micro nav-toggle" type="button" data-liquid aria-expanded="false" aria-controls="nav-panel" data-nav-toggle>
       <span data-nav-toggle-label>Menu</span>
     </button>
@@ -59,6 +65,8 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
 </header>
 
 <script>
+  import { currentTheme, followSystem, onThemeChange, setTheme } from "../../lib/theme";
+
   function setupNav() {
     const nav = document.querySelector<HTMLElement>("[data-nav]");
     const toggle = document.querySelector<HTMLButtonElement>("[data-nav-toggle]");
@@ -88,6 +96,15 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     // The nav is persisted across navigations: bind listeners only once.
     if (nav.dataset.ready) return;
     nav.dataset.ready = "true";
+
+    // Light / dark toggle.
+    const themeBtn = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+    const syncThemeLabel = () =>
+      themeBtn?.setAttribute("aria-label", currentTheme() === "dark" ? "Switch to light theme" : "Switch to dark theme");
+    syncThemeLabel();
+    followSystem();
+    onThemeChange(syncThemeLabel);
+    if (themeBtn) themeBtn.onclick = () => setTheme(currentTheme() === "dark" ? "light" : "dark");
     toggle.onclick = () => void setOpen(toggle.getAttribute("aria-expanded") !== "true");
     panel.onclick = (e) => {
       // Navigating away: close instantly so the next page isn't covered.
@@ -161,7 +178,15 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
+    gap: 16px;
+  }
+  @media (min-width: 960px) {
+    .nav-row .theme-toggle {
+      margin-left: 8px;
+    }
+    .nav-desktop {
+      margin-left: auto;
+    }
   }
   .brand {
     display: inline-flex;
@@ -226,6 +251,40 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
   }
   .nav-link[aria-current="page"] .nav-index {
     opacity: 1;
+  }
+  .theme-toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+    transition: border-color var(--dur-fast);
+  }
+  .theme-toggle:hover {
+    border-color: var(--line-strong);
+  }
+  .theme-toggle :global(svg) {
+    grid-area: 1 / 1;
+    transition:
+      transform var(--dur) var(--ease-out),
+      opacity var(--dur) var(--ease-out);
+  }
+  .theme-toggle :global(.icon-sun) {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+  :global(:root[data-theme="dark"]) .theme-toggle :global(.icon-sun) {
+    opacity: 1;
+    transform: none;
+  }
+  :global(:root[data-theme="dark"]) .theme-toggle :global(.icon-moon) {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.6);
   }
   .nav-toggle {
     min-height: 44px;

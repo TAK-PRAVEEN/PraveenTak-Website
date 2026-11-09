@@ -10,6 +10,7 @@
  */
 import { attribute, createContext, createProgram, rgb, uniforms } from "../../lib/gl";
 import { onFrame, spring } from "../../lib/frame";
+import { currentTheme, onThemeChange } from "../../lib/theme";
 
 const VS = /* glsl */ `#version 300 es
 precision highp float;
@@ -128,7 +129,7 @@ export function mountOrb(root: HTMLElement): () => void {
   let onInk = document.documentElement.dataset.surface === "ink";
   let hoverSurface: string | undefined;
   const applySurface = () => {
-    onInk = (hoverSurface ?? document.documentElement.dataset.surface) === "ink";
+    onInk = currentTheme() === "dark" || (hoverSurface ?? document.documentElement.dataset.surface) === "ink";
     root.dataset.surface = onInk ? "ink" : "paper";
     gl.uniform3fv(u.uColor, onInk ? orange : charcoal);
     if (onInk) gl.blendFunc(gl.ONE, gl.ONE); // additive glow on dark
@@ -182,6 +183,7 @@ export function mountOrb(root: HTMLElement): () => void {
     applySurface();
   };
   document.addEventListener("astro:after-swap", onSwap);
+  const offTheme = onThemeChange(applySurface);
   document.documentElement.classList.add("orb-on");
 
   const half = size / 2;
@@ -213,6 +215,7 @@ export function mountOrb(root: HTMLElement): () => void {
     window.removeEventListener("pointerup", onUp);
     document.documentElement.removeEventListener("pointerleave", onLeaveDoc);
     document.removeEventListener("astro:after-swap", onSwap);
+    offTheme();
     document.documentElement.classList.remove("orb-on");
   };
 }
