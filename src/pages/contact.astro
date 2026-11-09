@@ -46,7 +46,7 @@ const profile = (await getEntry("profile", "main"))!.data;
         <textarea id="message" name="message" rows="6" required></textarea>
       </div>
       <p class="micro form-error" role="alert" data-form-error hidden></p>
-      <button type="submit" class="micro submit">Compose email →</button>
+      <button type="submit" class="micro submit" data-liquid>Compose email →</button>
       <p class="micro text-muted">Opens your email app with the message filled in. A direct form arrives soon.</p>
     </form>
   </section>

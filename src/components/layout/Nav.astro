@@ -20,11 +20,12 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     </a>
 
     <nav aria-label="Primary" class="nav-desktop">
-      <ul>
+      <ul data-nav-list>
+        <li class="nav-blob" data-nav-blob aria-hidden="true"></li>
         {
           links.map((l) => (
             <li>
-              <a href={l.href} class="micro nav-link" aria-current={current === l.href ? "page" : undefined}>
+              <a href={l.href} class="micro nav-link" data-liquid aria-current={current === l.href ? "page" : undefined}>
                 <span class="nav-index" aria-hidden="true">{l.index}</span>
                 {l.label}
               </a>
@@ -34,7 +35,7 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
       </ul>
     </nav>
 
-    <button class="micro nav-toggle" type="button" aria-expanded="false" aria-controls="nav-panel" data-nav-toggle>
+    <button class="micro nav-toggle" type="button" data-liquid aria-expanded="false" aria-controls="nav-panel" data-nav-toggle>
       <span data-nav-toggle-label>Menu</span>
     </button>
   </div>
@@ -65,30 +66,60 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     const label = document.querySelector<HTMLElement>("[data-nav-toggle-label]");
     if (!nav || !toggle || !panel || !label) return;
 
-    const setOpen = (open: boolean) => {
+    let busy = false;
+    const setOpen = async (open: boolean, animate = true) => {
+      if (busy) return;
       toggle.setAttribute("aria-expanded", String(open));
-      panel.hidden = !open;
       label.textContent = open ? "Close" : "Menu";
       document.documentElement.style.overflow = open ? "hidden" : "";
+      if (open) panel.hidden = false;
+      if (animate) {
+        busy = true;
+        try {
+          const { animatePanel } = await import("../motion/liquid");
+          await animatePanel(panel, toggle, open);
+        } finally {
+          busy = false;
+        }
+      }
+      if (!open) panel.hidden = true;
     };
-    setOpen(false);
+    void setOpen(false, false);
     // The nav is persisted across navigations: bind listeners only once.
     if (nav.dataset.ready) return;
     nav.dataset.ready = "true";
-    toggle.onclick = () => setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    toggle.onclick = () => void setOpen(toggle.getAttribute("aria-expanded") !== "true");
     panel.onclick = (e) => {
-      if ((e.target as HTMLElement).closest("a")) setOpen(false);
+      // Navigating away: close instantly so the next page isn't covered.
+      if ((e.target as HTMLElement).closest("a")) void setOpen(false, false);
     };
     document.onkeydown = (e) => {
       if (e.key === "Escape" && !panel.hidden) {
-        setOpen(false);
+        void setOpen(false);
         toggle.focus();
       }
     };
 
-    const onScroll = () => nav.toggleAttribute("data-scrolled", window.scrollY > 8);
-    onScroll();
+    // Adopt the surface of the section directly beneath the bar (e.g. the Ink band on Home).
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      nav.toggleAttribute("data-scrolled", window.scrollY > 8);
+      const below = document.elementFromPoint(window.innerWidth / 2, nav.offsetHeight + 1);
+      const surface = below?.closest<HTMLElement>("[data-surface]:not([data-nav])")?.dataset.surface;
+      const pageSurface = document.documentElement.dataset.surface;
+      if (surface && surface !== pageSurface) nav.dataset.surface = surface;
+      else delete nav.dataset.surface;
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("astro:after-swap", () => requestAnimationFrame(update));
   }
   document.addEventListener("astro:page-load", setupNav);
 
@@ -152,13 +183,34 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     display: none;
   }
   .nav-desktop ul {
+    position: relative;
     display: flex;
     gap: clamp(16px, 2.2vw, 36px);
     list-style: none;
     margin: 0;
     padding: 0;
   }
+  /* Liquid glass droplet behind the hovered / current link (positioned by liquid.ts). */
+  .nav-blob {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 34px;
+    width: 0;
+    margin-top: -17px;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    background: color-mix(in oklab, var(--fg) 7%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 70%, transparent),
+      inset 0 0 0 1px color-mix(in oklab, var(--fg) 10%, transparent);
+    -webkit-backdrop-filter: blur(8px) saturate(1.4);
+    backdrop-filter: blur(8px) saturate(1.4);
+    transform-origin: center;
+  }
   .nav-link {
+    position: relative;
     display: inline-flex;
     gap: 6px;
     padding-block: 8px;

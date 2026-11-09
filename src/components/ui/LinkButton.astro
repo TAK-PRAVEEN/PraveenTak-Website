@@ -12,6 +12,7 @@ const { href, variant = "solid", external = false } = Astro.props;
 <a
   href={href}
   class:list={["btn", "micro", variant]}
+  data-liquid
   {...external ? { target: "_blank", rel: "noopener" } : {}}
 >
   <span><slot /></span>

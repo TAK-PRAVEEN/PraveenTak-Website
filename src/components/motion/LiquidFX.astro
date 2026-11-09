@@ -1,0 +1,29 @@
+---
+/**
+ * Shared SVG filter for liquid press effects (#liquid) + bootstraps the
+ * liquid behaviours. Persisted across navigations; included once in BaseLayout.
+ */
+---
+
+<svg class="liquid-defs" width="0" height="0" aria-hidden="true" focusable="false" transition:persist="liquid-defs">
+  <filter id="liquid" x="-15%" y="-40%" width="130%" height="180%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.008 0.02" numOctaves="2" seed="7" result="noise"></feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+  </filter>
+</svg>
+
+<script>
+  document.addEventListener("astro:page-load", async () => {
+    const { initLiquid } = await import("./liquid");
+    initLiquid();
+  });
+</script>
+
+<style>
+  .liquid-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+</style>

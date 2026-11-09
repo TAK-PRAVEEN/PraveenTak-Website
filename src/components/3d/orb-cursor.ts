@@ -126,8 +126,9 @@ export function mountOrb(root: HTMLElement): () => void {
   const charcoal = rgb(css.getPropertyValue("--charcoal") || "#171719");
   const orange = rgb(css.getPropertyValue("--orange") || "#ff5a1f");
   let onInk = document.documentElement.dataset.surface === "ink";
+  let hoverSurface: string | undefined;
   const applySurface = () => {
-    onInk = document.documentElement.dataset.surface === "ink";
+    onInk = (hoverSurface ?? document.documentElement.dataset.surface) === "ink";
     root.dataset.surface = onInk ? "ink" : "paper";
     gl.uniform3fv(u.uColor, onInk ? orange : charcoal);
     if (onInk) gl.blendFunc(gl.ONE, gl.ONE); // additive glow on dark
@@ -159,6 +160,12 @@ export function mountOrb(root: HTMLElement): () => void {
   const onOver = (e: PointerEvent) => {
     const el = e.target as Element | null;
     overText = !!el?.closest?.(TEXT_ENTRY);
+    // Sections may switch surface mid-page (e.g. the Paper → Ink band).
+    const surface = el?.closest?.<HTMLElement>("[data-surface]")?.dataset.surface;
+    if (surface !== hoverSurface) {
+      hoverSurface = surface;
+      applySurface();
+    }
     explodeTarget = !overText && el?.closest?.(INTERACTIVE) ? 1 : 0;
   };
   const onDown = () => (pressed = true);
@@ -170,7 +177,11 @@ export function mountOrb(root: HTMLElement): () => void {
   window.addEventListener("pointerdown", onDown, { passive: true });
   window.addEventListener("pointerup", onUp, { passive: true });
   document.documentElement.addEventListener("pointerleave", onLeaveDoc);
-  document.addEventListener("astro:after-swap", applySurface);
+  const onSwap = () => {
+    hoverSurface = undefined;
+    applySurface();
+  };
+  document.addEventListener("astro:after-swap", onSwap);
   document.documentElement.classList.add("orb-on");
 
   const half = size / 2;
@@ -201,7 +212,7 @@ export function mountOrb(root: HTMLElement): () => void {
     window.removeEventListener("pointerdown", onDown);
     window.removeEventListener("pointerup", onUp);
     document.documentElement.removeEventListener("pointerleave", onLeaveDoc);
-    document.removeEventListener("astro:after-swap", applySurface);
+    document.removeEventListener("astro:after-swap", onSwap);
     document.documentElement.classList.remove("orb-on");
   };
 }

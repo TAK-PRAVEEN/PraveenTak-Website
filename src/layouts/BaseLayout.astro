@@ -8,6 +8,7 @@ import { ClientRouter } from "astro:transitions";
 import Nav from "../components/layout/Nav.astro";
 import Footer from "../components/layout/Footer.astro";
 import OrbCursor from "../components/3d/OrbCursor.astro";
+import LiquidFX from "../components/motion/LiquidFX.astro";
 import { SITE, experienceFor, type Accent, type Surface } from "../config/site";
 
 interface Props {
@@ -63,6 +64,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
       <slot />
     </main>
     {!bare && <Footer />}
+    <LiquidFX />
     <OrbCursor />
   </body>
 </html>

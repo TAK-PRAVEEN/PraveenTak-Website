@@ -2,7 +2,7 @@
 
 **Swiss Futurism / Digital Matter.** Editorial precision × computational art × cinematic 3D.
 
-Status: **Phase 2a complete (signatures) — 09 Nov 2026.** Name animation, binary portrait and orb cursor are live; hero scroll transition + liquid nav (2b) await your review of 2a. Branch: `feature/redesign-2026`.
+Status: **Phase 2 complete (hero + signatures) — 09 Nov 2026.** Next: Phase 3 pages — needs your content (projects, lab, experiments, quote). Branch: `feature/redesign-2026`.
 Source brief: `Portfolio.pdf` (09 Nov 2026) and 14 reference images. This document adopts that
 brief and records where Phase 0 inspection changes or tightens it (marked **▲ change**).
 
@@ -271,7 +271,7 @@ support, AVIF/WebP, WebM/MP4, KTX2/Draco GLB, real-device testing.
 |---|---|---|
 | 0 | This spec | ✓ D1–D4 approved |
 | 1 | ✓ Astro 7 + Cloudflare scaffold, tokens, fonts, grid, nav, layouts, content schemas, migrated old content | ✓ Builds + runs in local Workers runtime. Deploy + Lighthouse baseline wait for Cloudflare login |
-| 2 | ✓ 2a: name animation (WebM/WebP, 18 MB → 0.47 MB), binary portrait (24k / 9k pts), orb cursor · 2b: hero scroll transition, liquid nav | You sign off the hero |
+| 2 | ✓ 2a: name animation (WebM/WebP, 18 MB → 0.47 MB), binary portrait (24k / 9k pts), orb cursor · ✓ 2b: Paper→Ink scroll band (GSAP ScrollTrigger + SplitText), liquid press ripple, glass nav blob, liquid mobile menu, surface-aware nav/orb · ▲ one visible name: signature is the h1 (text is sr-only) | ✓ Hero signed off (hover softened per review) |
 | 3 | About, Work (+ case study), Lab, Experiments, Experience, Contact | All pages with real content |
 | 4 | Blender assets → GLB, shaders, scroll 3D | Budgets still met |
 | 5 | Contact API, chatbot, analytics, SEO/OG | End-to-end on preview |

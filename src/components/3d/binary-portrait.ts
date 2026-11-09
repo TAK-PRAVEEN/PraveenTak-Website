@@ -43,7 +43,7 @@ void main() {
     sin(p.z * 2.7 + uTime * 0.6 + s * 4.1) * 0.6 - 0.6 - s * 0.9,
     cos(p.x * 2.9 + uTime * 0.5 + s * 5.2)
   );
-  p += drift * uHover * (0.08 + 0.24 * s);
+  p += drift * uHover * (0.055 + 0.17 * s);
 
   // Rotation: gentle breathing + pointer tilt.
   float cy = cos(uYaw), sy = sin(uYaw), cp = cos(uPitch), sp = sin(uPitch);

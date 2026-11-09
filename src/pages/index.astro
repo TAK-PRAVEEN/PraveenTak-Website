@@ -25,12 +25,13 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
 
     <div class="grid-12 hero-grid">
       <div class="hero-copy col-span-4 md:col-span-7">
-        <p class="micro text-muted hero-hi">Hi, I'm</p>
-        <Signature class="hero-signature" />
-        <h1 id="hero-title" class="display hero-name">
-          Praveen<br />Tak
+        <p class="micro text-muted hero-hi" data-hero-fade>Hi, I'm</p>
+        <!-- One name only: the signature is the visible name; the h1 text is for SEO / screen readers. -->
+        <h1 id="hero-title" class="hero-name" data-hero-name>
+          <span class="sr-only">Praveen Tak</span>
+          <Signature class="hero-signature" />
         </h1>
-        <ul class="roles" aria-label="Roles">
+        <ul class="roles" aria-label="Roles" data-hero-fade>
           {profile.roles.map((r, i) => <li class="micro"><span class="text-muted">0{i + 1}</span> {r}</li>)}
         </ul>
       </div>
@@ -47,6 +48,24 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
     </div>
   </section>
 
+  <!-- PAPER → INK: scroll transition out of the hero ----------------------- -->
+  <section class="band" data-surface="ink" data-accent="orange" data-band aria-labelledby="statement">
+    <div class="band-ink" data-band-ink aria-hidden="true"></div>
+    <div class="frame band-inner" data-band-inner>
+      <div class="band-meta micro">
+        <span>01.1 — Statement</span>
+        <span class="text-muted">{profile.location.coords}</span>
+      </div>
+      <!-- Slot for Praveen's own one-liner (pending); falls back to the brief's statement. -->
+      <p id="statement" class="editorial band-statement" data-band-statement>{profile.statement}</p>
+      <ul class="band-pillars micro" aria-label="Disciplines">
+        <li><span class="band-index">A</span> AI / ML engineering</li>
+        <li><span class="band-index">B</span> Full-stack systems</li>
+        <li><span class="band-index">C</span> Creative technology</li>
+      </ul>
+    </div>
+  </section>
+
   <!-- INDEX OF EXPERIENCES ------------------------------------------------- -->
   <section class="frame chapters" aria-labelledby="chapters-title">
     <div class="section-meta micro">
@@ -57,7 +76,7 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
       {
         chapters.map((c) => (
           <li>
-            <a href={c.href} class="chapter">
+            <a href={c.href} class="chapter" data-liquid>
               <span class="micro chapter-index">{c.index}</span>
               <span class="heading chapter-label">{c.label}</span>
               <span class="chapter-summary">{c.summary}</span>
@@ -95,6 +114,20 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
   </section>
 </BaseLayout>
 
+<script>
+  let cleanup: (() => void) | null = null;
+  document.addEventListener("astro:page-load", async () => {
+    if (!document.querySelector("[data-band]")) return;
+    const { initHomeMotion } = await import("../components/motion/home-motion");
+    cleanup?.();
+    cleanup = initHomeMotion();
+  });
+  document.addEventListener("astro:before-swap", () => {
+    cleanup?.();
+    cleanup = null;
+  });
+</script>
+
 <style>
   /* ---- Hero ---- */
   .hero {
@@ -121,13 +154,61 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
   .hero-hi {
     margin: 0 0 8px;
   }
-  .hero-copy :global(.hero-signature) {
-    width: clamp(240px, 34vw, 520px);
-    margin: 0 0 clamp(4px, 1vw, 16px) -0.5%;
-  }
+  /* The signature IS the name: giant, the hero's main typographic statement. */
   .hero-name {
-    font-size: clamp(4.5rem, 1rem + 14vw, 15rem);
     margin: 0;
+  }
+  .hero-name :global(.hero-signature) {
+    width: min(100%, 880px);
+    margin-left: -1.5%;
+  }
+
+  /* ---- Paper → Ink statement band ---- */
+  .band {
+    position: relative;
+    isolation: isolate;
+    color: var(--fg);
+    margin-top: clamp(48px, 8vw, 120px);
+  }
+  /* The ink layer is wiped in on scroll (clip-path); without JS it is simply there. */
+  .band-ink {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--ink);
+  }
+  .band-inner {
+    min-height: min(100svh, 980px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 48px;
+    padding-block: clamp(48px, 7vw, 96px);
+  }
+  .band-meta {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .band-statement {
+    margin: 0;
+    font-size: clamp(3.5rem, 1rem + 10vw, 12rem);
+    line-height: 0.92;
+    max-width: 12ch;
+  }
+  .band-pillars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 40px;
+    list-style: none;
+    margin: 0;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--line);
+  }
+  .band-index {
+    color: var(--accent-as-text);
+    margin-right: 8px;
   }
   .roles {
     display: flex;

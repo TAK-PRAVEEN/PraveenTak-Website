@@ -1,0 +1,140 @@
+/**
+ * Liquid interactions — DESIGN.md §5 "Glass and liquid (restrained)".
+ *
+ *  - Press ripple: any [data-liquid] element is briefly run through the shared
+ *    SVG displacement filter (#liquid) and settles with an elastic squash.
+ *    The filter is attached only for ~0.45 s, so it costs nothing at rest.
+ *  - Nav blob: a glass pill that flows between desktop nav links, stretching
+ *    like a droplet as it travels and settling on the current page.
+ *
+ * Skipped entirely under prefers-reduced-motion.
+ */
+import { gsap } from "gsap";
+
+const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function ripple(el: HTMLElement) {
+  const turb = document.querySelector<SVGFETurbulenceElement>("#liquid feTurbulence");
+  const disp = document.querySelector<SVGFEDisplacementMapElement>("#liquid feDisplacementMap");
+  if (!turb || !disp) return;
+  el.style.filter = "url(#liquid)";
+  gsap.killTweensOf([turb, disp]);
+  gsap.fromTo(turb, { attr: { baseFrequency: "0.03 0.08" } }, { attr: { baseFrequency: "0.008 0.02" }, duration: 0.45, ease: "power2.out" });
+  gsap.fromTo(
+    disp,
+    { attr: { scale: 0 } },
+    {
+      attr: { scale: 18 },
+      duration: 0.16,
+      ease: "power2.out",
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => {
+        el.style.filter = "";
+      },
+    },
+  );
+  gsap.fromTo(el, { scaleX: 1.05, scaleY: 0.93 }, { scaleX: 1, scaleY: 1, duration: 0.7, ease: "elastic.out(1, 0.35)", clearProps: "transform" });
+}
+
+function initRipple(): () => void {
+  const onDown = (e: PointerEvent) => {
+    if (e.button !== 0 || reduced()) return;
+    const el = (e.target as Element | null)?.closest<HTMLElement>("[data-liquid]");
+    if (el) ripple(el);
+  };
+  document.addEventListener("pointerdown", onDown, { passive: true });
+  return () => document.removeEventListener("pointerdown", onDown);
+}
+
+/** Glass droplet that flows between the desktop nav links. */
+function initNavBlob(): () => void {
+  const list = document.querySelector<HTMLElement>("[data-nav-list]");
+  const blob = document.querySelector<HTMLElement>("[data-nav-blob]");
+  if (!list || !blob) return () => {};
+
+  const place = (link: HTMLElement | null, animate: boolean) => {
+    if (!link) {
+      gsap.to(blob, { opacity: 0, duration: 0.25 });
+      return;
+    }
+    const lr = link.getBoundingClientRect();
+    const pr = list.getBoundingClientRect();
+    const x = lr.left - pr.left - 12;
+    const width = lr.width + 24;
+    if (!animate || reduced()) {
+      gsap.set(blob, { x, width, opacity: 1 });
+      return;
+    }
+    const distance = Math.abs((gsap.getProperty(blob, "x") as number) - x);
+    gsap.to(blob, { x, width, opacity: 1, duration: 0.6, ease: "elastic.out(1, 0.7)", overwrite: "auto" });
+    // Droplet stretch: thinner while travelling, proportional to the distance.
+    if (distance > 4) {
+      gsap.fromTo(blob, { scaleY: Math.max(0.62, 1 - distance / 600) }, { scaleY: 1, duration: 0.7, ease: "elastic.out(1, 0.4)" });
+    }
+  };
+
+  const current = () => list.querySelector<HTMLElement>('a[aria-current="page"]');
+  const onEnter = (e: Event) => place((e.target as HTMLElement).closest("a"), true);
+  const onLeave = () => place(current(), true);
+  const links = Array.from(list.querySelectorAll<HTMLElement>("a"));
+  links.forEach((a) => {
+    a.addEventListener("pointerenter", onEnter);
+    a.addEventListener("focus", onEnter);
+  });
+  list.addEventListener("pointerleave", onLeave);
+  list.addEventListener("focusout", onLeave);
+
+  const settle = () => place(current(), true);
+  const onResize = () => place(current(), false);
+  document.addEventListener("astro:after-swap", settle);
+  window.addEventListener("resize", onResize);
+  // Fonts change link widths: re-measure once they are ready.
+  void document.fonts.ready.then(() => place(current(), false));
+  place(current(), false);
+
+  return () => {
+    links.forEach((a) => {
+      a.removeEventListener("pointerenter", onEnter);
+      a.removeEventListener("focus", onEnter);
+    });
+    list.removeEventListener("pointerleave", onLeave);
+    list.removeEventListener("focusout", onLeave);
+    document.removeEventListener("astro:after-swap", settle);
+    window.removeEventListener("resize", onResize);
+  };
+}
+
+let started = false;
+/** Idempotent: the nav and filter are persisted, so this runs once per full page load. */
+export function initLiquid() {
+  if (started) return;
+  started = true;
+  initRipple();
+  initNavBlob();
+}
+
+/** Mobile menu: the panel spills open from the toggle like ink, and drains back. */
+export function animatePanel(panel: HTMLElement, origin: HTMLElement, open: boolean): Promise<void> {
+  const r = origin.getBoundingClientRect();
+  const at = `${r.left + r.width / 2}px ${r.top + r.height / 2 - panel.getBoundingClientRect().top}px`;
+  if (reduced()) return Promise.resolve();
+  return new Promise((resolve) => {
+    gsap.fromTo(
+      panel,
+      { clipPath: `circle(${open ? 0 : 150}% at ${at})` },
+      {
+        clipPath: `circle(${open ? 150 : 0}% at ${at})`,
+        duration: open ? 0.75 : 0.45,
+        ease: open ? "expo.out" : "power3.in",
+        onComplete: () => {
+          gsap.set(panel, { clearProps: "clipPath" });
+          resolve();
+        },
+      },
+    );
+    if (open) {
+      gsap.fromTo(panel.querySelectorAll("li"), { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", stagger: 0.04, delay: 0.1 });
+    }
+  });
+}
