@@ -34,9 +34,9 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
         {
           links.map((l) => (
             <li>
-              <a href={l.href} class="micro nav-link" data-liquid data-decode-hover aria-current={current === l.href ? "page" : undefined}>
+              <a href={l.href} class="micro nav-link" data-liquid aria-current={current === l.href ? "page" : undefined}>
                 <span class="nav-index" aria-hidden="true">{l.index}</span>
-                <span data-decode-target>{l.label}</span>
+                <span>{l.label}</span>
               </a>
             </li>
           ))
@@ -191,6 +191,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
       toggle.setAttribute("aria-expanded", String(open));
       label.textContent = open ? "Close" : "Menu";
       document.documentElement.style.overflow = open ? "hidden" : "";
+      document.dispatchEvent(new CustomEvent("scroll-lock", { detail: open }));
       if (open) {
         panel.hidden = false;
         dialApi?.spinIn();

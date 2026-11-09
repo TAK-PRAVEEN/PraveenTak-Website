@@ -54,8 +54,9 @@ import { MOTION } from "../../config/site";
   .orb[data-surface="paper"] canvas {
     background: radial-gradient(
       circle at center,
-      color-mix(in oklab, var(--orange) 85%, transparent) 0,
-      color-mix(in oklab, var(--orange) 0%, transparent) calc(9% + var(--orb-explode) * 5%)
+      /* The core fades out as the orb bursts over a control, so its label stays readable. */
+      color-mix(in oklab, var(--orange) calc(85% - min(var(--orb-explode), 1) * 85%), transparent) 0,
+      color-mix(in oklab, var(--orange) 0%, transparent) 9%
     );
   }
   .dot {

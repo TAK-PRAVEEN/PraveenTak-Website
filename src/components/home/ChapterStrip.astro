@@ -25,7 +25,7 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
         chapters.map((c) => (
           <li class="strip-cell" data-surface={c.surface} data-accent={c.accent}>
             <a href={c.href} class="chapter" data-liquid data-decode-hover>
-              <span class="numeral outline chapter-num" aria-hidden="true">{c.index}</span>
+              <span class="numeral text-outline chapter-num" aria-hidden="true">{c.index}</span>
               {VISUAL[c.href] && <img class="chapter-visual" src={VISUAL[c.href]} alt="" loading="lazy" decoding="async" />}
               <span class="chapter-text">
                 <span class="hud chapter-kicker" data-decode-target>{c.index} / {c.label}</span>

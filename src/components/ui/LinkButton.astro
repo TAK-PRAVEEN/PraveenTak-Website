@@ -11,7 +11,7 @@ const { href, variant = "solid", external = false } = Astro.props;
 
 <a
   href={href}
-  class:list={["btn", "micro", variant]}
+  class:list={["btn", "micro", `btn-${variant}`]}
   data-liquid
   {...external ? { target: "_blank", rel: "noopener" } : {}}
 >
@@ -32,16 +32,16 @@ const { href, variant = "solid", external = false } = Astro.props;
       background-color var(--dur-fast) var(--ease-out),
       color var(--dur-fast) var(--ease-out);
   }
-  .solid {
+  .btn-solid {
     background: var(--fg);
     color: var(--bg);
   }
-  .solid:hover {
+  .btn-solid:hover {
     background: var(--accent);
     color: var(--accent-text);
     border-color: var(--accent);
   }
-  .outline:hover {
+  .btn-outline:hover {
     background: var(--fg);
     color: var(--bg);
   }

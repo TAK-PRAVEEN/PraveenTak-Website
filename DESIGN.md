@@ -298,7 +298,7 @@ and availability, résumé, social links, any Blender renders, chatbot AI provid
 | Piece | Where | Notes |
 |---|---|---|
 | Michroma (HUD/numerals) | `--font-hud`, `.hud`, `.numeral` | Instrument details and big numbers only |
-| Corinthia (script) | `--font-script`, `.script` | Human counterpoint to the machine type |
+| Kaushan Script (script) | `--font-script`, `.script` | Confident brush — human counterpoint to the machine type |
 | Decode text | `data-decode`, `data-decode-hover` | GSAP ScrambleText; aria-label keeps the real text |
 | Masked line reveal | `data-reveal-lines` | SplitText `mask: "lines"` on page titles |
 | Terminal caret | `.caret` | Blinking `_` after technical labels |

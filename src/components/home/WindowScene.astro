@@ -167,9 +167,9 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
     line-height: 1.45;
   }
   .win-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px 36px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, max-content));
+    gap: 0 clamp(20px, 3vw, 44px);
     margin: 0;
   }
   .win-stats div {
@@ -179,7 +179,8 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
   }
   .win-stats dd {
     margin: 0;
-    font-size: clamp(1.6rem, 1rem + 1.8vw, 2.6rem);
+    white-space: nowrap;
+    font-size: clamp(1.3rem, 0.9rem + 1.3vw, 2.2rem);
     color: var(--accent-as-text);
   }
   .win-stats dt {

@@ -19,6 +19,7 @@ const TICKS = 41;
 
 <script>
   import { EXPERIENCES } from "../../config/site";
+  import { initSmoothScroll, scrollToY } from "../../lib/smooth-scroll";
 
   let started = false;
   function init() {
@@ -28,6 +29,29 @@ const TICKS = 41;
     if (ch) ch.textContent = EXPERIENCES.find((e) => e.href === path)?.index ?? "01";
     if (started) return;
     started = true;
+    initSmoothScroll();
+
+    // The scale replaces the hidden browser scrollbar: click or drag it to scroll.
+    const rail = document.querySelector<HTMLElement>("[data-hud-scale]");
+    const toY = (clientY: number) => {
+      const r = rail!.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, (clientY - r.top) / r.height));
+      return p * Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    };
+    let dragging = false;
+    rail?.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      rail.setPointerCapture(e.pointerId);
+      rail.classList.add("dragging");
+      scrollToY(toY(e.clientY));
+    });
+    rail?.addEventListener("pointermove", (e) => dragging && scrollToY(toY(e.clientY), true));
+    const end = () => {
+      dragging = false;
+      rail?.classList.remove("dragging");
+    };
+    rail?.addEventListener("pointerup", end);
+    rail?.addEventListener("pointercancel", end);
 
     const root = document.documentElement;
     const time = document.querySelector<HTMLElement>("[data-hud-time]");
@@ -62,21 +86,36 @@ const TICKS = 41;
 <style>
   .scale {
     position: fixed;
-    right: 14px;
+    right: 6px;
     top: 50%;
     z-index: 40;
     height: min(46vh, 380px);
+    padding: 0 8px 0 20px; /* generous hit area for click / drag */
+    box-sizing: content-box;
     transform: translateY(-50%);
     display: none;
-    pointer-events: none;
     color: var(--fg);
+    touch-action: none;
+    user-select: none;
   }
-  @media (min-width: 1100px) and (hover: hover) {
+  /* The scale is the scrollbar on mouse/trackpad screens: the native one is hidden. */
+  @media (min-width: 768px) and (hover: hover) {
     .scale {
       display: block;
     }
+    :global(html) {
+      scrollbar-width: none;
+    }
+    :global(html::-webkit-scrollbar) {
+      display: none;
+    }
+  }
+  .scale:hover .tick,
+  .scale.dragging .tick {
+    opacity: 1;
   }
   .ticks {
+    pointer-events: none;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -99,7 +138,7 @@ const TICKS = 41;
   }
   .marker {
     position: absolute;
-    right: 0;
+    right: 8px;
     top: 0;
     transform: translateY(calc(var(--progress, 0) * min(46vh, 380px) - 50%));
     display: flex;

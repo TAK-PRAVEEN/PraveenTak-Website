@@ -51,4 +51,6 @@ export const MOTION = {
   intensity: 1,
   customCursor: true,
   binaryPortrait: true,
+  /** Ink-in-water fluid background reacting to the cursor. */
+  inkBackground: true,
 } as const;

@@ -202,7 +202,8 @@ export function mountOrb(root: HTMLElement): () => void {
     gl.uniform1f(u.uTime, t);
     gl.uniform1f(u.uExplode, Math.max(0, explode.value));
     gl.uniform1f(u.uPress, press.value);
-    gl.uniform1f(u.uAlpha, onInk ? 0.6 : 1); // additive on Ink saturates fast; fade is CSS opacity
+    // Additive on Ink saturates fast; while burst over a control, thin the particles so its label reads.
+    gl.uniform1f(u.uAlpha, (onInk ? 0.6 : 1) * (1 - 0.55 * Math.min(1, Math.max(0, explode.value))));
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.POINTS, 0, g.n);
   });

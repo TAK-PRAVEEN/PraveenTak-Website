@@ -1,0 +1,60 @@
+---
+/**
+ * Site-wide ink-in-water background (see ink-fluid.ts). A fixed canvas behind
+ * all content, persisted across navigations. Opaque sections and cards sit on
+ * top of it as before; open paper areas show the ink.
+ * Off under reduced motion, on touch-only devices, without WebGL2 float
+ * targets, or if MOTION.inkBackground is false.
+ */
+import { MOTION } from "../../config/site";
+---
+
+<canvas class="ink-bg" data-ink-bg data-enabled={MOTION.inkBackground ? "true" : "false"} aria-hidden="true" transition:persist="ink-bg"></canvas>
+
+<script>
+  import { prefersReducedMotion } from "../../lib/frame";
+
+  async function init() {
+    const canvas = document.querySelector<HTMLCanvasElement>("[data-ink-bg]");
+    if (!canvas || canvas.dataset.mounted || canvas.dataset.enabled !== "true" || prefersReducedMotion()) return;
+    // Touch-only devices have no cursor to stir the water; save their battery.
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return canvas.remove();
+    canvas.dataset.mounted = "true";
+    try {
+      const { mountInkFluid } = await import("./ink-fluid");
+      mountInkFluid(canvas);
+      document.documentElement.classList.add("ink-bg-on");
+    } catch (err) {
+      console.warn("[ink] background disabled:", err);
+      canvas.remove();
+    }
+  }
+  // Start after the hero has settled, so it never competes with first paint.
+  document.addEventListener("astro:page-load", () => {
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 800));
+    idle(() => void init(), { timeout: 1500 });
+  });
+</script>
+
+<style>
+  .ink-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.2s var(--ease-out);
+  }
+  :global(html.ink-bg-on) .ink-bg {
+    opacity: 1;
+  }
+  /* The canvas paints the page colour itself; let it show through the body. */
+  :global(html.ink-bg-on body) {
+    background: transparent;
+  }
+  :global(html) {
+    background: var(--bg);
+  }
+</style>

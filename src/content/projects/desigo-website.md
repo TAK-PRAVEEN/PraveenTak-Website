@@ -14,11 +14,12 @@ metrics:
 links:
   demo: https://desigomilk.com
   code: https://github.com/TAK-PRAVEEN/DESIGOMILK
-cover: ../../assets/work/desigo-site-hero.png
-coverAlt: DESIGO Milk website hero — a glass milk bottle wrapped in a green splash beside the headline "Milk from the source."
+cover: ../../assets/work/desigo-site-technology.png
+coverAlt: DESIGO Milk website — "Tradition is the source. Technology protects the journey." over a seven-step traceability line on deep green
 gallery:
-  - { src: ../../assets/work/desigo-site-journey.png, alt: "From cow to bottle — seven steps of the journey on one line" }
-  - { src: ../../assets/work/desigo-site-trace.png, alt: "Traceability section with a living map" }
+  - { src: ../../assets/work/desigo-site-master26.png, alt: "MASTER 26 product world — forest canopy, twenty-six herbs" }
+  - { src: ../../assets/work/desigo-site-breeds.png, alt: "The cows of this land — indigenous breed plates" }
+  - { src: ../../assets/work/desigo-site-final.png, alt: "Know where your milk comes from — closing call to action" }
   - { src: ../../assets/work/desigo-site-mobile.png, alt: "Mobile hero, designed separately rather than shrunk" }
 ---
 

@@ -42,16 +42,9 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Corinthia";
-  src: url("/fonts/corinthia-400.woff2") format("woff2");
+  font-family: "Kaushan Script";
+  src: url("/fonts/kaushan-script-400.woff2") format("woff2");
   font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Corinthia";
-  src: url("/fonts/corinthia-700.woff2") format("woff2");
-  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -197,7 +190,7 @@
   /* HUD / numerals — wide "spacecraft" face, used only for instrument details and big numbers. */
   --font-hud: "Michroma", "Space Grotesk", ui-sans-serif, sans-serif;
   /* Script accent — pairs with the handwritten signature. */
-  --font-script: "Corinthia", "Segoe Script", cursive;
+  --font-script: "Kaushan Script", "Segoe Script", cursive;
 
   /* Fluid type scale */
   --text-micro: 0.6875rem;
@@ -288,18 +281,19 @@
     letter-spacing: -0.03em;
     line-height: 0.95;
   }
-  /* Script accent (Corinthia): used sparingly for personal, hand-written moments.
-     Script faces read small, so sizes are set ~1.4x larger than the text they accompany. */
+  /* Script accent (Kaushan Script, a confident brush): used sparingly for personal moments. */
   .editorial,
   .script {
     font-family: var(--font-script);
     font-style: normal;
     font-weight: 400;
     letter-spacing: 0;
-    line-height: 0.9;
+    line-height: 1;
   }
+  /* Kaushan has a single weight; keep the class as a hook, never fake bold. */
   .script-bold {
-    font-weight: 700;
+    font-weight: 400;
+    font-synthesis: none;
   }
   /* HUD: instrument-panel details and big numerals (Michroma, tabular, tracked). */
   .hud {
@@ -317,13 +311,14 @@
     line-height: 0.85;
   }
   /* Outline headline that fills in on hover / focus. */
-  .outline {
+  /* (Named text-outline: Tailwind's own .outline draws a box.) */
+  .text-outline {
     color: transparent;
     -webkit-text-stroke: 1.5px var(--fg);
     transition: color var(--dur) var(--ease-out);
   }
-  .outline:is(:hover, :focus-visible),
-  a:is(:hover, :focus-visible) .outline {
+  .text-outline:is(:hover, :focus-visible),
+  a:is(:hover, :focus-visible) .text-outline {
     color: var(--fg);
   }
   /* Terminal caret after technical labels. */
@@ -401,6 +396,21 @@ html.ink-transition::view-transition-old(root) {
 }
 html.ink-transition::view-transition-new(root) {
   z-index: 1;
+}
+
+/* ---------- Lenis smooth scroll (src/lib/smooth-scroll.ts) ---------- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 
 /* ---------- Reduced motion ---------- */

@@ -46,7 +46,7 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
                   <Image src={p.data.cover} alt="" widths={[600, 1000, 1400]} sizes="(min-width: 768px) 46vw, 92vw" class="card-cover" loading="lazy" />
                 ) : (
                   <div class="card-numeral">
-                    <span class="numeral outline">{String(i + 1).padStart(2, "0")}</span>
+                    <span class="numeral text-outline">{String(i + 1).padStart(2, "0")}</span>
                     <ul class="hud card-stack">
                       {p.data.stack.slice(0, 6).map((s) => (
                         <li>{s}</li>

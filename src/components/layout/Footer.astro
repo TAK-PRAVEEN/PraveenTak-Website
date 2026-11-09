@@ -6,22 +6,10 @@ import StatusDot from "../ui/StatusDot.astro";
 import Barcode from "../ui/Barcode.astro";
 
 const profile = (await getEntry("profile", "main"))!.data;
-interface Props {
-  /** Home finale: chrome "PT" lettering rendered in Blender, tilting with the pointer. */
-  showcase?: boolean;
-}
-const { showcase = false } = Astro.props;
+
 ---
 
-<footer class:list={["footer", { showcase }]}>
-  {
-    showcase && (
-      <div class="finale" aria-hidden="true" data-finale>
-        <div class="finale-glow" />
-        <img src="/media/chrome-pt.webp" alt="" width="1400" height="1400" loading="lazy" decoding="async" class="finale-pt" data-finale-pt />
-      </div>
-    )
-  }
+<footer class="footer">
   <div class="frame">
     <hr class="rule-strong" />
     <div class="grid-12 footer-top">
@@ -67,32 +55,6 @@ const { showcase = false } = Astro.props;
     position: relative;
     padding-block: clamp(64px, 10vw, 160px) 32px;
   }
-  /* Home finale: chrome lettering floats above the CTA, tilting toward the pointer. */
-  .finale {
-    position: relative;
-    height: clamp(260px, 42vw, 560px);
-    display: grid;
-    place-items: center;
-    perspective: 1000px;
-    margin-bottom: clamp(16px, 3vw, 40px);
-  }
-  .finale-glow {
-    position: absolute;
-    width: min(60vw, 640px);
-    aspect-ratio: 2 / 1;
-    border-radius: 50%;
-    background: radial-gradient(closest-side, color-mix(in oklab, var(--orange) 45%, transparent), transparent);
-    filter: blur(40px);
-    opacity: 0.6;
-  }
-  .finale-pt {
-    position: relative;
-    width: min(70vw, 620px);
-    height: auto;
-    transform: rotateX(var(--ty, 0deg)) rotateY(var(--tx, 0deg));
-    transition: transform 600ms var(--ease-out);
-    filter: drop-shadow(0 40px 40px rgb(0 0 0 / 0.25));
-  }
   .footer-top {
     padding-block: 32px 64px;
     row-gap: 48px;
@@ -107,8 +69,8 @@ const { showcase = false } = Astro.props;
     color: var(--accent-as-text);
   }
   .footer-cta .script {
-    font-size: 1.45em;
-    line-height: 0.6;
+    font-size: 1.05em;
+    line-height: 0.9;
     color: var(--accent-as-text);
   }
   .footer-meta {

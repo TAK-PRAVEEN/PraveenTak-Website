@@ -84,7 +84,7 @@ export function initHomeMotion(): () => void {
 
   const cleanups: (() => void)[] = [];
   mm.add("(prefers-reduced-motion: no-preference)", () => {
-    cleanups.push(windowScene(), stackedWork(), bigNumbers(), finaleTilt());
+    cleanups.push(windowScene(), stackedWork(), bigNumbers());
   });
   // The sideways strip only pins on wide screens; phones keep a native swipe row.
   mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
@@ -247,24 +247,4 @@ function bigNumbers(): () => void {
     });
   });
   return () => tweens.forEach((t) => (t?.scrollTrigger?.kill(), t?.kill()));
-}
-
-/* Finale: chrome lettering tilts toward the pointer and floats gently. */
-function finaleTilt(): () => void {
-  const pt = document.querySelector<HTMLElement>("[data-finale-pt]");
-  if (!pt) return () => {};
-  const float = gsap.to(pt, { y: -14, duration: 3.2, ease: "sine.inOut", yoyo: true, repeat: -1 });
-  const onMove = (e: PointerEvent) => {
-    const r = pt.getBoundingClientRect();
-    if (r.bottom < 0 || r.top > window.innerHeight) return;
-    const x = (e.clientX - (r.left + r.width / 2)) / window.innerWidth;
-    const y = (e.clientY - (r.top + r.height / 2)) / window.innerHeight;
-    pt.style.setProperty("--tx", `${(x * 26).toFixed(2)}deg`);
-    pt.style.setProperty("--ty", `${(-y * 18).toFixed(2)}deg`);
-  };
-  window.addEventListener("pointermove", onMove, { passive: true });
-  return () => {
-    float.kill();
-    window.removeEventListener("pointermove", onMove);
-  };
 }

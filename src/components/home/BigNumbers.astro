@@ -33,14 +33,15 @@ const items = [
     {
       items.map((it, i) => (
         <li class:list={["num", { wide: i === 0 }]}>
-          <div class="num-meta hud">
-            <span>{String(i + 1).padStart(2, "0")}</span>
-            <span class="dim">{it.code}</span>
+          <div class="num-top hud">
+            <span class="num-index">{String(i + 1).padStart(2, "0")}</span>
+            <span class="num-code">{it.code}</span>
           </div>
           <p class="numeral num-value" data-count={it.value}>{it.value}</p>
-          <p class="num-label">{it.label}</p>
-          <p class="hud dim num-src">SRC — {it.src}</p>
-          <span class="num-ticks" aria-hidden="true"></span>
+          <div class="num-bottom">
+            <p class="num-label">{it.label}</p>
+            <p class="hud num-src">{it.src}</p>
+          </div>
         </li>
       ))
     }
@@ -54,6 +55,7 @@ const items = [
   .numbers-head {
     display: flex;
     justify-content: space-between;
+    gap: 16px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--line-strong);
   }
@@ -66,9 +68,10 @@ const items = [
   }
   .numbers-grid {
     list-style: none;
-    margin: 0;
+    margin: 24px 0 0;
     padding: 0;
     display: grid;
+    gap: 16px;
     grid-template-columns: 1fr;
   }
   @media (min-width: 900px) {
@@ -79,47 +82,52 @@ const items = [
       grid-column: 1 / -1;
     }
   }
+  /* Each figure is its own clear card. */
   .num {
-    position: relative;
-    display: grid;
-    gap: 10px;
-    padding: 28px 0 36px;
-    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 28px;
+    min-height: 260px;
+    padding: clamp(20px, 2.4vw, 32px);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--panel);
   }
-  @media (min-width: 900px) {
-    .num:not(.wide):nth-child(even) {
-      padding-left: 28px;
-      border-left: 1px solid var(--line);
-    }
-  }
-  .num-meta {
+  .num-top {
     display: flex;
     justify-content: space-between;
+    gap: 12px;
+    color: var(--fg-muted);
+  }
+  .num-index {
+    color: var(--fg);
   }
   .num-value {
     margin: 0;
-    font-size: clamp(3.2rem, 1rem + 5.4vw, 6.8rem);
+    font-size: clamp(3rem, 1rem + 5vw, 6rem);
     white-space: nowrap;
   }
   .wide .num-value {
-    font-size: clamp(6rem, 2rem + 16vw, 18rem);
+    font-size: clamp(4.5rem, 1.5rem + 9vw, 11rem);
+  }
+  .num-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
   }
   .num-label {
     margin: 0;
     font-size: var(--text-lead);
+    font-weight: 500;
   }
   .num-src {
     margin: 0;
     font-size: 9px;
-  }
-  /* Measuring ticks along the right edge (Polymer 48). */
-  .num-ticks {
-    position: absolute;
-    right: 0;
-    top: 28px;
-    bottom: 36px;
-    width: 10px;
-    background: repeating-linear-gradient(to bottom, var(--fg-muted) 0 1px, transparent 1px 12px);
-    opacity: 0.5;
+    color: var(--fg-muted);
   }
 </style>
