@@ -285,12 +285,6 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
       border-color var(--dur) var(--ease-out);
     border-bottom: 1px solid transparent;
   }
-  .nav[data-scrolled] {
-    background: color-mix(in oklab, var(--bg) 72%, transparent);
-    -webkit-backdrop-filter: blur(14px) saturate(1.2);
-    backdrop-filter: blur(14px) saturate(1.2);
-    border-bottom-color: var(--line);
-  }
   @media (prefers-reduced-transparency: reduce) {
     .nav[data-scrolled] {
       background: var(--bg);
@@ -488,10 +482,10 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     min-height: calc(100svh - var(--nav-h) - 64px);
   }
   .dial {
-    --r: min(36vw, 150px);
+    --r: min(32vw, 150px);
     --ring: 0deg;
     position: relative;
-    width: calc(var(--r) * 2 + 120px);
+    width: min(calc(var(--r) * 2 + 110px), calc(100vw - 16px));
     aspect-ratio: 1;
     touch-action: none;
     user-select: none;
