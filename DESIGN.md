@@ -298,7 +298,7 @@ and availability, résumé, social links, any Blender renders, chatbot AI provid
 | Piece | Where | Notes |
 |---|---|---|
 | Michroma (HUD/numerals) | `--font-hud`, `.hud`, `.numeral` | Instrument details and big numbers only |
-| Kaushan Script (script) | `--font-script`, `.script` | Confident brush — human counterpoint to the machine type |
+| Comforter Brush (script) | `--font-script`, `.script` | Dry-brush signature — chosen in /playground |
 | Decode text | `data-decode`, `data-decode-hover` | GSAP ScrambleText; aria-label keeps the real text |
 | Masked line reveal | `data-reveal-lines` | SplitText `mask: "lines"` on page titles |
 | Terminal caret | `.caret` | Blinking `_` after technical labels |
@@ -314,3 +314,6 @@ and availability, résumé, social links, any Blender renders, chatbot AI provid
 | Home finale | `Footer.astro` (`showcase`) | Blender chrome "PT", pointer tilt |
 | First-visit intro | `motion/Intro.astro` | Once per browser, skippable; code not video |
 | Blender pipeline | `scripts/render-sculpture.py`, `prepare-renders.sh` | Cycles/OptiX on the RTX 4050 |
+
+
+**Type system (chosen 09 Nov 2026 in /playground):** Inter Tight (headlines) · IBM Plex Sans (body) · Space Mono (labels) · Michroma (numbers/HUD) · Comforter Brush (script). Background: ink, all accents, paper-bleed rendering + ink drop on click.

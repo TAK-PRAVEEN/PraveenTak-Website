@@ -53,4 +53,8 @@ export const MOTION = {
   binaryPortrait: true,
   /** Ink-in-water fluid background reacting to the cursor. */
   inkBackground: true,
+  /** "paper": ink soaks into paper and stains; "liquid": swirls only. */
+  inkMode: "paper" as "paper" | "liquid",
+  /** A burst of ink wherever the visitor clicks. */
+  inkClickDrops: true,
 } as const;

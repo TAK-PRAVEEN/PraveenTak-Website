@@ -16,7 +16,8 @@ const ROLES: { key: string; label: string; vars: string[]; fallback: string; fon
     vars: ["--font-script"],
     fallback: "cursive",
     fonts: [
-      { name: "Kaushan Script", current: true, local: true },
+      { name: "Comforter Brush", current: true, local: true },
+      { name: "Kaushan Script" },
       { name: "Mrs Saint Delafield" },
       { name: "Herr Von Muellerhoff" },
       { name: "Monsieur La Doulaise" },
@@ -31,7 +32,6 @@ const ROLES: { key: string; label: string; vars: string[]; fallback: string; fon
       { name: "Hurricane" },
       { name: "The Nautigal" },
       { name: "WindSong" },
-      { name: "Comforter Brush" },
       { name: "Petemoss" },
       { name: "Meow Script" },
       { name: "Ephesis" },
@@ -44,12 +44,12 @@ const ROLES: { key: string; label: string; vars: string[]; fallback: string; fon
     vars: ["--font-display"],
     fallback: "sans-serif",
     fonts: [
-      { name: "Space Grotesk", current: true, local: true },
+      { name: "Inter Tight", current: true, local: true },
+      { name: "Space Grotesk", axes: "wght@400;600;700" },
       { name: "Syne", axes: "wght@400;700;800" },
       { name: "Unbounded", axes: "wght@400;600;800" },
       { name: "Bricolage Grotesque", axes: "wght@400;600;800" },
       { name: "Familjen Grotesk", axes: "wght@400;600;700" },
-      { name: "Inter Tight", axes: "wght@400;600;800" },
       { name: "Archivo", axes: "wght@400;600;800" },
       { name: "Michroma", local: true },
     ],
@@ -60,12 +60,12 @@ const ROLES: { key: string; label: string; vars: string[]; fallback: string; fon
     vars: ["--font-sans"],
     fallback: "sans-serif",
     fonts: [
-      { name: "Manrope", current: true, local: true },
+      { name: "IBM Plex Sans", current: true, local: true },
+      { name: "Manrope", axes: "wght@400;500;600" },
       { name: "Inter", axes: "wght@400;500;600" },
       { name: "DM Sans", axes: "wght@400;500;600" },
       { name: "Plus Jakarta Sans", axes: "wght@400;500;600" },
       { name: "Instrument Sans", axes: "wght@400;500;600" },
-      { name: "IBM Plex Sans", axes: "wght@400;500;600" },
     ],
   },
   {
@@ -93,7 +93,7 @@ const ROLES: { key: string; label: string; vars: string[]; fallback: string; fon
       { name: "Chakra Petch", axes: "wght@400;600" },
       { name: "Oxanium", axes: "wght@400;600" },
       { name: "Audiowide" },
-      { name: "Space Grotesk", local: true },
+      { name: "Inter Tight", local: true },
     ],
   },
 ];
@@ -101,7 +101,8 @@ const ROLES: { key: string; label: string; vars: string[]; fallback: string; fon
 const remote = [...new Set(ROLES.flatMap((r) => r.fonts.filter((f) => !f.local).map((f) => `${f.name.replace(/ /g, "+")}${f.axes ? `:${f.axes}` : ""}`)))];
 
 const BACKGROUNDS = [
-  { key: "ink", n: "01", title: "Ink — all accents", note: "Current. Cursor stirs water; orange, blue, lime and lavender inks." },
+  { key: "ink", n: "01", title: "Ink — paper bleed", note: "Current. Ink soaks into the paper: feathered fibre edges, a darker dried rim, fades over ~6 s." },
+  { key: "liquid", n: "01b", title: "Ink — liquid only", note: "The previous look: ink just swirls in water, no stains left behind." },
   { key: "tinted", n: "02", title: "Section-tinted ink", note: "One accent per page — tells you where you are. Pick the accent:" },
   { key: "scroll", n: "03", title: "Scroll-reactive ink", note: "Fast scrolling drags the ink in streaks, like a brush through water." },
   { key: "gradient", n: "04", title: "Drifting gradient", note: "Slow, soft accent blobs drifting on their own. Cheapest; good for phones." },
@@ -215,7 +216,7 @@ const LAYERS = [
     <div class="layers">
       {
         LAYERS.map((l) => (
-          <button type="button" class="layer" aria-pressed="false" data-layer={l.key}>
+          <button type="button" class="layer" aria-pressed={l.key === "click" ? "true" : "false"} data-layer={l.key}>
             <span class="heading">{l.title}</span>
             <span class="bg-note">{l.note}</span>
           </button>
@@ -240,6 +241,7 @@ const LAYERS = [
     setScrollReactive(on: boolean): void;
     setClickDrops(on: boolean): void;
     setEnabled(on: boolean): void;
+    setMode(m: "paper" | "liquid"): void;
   };
   const getInk = () => (window as unknown as { __ink?: Ink }).__ink;
 
@@ -287,11 +289,12 @@ const LAYERS = [
     const grain = document.querySelector<HTMLElement>("[data-pg-grain]")!;
     let bg = "ink";
     let accent = "orange";
-    const layers = { grain: false, click: false };
+    const layers = { grain: false, click: true };
     const showBg = (key: string) => {
       const ink = getInk();
-      const inkOn = key === "ink" || key === "tinted" || key === "scroll";
+      const inkOn = key === "ink" || key === "liquid" || key === "tinted" || key === "scroll";
       ink?.setEnabled(inkOn);
+      ink?.setMode(key === "liquid" ? "liquid" : "paper");
       ink?.setPalette(key === "tinted" ? [accent] : ["orange", "blue", "lime", "lavender"]);
       ink?.setScrollReactive(key === "scroll");
       gradient.classList.toggle("on", key === "gradient");
@@ -354,7 +357,8 @@ const LAYERS = [
         ink?.setEnabled(true);
         ink?.setPalette(["orange", "blue", "lime", "lavender"]);
         ink?.setScrollReactive(false);
-        ink?.setClickDrops(false);
+        ink?.setClickDrops(true);
+        ink?.setMode("paper");
       },
       { once: true },
     );

@@ -55,15 +55,44 @@ const FS = {
     void main() { float L = texture(uPressure, vL).x, R = texture(uPressure, vR).x, T = texture(uPressure, vT).x, B = texture(uPressure, vB).x;
       vec2 v = texture(uVelocity, vUv).xy - vec2(R - L, T - B); o = vec4(v, 0.0, 1.0); }`,
   clear: head + `uniform sampler2D uTexture; uniform float value; void main() { o = value * texture(uTexture, vUv); }`,
-  display: head + `uniform sampler2D uDye; uniform vec3 uBg; uniform float uStrength, uDark;
+  // Paper soaks the ink up: the stain keeps the strongest dye that passed, then slowly dries/lightens.
+  absorb: head + `uniform sampler2D uStain, uDye; uniform float dt, fade;
+    void main() { vec3 st = texture(uStain, vUv).rgb * (1.0 - fade * dt); vec3 d = texture(uDye, vUv).rgb;
+      o = vec4(max(st, d * 0.6), 1.0); }`,
+  display: head + `uniform sampler2D uDye, uStain; uniform vec3 uBg; uniform float uStrength, uDark, uPaper, uTime;
+    float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+    float fbm(vec2 p) { float s = 0.0, a = 0.5; for (int k = 0; k < 4; k++) { s += a * vn(p); p = p * 2.03 + 17.0; a *= 0.5; } return s; }
     void main() {
+      // ---- liquid layer (water) ----
       vec3 c = texture(uDye, vUv).rgb * uStrength;
       float a = clamp(max(c.r, max(c.g, c.b)), 0.0, 1.0);
       vec3 tint = c / max(a, 1e-3);
-      // Ink staining paper, capped so text on top always stays readable.
       vec3 paper = mix(uBg, tint, min(a, 0.38));
-      vec3 night = uBg + c * 0.75;         // ink glowing in dark water
-      o = vec4(mix(paper, night, uDark), 1.0);
+      vec3 night = uBg + c * 0.75;
+      vec3 liquid = mix(paper, night, uDark);
+
+      // ---- paper-bleed layer: ink absorbed into paper fibres ----
+      vec3 sc = texture(uStain, vUv).rgb;
+      float amt = max(sc.r, max(sc.g, sc.b));
+      vec3 stint = sc / max(amt, 1e-3);
+      vec2 px = gl_FragCoord.xy;
+      // Fibres: long, mostly-horizontal streaks + fine grain — they make the edge feather.
+      float fib = fbm(px * vec2(0.035, 0.11)) * 0.65 + fbm(px * 0.22) * 0.35;
+      float edge = 0.075 + 0.13 * fib;
+      float body = smoothstep(edge, edge + 0.14, amt);
+      // Darker "tide line" where the wet edge dried (coffee-ring effect).
+      float rim = smoothstep(edge, edge + 0.03, amt) * (1.0 - smoothstep(edge + 0.03, edge + 0.12, amt));
+      float mottle = 0.85 + 0.3 * fbm(px * 0.06);
+      float alpha = min(0.32, (body * 0.2 * mottle + rim * 0.2));
+      vec3 bleedPaper = mix(uBg, stint * 0.88, alpha);
+      vec3 bleedNight = uBg + stint * (body * 0.22 + rim * 0.18);
+      vec3 bleed = mix(bleedPaper, bleedNight, uDark);
+      // A faint wet sheen of the moving water stays on top of the stains.
+      bleed = mix(bleed, liquid, 0.25);
+
+      o = vec4(mix(liquid, bleed, uPaper), 1.0);
     }`,
 };
 
@@ -78,13 +107,15 @@ export interface InkController {
   setScrollReactive(on: boolean): void;
   /** A burst of colour wherever the visitor clicks. */
   setClickDrops(on: boolean): void;
+  /** "paper": ink soaks into paper fibres and leaves stains; "liquid": ink only swirls in water. */
+  setMode(mode: "paper" | "liquid"): void;
   /** Show / hide (and pause) the simulation. */
   setEnabled(on: boolean): void;
   destroy(): void;
 }
 type Double = { read: FBO; write: FBO; swap(): void };
 
-export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
+export function mountInkFluid(canvas: HTMLCanvasElement, opts: { mode?: "paper" | "liquid"; clickDrops?: boolean } = {}): InkController {
   const gl = canvas.getContext("webgl2", { alpha: false, antialias: false, depth: false, preserveDrawingBuffer: false });
   if (!gl || !gl.getExtension("EXT_color_buffer_float")) throw new Error("float render targets unavailable");
 
@@ -134,6 +165,7 @@ export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
   let d = dims(DYE);
   let velocity = double(s.w, s.h);
   let dye = double(d.w, d.h);
+  let stain = double(d.w, d.h);
   let pressure = double(s.w, s.h);
   let divergence = fbo(s.w, s.h);
   let curlFbo = fbo(s.w, s.h);
@@ -175,7 +207,8 @@ export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
   let ci = 0;
   let enabled = true;
   let scrollReactive = false;
-  let clickDrops = false;
+  let clickDrops = opts.clickDrops ?? false;
+  let paperMode = opts.mode === "liquid" ? 0 : 1;
   const nextColor = (k: number) => {
     const c = PALETTE[ci++ % PALETTE.length];
     return [c[0] * k, c[1] * k, c[2] * k] as [number, number, number];
@@ -234,7 +267,7 @@ export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
     const y = 1 - e.clientY / window.innerHeight;
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2;
-      splat(x, y, Math.cos(a) * 1400, Math.sin(a) * 1400, nextColor(0.5), 0.0035);
+      splat(x, y, Math.cos(a) * 1100, Math.sin(a) * 1100, nextColor(0.38), 0.0026);
     }
   };
   window.addEventListener("pointerdown", onDown, { passive: true });
@@ -256,7 +289,7 @@ export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
   for (let i = 0; i < 4; i++) drop();
   let ambient = 0;
   let colorTimer = 0;
-  let current = nextColor(0.35);
+  let current = nextColor(0.24);
 
   const resize = () => {
     const w = Math.round(window.innerWidth);
@@ -283,7 +316,7 @@ export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
     colorTimer += dt;
     if (colorTimer > 1.4) {
       colorTimer = 0;
-      current = nextColor(0.35);
+      current = nextColor(0.24);
     }
     if (pointer.moved) {
       pointer.moved = false;
@@ -344,8 +377,20 @@ export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
     }, [1 / d.w, 1 / d.h]);
     dye.swap();
 
+    if (paperMode) {
+      run("absorb", stain.write, (u) => {
+        gl.uniform1i(u("uStain"), bindTex(stain.read.tex));
+        gl.uniform1i(u("uDye"), bindTex(dye.read.tex));
+        gl.uniform1f(u("dt"), dt);
+        gl.uniform1f(u("fade"), 0.16); // stains dry out over ~6 s
+      }, [1 / d.w, 1 / d.h]);
+      stain.swap();
+    }
+
     run("display", null, (u) => {
       gl.uniform1i(u("uDye"), bindTex(dye.read.tex));
+      gl.uniform1i(u("uStain"), bindTex(stain.read.tex));
+      gl.uniform1f(u("uPaper"), paperMode);
       gl.uniform3f(u("uBg"), bg[0], bg[1], bg[2]);
       gl.uniform1f(u("uStrength"), dark ? 0.5 : 0.32);
       gl.uniform1f(u("uDark"), dark);
@@ -365,6 +410,7 @@ export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
     pressure = double(s.w, s.h);
     divergence = fbo(s.w, s.h);
     curlFbo = fbo(s.w, s.h);
+    stain = double(d.w, d.h);
   };
   window.addEventListener("resize", onResizeSim);
 
@@ -386,6 +432,7 @@ export function mountInkFluid(canvas: HTMLCanvasElement): InkController {
     },
     setScrollReactive: (on) => void (scrollReactive = on),
     setClickDrops: (on) => void (clickDrops = on),
+    setMode: (mode) => void (paperMode = mode === "paper" ? 1 : 0),
     setEnabled(on) {
       enabled = on;
       canvas.style.visibility = on ? "" : "hidden";
