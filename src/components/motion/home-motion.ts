@@ -112,56 +112,70 @@ function windowScene(): () => void {
   const frameOut = sec.querySelector<HTMLElement>("[data-win-frame]");
   const before = sec.querySelector<HTMLElement>("[data-win-before]");
 
-  const TOTAL = 90;
+  // Looping Blender sequence: wavy glass orb with glowing filaments inside.
+  const TOTAL = 60;
   const small = window.matchMedia("(max-width: 767px)").matches;
   const stepBy = small ? 2 : 1; // phones load every 2nd frame
-  const frames: (HTMLImageElement | null)[] = new Array(TOTAL).fill(null);
+  const seq = (name: string) => ({ name, frames: new Array<HTMLImageElement | null>(TOTAL).fill(null) });
+  const outside = seq("orb-glass");
   let loaded = false;
   const load = () => {
     if (loaded) return;
     loaded = true;
-    for (let i = 0; i < TOTAL; i += stepBy) {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = `/media/turntable/orb-${String(i).padStart(2, "0")}.webp`;
-      img.onload = () => {
-        frames[i] = img;
-        if (i === 0) {
-          document.documentElement.classList.add("win-ready");
-          draw(0);
-        }
-      };
-    }
+    for (const s of [outside])
+      for (let i = 0; i < TOTAL; i += stepBy) {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = `/media/turntable/${s.name}-${String(i).padStart(2, "0")}.webp`;
+        img.onload = () => {
+          s.frames[i] = img;
+          if (s === outside && i === 0) document.documentElement.classList.add("win-ready");
+        };
+      }
   };
-  const nearest = (i: number) => {
+  const nearest = (s: ReturnType<typeof seq>, i: number) => {
     for (let d = 0; d < TOTAL; d++) {
-      const a = frames[(i + d) % TOTAL] ?? frames[(i - d + TOTAL) % TOTAL];
+      const a = s.frames[(i + d) % TOTAL] ?? s.frames[(i - d + TOTAL) % TOTAL];
       if (a) return a;
     }
     return null;
   };
-  const draw = (i: number) => {
-    const img = nearest(i);
-    if (!img) return;
+
+  // State: frame position advances on its own (idle spin), scroll adds to it; dive = 0 outside .. 1 inside.
+  const st = { pos: 0, dive: 0, scrollVel: 0 };
+  const draw = () => {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = Math.round(canvas.clientWidth * dpr);
     const h = Math.round(canvas.clientHeight * dpr);
+    if (!w || !h) return;
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w;
       canvas.height = h;
     }
+    const i = ((Math.floor(st.pos) % TOTAL) + TOTAL) % TOTAL;
     ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(img, 0, 0, w, h);
+    // The orb drifts toward you as you scroll in (no fade: it stays the hero of the scene).
+    const out = nearest(outside, i);
+    if (out) {
+      const sc = 1 + st.dive * 0.22;
+      ctx.drawImage(out, (w - w * sc) / 2, (h - h * sc) / 2, w * sc, h * sc);
+    }
+    ctx.globalAlpha = 1;
+    canvas.style.setProperty("--dive-scale", (1 + st.dive * 0.12).toFixed(3));
+    if (rot) rot.textContent = String(Math.round((i / TOTAL) * 360)).padStart(3, "0");
+    if (frameOut) frameOut.textContent = String(i).padStart(2, "0");
   };
 
   // Preload the frames only as the scene approaches, so they never compete with the hero portrait.
   const pre = ScrollTrigger.create({ trigger: sec, start: "top 160%", once: true, onEnter: load });
-  const state = { f: 0 };
-  // Phones: no pin and no window — the sculpture simply turns as the section scrolls past.
+
+  // Scroll: opens the window (desktop) and dives inside; scroll speed adds spin.
   const tl = gsap.timeline({
-    scrollTrigger: small
-      ? { trigger: sec, start: "top bottom", end: "bottom top", scrub: 0.5 }
-      : { trigger: sec, start: "top top", end: "bottom bottom", scrub: 0.5 },
+    scrollTrigger: {
+      ...(small ? { trigger: sec, start: "top 60%", end: "bottom 40%" } : { trigger: sec, start: "top top", end: "bottom bottom" }),
+      scrub: 0.6,
+      onUpdate: (self) => (st.scrollVel += self.getVelocity() / 900),
+    },
   });
   if (!small) {
     tl.fromTo(pane, { clipPath: "inset(24% 6% 24% 54% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "power2.inOut", duration: 0.3 }, 0).to(
@@ -170,25 +184,26 @@ function windowScene(): () => void {
       0,
     );
   }
-  tl.to(
-      state,
-      {
-        f: TOTAL - 1,
-        ease: "none",
-        duration: 0.7,
-        onUpdate: () => {
-          const i = Math.round(state.f);
-          draw(i);
-          if (rot) rot.textContent = String(Math.round((i / TOTAL) * 360)).padStart(3, "0");
-          if (frameOut) frameOut.textContent = String(i).padStart(2, "0");
-        },
-      },
-      small ? 0 : 0.3,
-    );
-  const onResize = () => draw(Math.round(state.f));
+  tl.to(st, { dive: 1, ease: "power1.inOut", duration: 0.55 }, small ? 0.2 : 0.4).to(st, { duration: 0.15 });
+
+  // Idle loop: ~18 fps of sequence playback while the scene is on screen; scroll velocity boosts it.
+  let visible = false;
+  const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
+  io.observe(sec);
+  const tick = (_t: number, dt: number) => {
+    if (!visible) return;
+    st.scrollVel *= 0.9;
+    st.pos += (dt / 1000) * 18 + Math.max(-6, Math.min(6, st.scrollVel));
+    draw();
+  };
+  gsap.ticker.add(tick);
+
+  const onResize = () => draw();
   window.addEventListener("resize", onResize);
   return () => {
     pre.kill();
+    io.disconnect();
+    gsap.ticker.remove(tick);
     tl.scrollTrigger?.kill();
     tl.kill();
     window.removeEventListener("resize", onResize);

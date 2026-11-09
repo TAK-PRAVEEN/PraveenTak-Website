@@ -37,6 +37,8 @@ ap.add_argument("--frames", type=int, default=0, help="render an N-frame 360° t
 ap.add_argument("--spin", choices=["turntable", "bangle"], default="turntable",
                 help="turntable: rotate about the world vertical; bangle: the ring revolves about its own axis, like a bracelet on a wrist")
 ap.add_argument("--seed", type=int, default=7)
+ap.add_argument("--orb-style", choices=["chrome", "glass"], default="chrome")
+ap.add_argument("--wires", type=int, default=0, help="glowing filament strands inside the orb (ref: wire sphere)")
 ap.add_argument("--core", type=float, default=0.55, help="how pale the facing core is (1 = white, 0 = full tint)")
 ap.add_argument("--film", type=float, default=380.0, help="thin-film thickness in nm (0 = off; it shifts hues toward blue)")
 a = ap.parse_args(argv)
@@ -137,33 +139,111 @@ FLOW = None  # empty whose orbit drives the orb's flowing surface (loops seamles
 
 
 def orb():
-    """Liquid-chrome sphere: a flowing surface (refs: liquid chrome ball) with
-    pressed-in bubble cells (refs: glass bubble orb)."""
+    """Orb in two styles (refs: liquid chrome ball / glass bubble orb).
+    chrome: smooth large liquid waves, silver. glass: clear smoky glass with bubble craters."""
     global FLOW
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=192, ring_count=96, radius=1.15)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=160, ring_count=80, radius=1.15)
     o = bpy.context.active_object
     FLOW = bpy.data.objects.new("Flow", None)
     bpy.context.collection.objects.link(FLOW)
-    # Liquid folds (ref: liquid chrome ball): broad marble ridges + a slow swell,
-    # both sampled through the moving empty so the liquid flows and loops.
-    t1 = bpy.data.textures.new("folds", type="MARBLE")
-    t1.marble_type = "SHARPER"
-    t1.noise_scale = 0.42
-    t1.turbulence = 5.0
-    t1.noise_depth = 1
-    d1 = o.modifiers.new("Folds", "DISPLACE")
-    d1.texture, d1.texture_coords, d1.texture_coords_object = t1, "OBJECT", FLOW
-    d1.strength, d1.mid_level = 0.11, 0.5
-    t2 = bpy.data.textures.new("swell", type="CLOUDS")
-    t2.noise_scale = 1.1
-    t2.noise_depth = 0
-    d2 = o.modifiers.new("Swell", "DISPLACE")
-    d2.texture, d2.texture_coords, d2.texture_coords_object = t2, "OBJECT", FLOW
-    d2.strength, d2.mid_level = 0.1, 0.5
+    if a.orb_style == "chrome":
+        # Crinkled liquid (ref B): soft marble ripples on a slow swell.
+        t = bpy.data.textures.new("ripples", type="MARBLE")
+        t.marble_type, t.noise_basis_2 = "SHARP", "SIN"
+        t.noise_scale, t.turbulence, t.noise_depth = 0.42, 4.0, 1
+        d = o.modifiers.new("Ripples", "DISPLACE")
+        d.texture, d.texture_coords, d.texture_coords_object = t, "OBJECT", FLOW
+        d.strength, d.mid_level = 0.075, 0.5
+        t2 = bpy.data.textures.new("swell", type="CLOUDS")
+        t2.noise_scale, t2.noise_depth = 0.7, 1
+        d2 = o.modifiers.new("Swell", "DISPLACE")
+        d2.texture, d2.texture_coords, d2.texture_coords_object = t2, "OBJECT", FLOW
+        d2.strength, d2.mid_level = 0.09, 0.5
+    else:
+        t = bpy.data.textures.new("cells", type="VORONOI")
+        t.noise_scale = 0.58
+        t.distance_metric = "DISTANCE"
+        d = o.modifiers.new("Cells", "DISPLACE")
+        d.texture, d.texture_coords = t, "LOCAL"
+        d.strength, d.mid_level = -0.035, 0.0
+        t2 = bpy.data.textures.new("ripple", type="CLOUDS")
+        t2.noise_scale, t2.noise_depth = 0.35, 2
+        d2 = o.modifiers.new("Ripple", "DISPLACE")
+        d2.texture, d2.texture_coords, d2.texture_coords_object = t2, "OBJECT", FLOW
+        d2.strength, d2.mid_level = 0.012, 0.5
+        # Wavy, liquid silhouette (ref B's edge): a slow swell + soft marble ripples, flowing.
+        tw = bpy.data.textures.new("edgeSwell", type="CLOUDS")
+        tw.noise_scale, tw.noise_depth = 0.7, 1
+        dw = o.modifiers.new("EdgeSwell", "DISPLACE")
+        dw.texture, dw.texture_coords, dw.texture_coords_object = tw, "OBJECT", FLOW
+        dw.strength, dw.mid_level = 0.11, 0.5
+        tr = bpy.data.textures.new("edgeRipple", type="MARBLE")
+        tr.marble_type, tr.noise_basis_2 = "SOFT", "SIN"
+        tr.noise_scale, tr.turbulence, tr.noise_depth = 0.45, 3.0, 1
+        dr = o.modifiers.new("EdgeRipple", "DISPLACE")
+        dr.texture, dr.texture_coords, dr.texture_coords_object = tr, "OBJECT", FLOW
+        dr.strength, dr.mid_level = 0.045, 0.5
     o.modifiers.new("Smooth", "SUBSURF").levels = 2
     bpy.ops.object.shade_smooth()
     o.rotation_euler = (math.radians(18), math.radians(-24), 0)
     return o
+
+
+WIRES = None
+
+
+def wires(n, radius=0.98):
+    """Glowing filaments swirling inside the sphere: streamlines of a smooth flow field."""
+    import random
+    global WIRES
+    rng = random.Random(a.seed)
+    cu = bpy.data.curves.new("wires", "CURVE")
+    cu.dimensions = "3D"
+    cu.bevel_depth = 0.0009
+    cu.bevel_resolution = 1
+    def field(x, y, z):
+        return (
+            math.sin(1.7 * y + 0.6) + 0.6 * math.cos(2.3 * z),
+            math.sin(1.9 * z + 1.3) + 0.6 * math.cos(2.1 * x),
+            math.sin(1.5 * x + 2.1) + 0.6 * math.cos(2.7 * y),
+        )
+    for _ in range(n):
+        # start anywhere inside, more near the shell (as in the reference)
+        while True:
+            p = [rng.uniform(-1, 1) for _ in range(3)]
+            r = math.sqrt(sum(c * c for c in p))
+            if 0.35 < r < 1.0:
+                break
+        p = [c * radius for c in p]
+        pts = []
+        for _ in range(70):
+            pts.append(tuple(p))
+            v = field(*p)
+            l = math.sqrt(sum(c * c for c in v)) or 1
+            p = [p[k] + 0.045 * v[k] / l for k in range(3)]
+            r = math.sqrt(sum(c * c for c in p))
+            if r > radius:  # slide along the inner shell
+                p = [c * radius / r for c in p]
+        sp = cu.splines.new("NURBS")
+        sp.points.add(len(pts) - 1)
+        for k, q in enumerate(pts):
+            sp.points[k].co = (*q, 1)
+        sp.order_u = 4
+    ob = bpy.data.objects.new("Wires", cu)
+    bpy.context.collection.objects.link(ob)
+    m = bpy.data.materials.new("Filament")
+    m.use_nodes = True
+    nodes = m.node_tree.nodes
+    for nd in list(nodes):
+        nodes.remove(nd)
+    em = nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (1, 1, 1, 1)
+    em.inputs["Strength"].default_value = 0.7
+    out = nodes.new("ShaderNodeOutputMaterial")
+    m.node_tree.links.new(em.outputs[0], out.inputs[0])
+    cu.materials.append(m)
+    WIRES = ob
+    return ob
 
 
 def text_object():
@@ -189,6 +269,9 @@ def text_object():
 
 obj = {"ribbon": ribbon, "text": text_object, "orb": orb}[a.shape]()
 obj.data.materials.append(chrome_material())
+
+if a.shape == "orb" and a.wires > 0:
+    wires(a.wires)
 
 # Pivot for the turntable: parent the sculpture so its own tilt is preserved.
 pivot = bpy.data.objects.new("Pivot", None)
@@ -235,21 +318,64 @@ nt.links.new(ramp.outputs["Color"], bg.inputs["Color"])
 bg.inputs["Strength"].default_value = 0.9
 
 if a.shape == "orb":
-    # Real studio: dark room, the softboxes do the work (chrome reflects them as
-    # long white highlights) + two small coloured strips for the orange / blue glints.
-    softbox("GlintOrange", (-2.8, -2.2, -0.4), (95, 0, -50), (2.2, 0.18), 260, color=(1.0, 0.42, 0.12))
-    softbox("GlintBlue", (2.9, -1.6, 1.8), (60, 0, 60), (2.4, 0.16), 300, color=(0.25, 0.45, 1.0))
-    softbox("Under", (0.0, -1.5, -3.5), (160, 0, 0), (4.0, 0.5), 220)
-    ramp.color_ramp.elements[1].color = (0.75, 0.76, 0.8, 1)
-    ramp.color_ramp.elements[0].position = 0.35
-    ramp.color_ramp.elements[0].color = (0.1, 0.1, 0.11, 1)
-    # Silver chrome: plain metal, no tint ramp; a light soap-film for the A-ref glints.
     m = obj.data.materials[0]
     b = m.node_tree.nodes["Principled BSDF"]
     for l in list(b.inputs["Base Color"].links):
         m.node_tree.links.remove(l)
-    b.inputs["Base Color"].default_value = (0.92, 0.93, 0.95, 1)
-    b.inputs["Roughness"].default_value = 0.06
+    if a.orb_style == "chrome":
+        # Ref B: silver chrome in a soft studio (black floor -> bright sky) - big soft highlights.
+        b.inputs["Base Color"].default_value = (0.9, 0.9, 0.92, 1)
+        b.inputs["Metallic"].default_value = 1.0
+        b.inputs["Roughness"].default_value = 0.1
+        if "Thin Film Thickness" in b.inputs:
+            b.inputs["Thin Film Thickness"].default_value = 0.0
+        b.inputs["Roughness"].default_value = 0.12
+        # Bright silver room with a few dark bands (ref B reads silver with dark wavy lines).
+        ramp.color_ramp.elements[0].color = (0.35, 0.35, 0.36, 1)
+        ramp.color_ramp.elements[1].color = (1.3, 1.3, 1.32, 1)
+        wave = nt.nodes.new("ShaderNodeTexWave")
+        wave.wave_type, wave.bands_direction = "BANDS", "Z"
+        wave.inputs["Scale"].default_value = 1.4
+        wave.inputs["Distortion"].default_value = 0.8
+        darkb = nt.nodes.new("ShaderNodeValToRGB")
+        de = darkb.color_ramp.elements
+        de[0].position, de[0].color = 0.0, (0.03, 0.03, 0.03, 1)
+        de[1].position, de[1].color = 0.25, (1, 1, 1, 1)
+        gen = nt.nodes.new("ShaderNodeTexCoord")
+        nt.links.new(gen.outputs["Generated"], wave.inputs["Vector"])
+        nt.links.new(wave.outputs["Fac"], darkb.inputs["Fac"])
+        mul = nt.nodes.new("ShaderNodeMix"); mul.data_type = "RGBA"; mul.blend_type = "MULTIPLY"
+        mul.inputs["Factor"].default_value = 1.0
+        nt.links.new(ramp.outputs["Color"], mul.inputs[6])
+        nt.links.new(darkb.outputs["Color"], mul.inputs[7])
+        nt.links.new(mul.outputs[2], bg.inputs["Color"])
+    else:
+        # Ref A: clear glass, dark smoky surroundings, orange + blue light catching the craters.
+        b.inputs["Base Color"].default_value = (0.95, 0.97, 1.0, 1)
+        b.inputs["Metallic"].default_value = 0.0
+        b.inputs["Roughness"].default_value = 0.02
+        b.inputs["Transmission Weight"].default_value = 1.0
+        b.inputs["IOR"].default_value = 1.45
+        if "Thin Film Thickness" in b.inputs:
+            b.inputs["Thin Film Thickness"].default_value = 380.0
+        ramp.color_ramp.elements[0].color = (0.0, 0.0, 0.0, 1)
+        ramp.color_ramp.elements[1].color = (0.55, 0.57, 0.6, 1)
+        # Bubble craters as surface relief (silhouette stays a clean circle, like ref A).
+        nt2 = m.node_tree
+        vor = nt2.nodes.new("ShaderNodeTexVoronoi")
+        vor.feature = "SMOOTH_F1"
+        vor.inputs["Scale"].default_value = 3.2
+        vor.inputs["Smoothness"].default_value = 0.6
+        bump = nt2.nodes.new("ShaderNodeBump")
+        bump.inputs["Strength"].default_value = 0.85
+        bump.inputs["Distance"].default_value = 0.25
+        nt2.links.new(vor.outputs["Distance"], bump.inputs["Height"])
+        nt2.links.new(bump.outputs["Normal"], b.inputs["Normal"])
+        softbox("GlintOrange", (-2.6, 1.5, 0.4), (80, 0, -130), (3.0, 0.3), 900, color=(1.0, 0.45, 0.15))
+        softbox("GlintBlue", (2.6, 1.8, 1.0), (75, 0, 130), (3.0, 0.3), 900, color=(0.3, 0.5, 1.0))
+        scene.cycles.transmission_bounces = 12
+        CLOSE_UP = True
+        scene.cycles.max_bounces = 16
 
 # ---------- camera ----------
 cam_data = bpy.data.cameras.new("Cam")
@@ -257,6 +383,10 @@ cam_data.lens = 62
 cam = bpy.data.objects.new("Cam", cam_data)
 bpy.context.collection.objects.link(cam)
 cam.location = (0, -7.2, 0.5)
+if globals().get("CLOSE_UP"):
+    # "Inside" view: the glass sphere fills the frame like a lens (ref A).
+    cam.location = (0, -4.1, 0.3)
+    cam_data.lens = 50
 cam.rotation_euler = (math.radians(86), 0, 0)
 scene.camera = cam
 
@@ -274,6 +404,12 @@ if a.frames > 0:
     spinner.rotation_euler = (base[0], base[1], base[2] + math.tau * a.frames / (a.frames + 1))
     spinner.keyframe_insert("rotation_euler", frame=a.frames)
     pivot = spinner
+    # Wires counter-rotate slowly inside the glass (one full turn per loop -> seamless).
+    if WIRES is not None:
+        WIRES.rotation_euler = (0.3, 0.0, 0.0)
+        WIRES.keyframe_insert("rotation_euler", frame=1)
+        WIRES.rotation_euler = (0.3, 0.0, -math.tau * a.frames / (a.frames + 1))
+        WIRES.keyframe_insert("rotation_euler", frame=a.frames)
     # Orb: the flow empty travels a closed circle, so the liquid surface loops seamlessly.
     if FLOW is not None:
         for f in range(1, a.frames + 1):
