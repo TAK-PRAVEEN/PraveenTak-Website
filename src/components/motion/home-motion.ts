@@ -157,12 +157,20 @@ function windowScene(): () => void {
   // Preload the frames only as the scene approaches, so they never compete with the hero portrait.
   const pre = ScrollTrigger.create({ trigger: sec, start: "top 160%", once: true, onEnter: load });
   const state = { f: 0 };
+  // Phones: no pin and no window — the sculpture simply turns as the section scrolls past.
   const tl = gsap.timeline({
-    scrollTrigger: { trigger: sec, start: "top top", end: "bottom bottom", scrub: 0.5 },
+    scrollTrigger: small
+      ? { trigger: sec, start: "top bottom", end: "bottom top", scrub: 0.5 }
+      : { trigger: sec, start: "top top", end: "bottom bottom", scrub: 0.5 },
   });
-  tl.fromTo(pane, { clipPath: () => (window.innerWidth < 768 ? "inset(46% 10% 6% 10% round 24px)" : "inset(24% 6% 24% 54% round 28px)") }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "power2.inOut", duration: 0.3 }, 0)
-    .to(before, { opacity: 0, y: -20, duration: 0.12 }, 0)
-    .to(
+  if (!small) {
+    tl.fromTo(pane, { clipPath: "inset(24% 6% 24% 54% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "power2.inOut", duration: 0.3 }, 0).to(
+      before,
+      { opacity: 0, y: -20, duration: 0.12 },
+      0,
+    );
+  }
+  tl.to(
       state,
       {
         f: TOTAL - 1,
@@ -175,7 +183,7 @@ function windowScene(): () => void {
           if (frameOut) frameOut.textContent = String(i).padStart(2, "0");
         },
       },
-      0.3,
+      small ? 0 : 0.3,
     );
   const onResize = () => draw(Math.round(state.f));
   window.addEventListener("resize", onResize);

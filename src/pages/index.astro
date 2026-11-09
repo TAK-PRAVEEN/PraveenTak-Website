@@ -144,8 +144,7 @@ const statementLead = statementWords.join(" ");
     position: absolute;
     inset: 0;
     z-index: -1;
-    /* Slightly see-through: the ink background glows through like ink in dark water. */
-    background: color-mix(in oklab, var(--band-bg, var(--ink)) 84%, transparent);
+    background: var(--band-bg, var(--ink));
   }
   .band-inner {
     min-height: min(100svh, 980px);
@@ -228,4 +227,8 @@ const statementLead = statementWords.join(" ");
     }
   }
 
+  /* Slightly see-through when the ink background runs: ink glows through like ink in dark water. */
+  :global(html.ink-bg-on) .band-ink {
+    background: color-mix(in oklab, var(--band-bg, var(--ink)) 84%, transparent);
+  }
 </style>

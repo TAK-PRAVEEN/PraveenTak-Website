@@ -45,7 +45,7 @@ const profile = (await getEntry("profile", "main"))!.data;
       <h2 id="cert-title" class="micro">Certifications</h2>
       <span class="micro text-muted">{certs.length} total</span>
     </div>
-    <ul class="certs">
+    <ul class="certs" data-certs>
       {
         certs.map((c) => (
           <li class="cert">
@@ -56,6 +56,7 @@ const profile = (await getEntry("profile", "main"))!.data;
         ))
       }
     </ul>
+    <button type="button" class="micro certs-more" data-certs-more aria-expanded="false">Show all {certs.length}</button>
   </section>
 
   <section class="frame block" aria-labelledby="extra-title">
@@ -67,6 +68,19 @@ const profile = (await getEntry("profile", "main"))!.data;
     </ul>
   </section>
 </BaseLayout>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const list = document.querySelector<HTMLElement>("[data-certs]");
+    const btn = document.querySelector<HTMLButtonElement>("[data-certs-more]");
+    if (!list || !btn) return;
+    btn.onclick = () => {
+      const open = list.toggleAttribute("data-open");
+      btn.setAttribute("aria-expanded", String(open));
+      btn.textContent = open ? "Show fewer" : `Show all ${list.children.length}`;
+    };
+  });
+</script>
 
 <style>
   .timeline {
@@ -153,5 +167,23 @@ const profile = (await getEntry("profile", "main"))!.data;
     padding-block: 14px;
     border-bottom: 1px solid var(--line);
     font-size: var(--text-lead);
+  }
+  .certs-more {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  @media (max-width: 767px) {
+    .certs:not([data-open]) .cert:nth-child(n + 9) {
+      display: none;
+    }
+    .certs-more {
+      display: inline-block;
+    }
   }
 </style>

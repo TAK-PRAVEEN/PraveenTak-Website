@@ -123,4 +123,15 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
   .entry:hover :global(.arrow) {
     transform: rotate(45deg);
   }
+  @media (max-width: 767px) {
+    .entry > :global(*) {
+      grid-column: 1 / -1 !important;
+    }
+    .entry :global(h2),
+    .entry :global(h3) {
+      padding-right: 40px;
+      overflow-wrap: anywhere;
+      font-size: clamp(2rem, 9vw, 2.6rem);
+    }
+  }
 </style>

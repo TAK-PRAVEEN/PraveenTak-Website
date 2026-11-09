@@ -60,13 +60,31 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
     place-items: center;
     overflow: hidden;
   }
-  @media (prefers-reduced-motion: no-preference) {
+  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
     .win {
       height: 340svh;
     }
     .win-sticky {
       position: sticky;
       top: 0;
+    }
+  }
+  @media (max-width: 767px) {
+    .win .win-sticky {
+      height: auto;
+      display: block;
+    }
+    .win .win-before {
+      display: none;
+    }
+    .win .win-pane {
+      position: relative;
+      min-height: 940px;
+    }
+    .win .win-inner {
+      height: auto;
+      padding-top: 48px;
+      padding-bottom: 420px;
     }
   }
   .win-before {
@@ -78,11 +96,11 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
   .win-pane {
     position: absolute;
     inset: 0;
-    background: color-mix(in oklab, var(--ink) 86%, transparent);
+    background: var(--ink);
     color: var(--fg);
     overflow: hidden;
   }
-  @media (prefers-reduced-motion: no-preference) {
+  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
     .win-pane {
       clip-path: inset(24% 6% 24% 54% round 28px);
     }
@@ -117,16 +135,11 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
   :global(html.win-ready) .win-still {
     opacity: 0;
   }
-  @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-    .win-pane {
-      clip-path: inset(46% 10% 6% 10% round 24px);
-    }
-  }
   @media (max-width: 767px) {
     .win-still,
     .win-canvas {
       top: auto;
-      bottom: 4%;
+      bottom: 24px;
       right: 50%;
       transform: translateX(50%);
       width: 86vw;
@@ -206,5 +219,9 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
       align-self: start;
       margin-top: 24px;
     }
+  }
+  /* Only see-through when the ink background is running behind it (desktop). */
+  :global(html.ink-bg-on) .win-pane {
+    background: color-mix(in oklab, var(--ink) 86%, transparent);
   }
 </style>

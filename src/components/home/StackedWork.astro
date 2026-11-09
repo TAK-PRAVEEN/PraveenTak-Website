@@ -187,4 +187,15 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     display: grid;
     gap: 6px;
   }
+  @media (max-width: 767px) {
+    .card-inner {
+      min-height: 0;
+    }
+    .card-visual {
+      min-height: 0;
+    }
+    .card-numeral .numeral {
+      font-size: 5.5rem;
+    }
+  }
 </style>

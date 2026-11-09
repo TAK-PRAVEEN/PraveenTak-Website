@@ -160,4 +160,15 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
       display: block;
     }
   }
+  @media (max-width: 767px) {
+    .project > :global(*) {
+      grid-column: 1 / -1 !important;
+    }
+    .project :global(h2),
+    .project :global(h3) {
+      padding-right: 40px;
+      overflow-wrap: anywhere;
+      font-size: clamp(2rem, 9vw, 2.6rem);
+    }
+  }
 </style>

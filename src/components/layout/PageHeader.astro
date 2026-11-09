@@ -88,6 +88,15 @@ const long = title.length > 12;
     text-wrap: balance;
   }
   .title.long {
+      font-size: min(3rem, 11vw);
+    }
+  @media (max-width: 767px) {
+    .title {
+      font-size: min(var(--text-display), 14vw);
+      overflow-wrap: normal;
+    }
+    }
+  .title.long {
     font-size: clamp(3rem, 1.2rem + 6vw, 8.5rem);
     line-height: 0.92;
     max-width: 18ch;
