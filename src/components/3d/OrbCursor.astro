@@ -1,0 +1,81 @@
+---
+/**
+ * Particle-orb cursor island (DESIGN.md §6B). Persisted across page
+ * navigations. Only activates for a fine, hovering pointer (mouse/trackpad),
+ * never under reduced motion, and only if MOTION.customCursor is on.
+ */
+import { MOTION } from "../../config/site";
+---
+
+<div class="orb" data-orb data-enabled={MOTION.customCursor ? "true" : "false"} aria-hidden="true" transition:persist="orb-cursor">
+  <canvas></canvas>
+  <span class="dot" data-orb-dot></span>
+</div>
+
+<script>
+  import { prefersReducedMotion } from "../../lib/frame";
+
+  async function init() {
+    const root = document.querySelector<HTMLElement>("[data-orb]");
+    if (!root || root.dataset.mounted || root.dataset.enabled !== "true") return;
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (!finePointer || prefersReducedMotion()) return;
+    root.dataset.mounted = "true";
+    try {
+      const { mountOrb } = await import("./orb-cursor");
+      mountOrb(root);
+    } catch (err) {
+      console.warn("[orb] disabled:", err);
+      document.documentElement.classList.remove("orb-on");
+    }
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .orb {
+    --orb-alpha: 0;
+    --orb-explode: 0;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+  }
+  canvas {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 200px;
+    height: 200px;
+    opacity: var(--orb-alpha);
+    will-change: transform, opacity;
+  }
+  /* Paper: an orange core glows inside the charcoal sphere (additive glow would vanish on light). */
+  .orb[data-surface="paper"] canvas {
+    background: radial-gradient(
+      circle at center,
+      color-mix(in oklab, var(--orange) 85%, transparent) 0,
+      color-mix(in oklab, var(--orange) 0%, transparent) calc(9% + var(--orb-explode) * 5%)
+    );
+  }
+  .dot {
+    position: fixed;
+    left: -3px;
+    top: -3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--orange);
+    opacity: var(--orb-alpha);
+    transform: translate3d(-100px, -100px, 0);
+    will-change: transform;
+  }
+
+  :global(html.orb-on),
+  :global(html.orb-on *) {
+    cursor: none !important;
+  }
+  :global(html.orb-on) :global(:is(input:not([type="submit"]):not([type="button"]), textarea, [contenteditable="true"])) {
+    cursor: text !important;
+  }
+</style>

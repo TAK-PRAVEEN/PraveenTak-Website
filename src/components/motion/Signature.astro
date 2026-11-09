@@ -1,0 +1,74 @@
+---
+/**
+ * The original handwritten "Praveen Tak" animation (DESIGN.md §6C), recoloured
+ * to charcoal per decision D3 — frames, timing and lettering untouched.
+ * Decorative: the page's <h1> carries the name for assistive tech and SEO.
+ *
+ *   Chrome / Edge / Firefox → signature.webm (VP9 with alpha, ~465 KB)
+ *   Safari (no VP9 alpha)   → signature.webp (animated WebP, ~435 KB)
+ *   Reduced motion / no JS  → signature-still.webp (one complete frame, ~22 KB)
+ */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<div class:list={["signature", className]} data-signature aria-hidden="true">
+  <img class="sig-media" src="/media/signature-still.webp" width="1200" height="342" alt="" decoding="async" fetchpriority="low" />
+</div>
+
+<script>
+  import { prefersReducedMotion } from "../../lib/frame";
+
+  function init() {
+    const root = document.querySelector<HTMLElement>("[data-signature]");
+    if (!root || root.dataset.ready || prefersReducedMotion()) return;
+    root.dataset.ready = "true";
+    const still = root.querySelector("img")!;
+
+    const ua = navigator.userAgent;
+    const isSafari = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(ua);
+    const probe = document.createElement("video");
+    const vp9 = probe.canPlayType('video/webm; codecs="vp09.00.10.08"') || probe.canPlayType('video/webm; codecs="vp9"');
+
+    if (isSafari || !vp9) {
+      still.src = "/media/signature.webp";
+      return;
+    }
+
+    const video = document.createElement("video");
+    Object.assign(video, { muted: true, loop: true, playsInline: true, autoplay: true, preload: "auto" });
+    video.setAttribute("muted", "");
+    video.className = "sig-media";
+    video.width = 1200;
+    video.height = 342;
+    video.poster = still.src;
+    video.src = "/media/signature.webm";
+    video.addEventListener("canplay", () => still.replaceWith(video), { once: true });
+    video.addEventListener("error", () => (still.src = "/media/signature.webp"), { once: true });
+    video.load();
+
+    // Pause when off-screen — no decoding work for an invisible element.
+    new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) void video.play().catch(() => {});
+      else video.pause();
+    }).observe(root);
+  }
+
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .signature {
+    width: 100%;
+    aspect-ratio: 1200 / 342;
+  }
+  .signature :global(.sig-media) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: left center;
+    background: transparent;
+  }
+</style>

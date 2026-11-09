@@ -1,0 +1,181 @@
+---
+/**
+ * Binary portrait island (DESIGN.md §6A). Renders the frame, orbit lines and
+ * caption as plain HTML; the WebGL module is code-split and loaded only when
+ * the hero is visible and the browser is idle.
+ *
+ * States (data-state): loading → live, or → still (reduced motion, no WebGL,
+ * error, or MOTION.binaryPortrait disabled).
+ */
+import { MOTION, SITE } from "../../config/site";
+
+interface Props {
+  class?: string;
+  /** CSS selector of the element whose scroll drives the dolly. */
+  scrollTarget: string;
+}
+const { class: className, scrollTarget } = Astro.props;
+---
+
+<figure
+  class:list={["portrait", className]}
+  data-binary-portrait
+  data-scroll-target={scrollTarget}
+  data-enabled={MOTION.binaryPortrait ? "true" : "false"}
+  data-state="loading"
+>
+  <div class="glow" aria-hidden="true"></div>
+  <svg class="orbit" viewBox="0 0 400 520" aria-hidden="true">
+    <ellipse cx="200" cy="270" rx="196" ry="70" transform="rotate(-24 200 270)"></ellipse>
+    <ellipse cx="200" cy="270" rx="176" ry="58" transform="rotate(-18 200 270)"></ellipse>
+    <path d="M326 118 v-10 m0 20 v10 m-10 -10 h-10 m20 0 h10"></path>
+  </svg>
+  <img
+    class="still"
+    src="/media/portrait-still.webp"
+    width="960"
+    height="1200"
+    alt="Portrait of Praveen Tak drawn in binary digits"
+    decoding="async"
+    loading="lazy"
+  />
+  <canvas class="canvas" role="img" aria-label="Portrait of Praveen Tak drawn in binary digits"></canvas>
+  <figcaption class="micro caption">
+    <span>Fig. 01 — Binary portrait</span>
+    <span class="text-muted hint" data-hint>Hover to disassemble</span>
+    <span class="text-muted">010101 / SYS_{SITE.year}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { prefersReducedMotion } from "../../lib/frame";
+
+  let cleanup: (() => void) | null = null;
+
+  function useStill(fig: HTMLElement) {
+    fig.dataset.state = "still";
+  }
+
+  function init() {
+    const fig = document.querySelector<HTMLElement>("[data-binary-portrait]");
+    if (!fig || fig.dataset.mounted) return;
+    fig.dataset.mounted = "true";
+    const canvas = fig.querySelector("canvas")!;
+    const hint = fig.querySelector<HTMLElement>("[data-hint]");
+    if (hint && !window.matchMedia("(hover: hover)").matches) hint.textContent = "Tap to disassemble";
+
+    if (fig.dataset.enabled !== "true" || prefersReducedMotion()) return useStill(fig);
+
+    // Stacked (phone) layout: the portrait sits below the name, so dolly from the figure itself.
+    const stacked = window.matchMedia("(max-width: 767px)").matches;
+    const target = (stacked ? null : document.querySelector<HTMLElement>(fig.dataset.scrollTarget || "")) ?? fig;
+    const start = async () => {
+      try {
+        const { mountPortrait } = await import("./binary-portrait");
+        cleanup = await mountPortrait(canvas, {
+          dataUrl: "/media/portrait.bin",
+          scrollTarget: target,
+          onReady: () => (fig.dataset.state = "live"),
+        });
+      } catch (err) {
+        console.warn("[portrait] falling back to still image:", err);
+        useStill(fig);
+      }
+    };
+
+    const io = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      io.disconnect();
+      const idle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 120));
+      idle(() => void start(), { timeout: 600 });
+    });
+    io.observe(fig);
+  }
+
+  document.addEventListener("astro:page-load", init);
+  document.addEventListener("astro:before-swap", () => {
+    cleanup?.();
+    cleanup = null;
+  });
+</script>
+
+<style>
+  .portrait {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 4 / 5;
+    width: 100%;
+    isolation: isolate;
+  }
+  /* Warp-gradient heat behind the figure (orange = Home accent). */
+  .glow {
+    position: absolute;
+    inset: 14% 16% 10%;
+    z-index: -1;
+    border-radius: 50%;
+    background:
+      radial-gradient(38% 46% at 56% 36%, color-mix(in oklab, var(--charcoal) 55%, transparent) 0%, transparent 70%),
+      radial-gradient(58% 66% at 50% 52%, var(--orange) 0%, transparent 72%);
+    filter: blur(34px);
+    opacity: 0.55;
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+  .portrait[data-state="live"] .glow {
+    opacity: 0.4;
+  }
+  .orbit {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--concrete);
+    stroke-width: 0.75;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .orbit path {
+    stroke: var(--charcoal);
+  }
+  .canvas,
+  .still {
+    position: absolute;
+    inset: 0 0 28px;
+    width: 100%;
+    height: calc(100% - 28px);
+    object-fit: contain;
+  }
+  .canvas {
+    opacity: 0;
+    transition: opacity 400ms var(--ease-out);
+    touch-action: pan-y;
+  }
+  .portrait[data-state="live"] .canvas {
+    opacity: 1;
+  }
+  .still {
+    display: none;
+    mix-blend-mode: multiply;
+  }
+  .portrait[data-state="still"] .still {
+    display: block;
+  }
+  .portrait[data-state="still"] .canvas,
+  .portrait[data-state="still"] .hint {
+    display: none;
+  }
+  .caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  @media (max-width: 479px) {
+    .hint {
+      display: none;
+    }
+  }
+</style>

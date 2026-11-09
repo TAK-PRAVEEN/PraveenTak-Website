@@ -4,6 +4,8 @@ import { ArrowUpRight } from "@lucide/astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import StatusDot from "../components/ui/StatusDot.astro";
 import LinkButton from "../components/ui/LinkButton.astro";
+import Signature from "../components/motion/Signature.astro";
+import BinaryPortrait from "../components/3d/BinaryPortrait.astro";
 import { EXPERIENCES, SITE } from "../config/site";
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -13,7 +15,7 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
 
 <BaseLayout section="/">
   <!-- 01 — HERO ----------------------------------------------------------- -->
-  <section class="hero frame" aria-labelledby="hero-title">
+  <section id="hero" class="hero frame" aria-labelledby="hero-title">
     <div class="hero-meta micro">
       <span>01 — Portfolio {SITE.year}</span>
       <span class="text-muted">{profile.location.coords}</span>
@@ -24,8 +26,7 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
     <div class="grid-12 hero-grid">
       <div class="hero-copy col-span-4 md:col-span-7">
         <p class="micro text-muted hero-hi">Hi, I'm</p>
-        <!-- Phase 2: charcoal-recoloured signature animation (D3) mounts here. -->
-        <div class="signature-slot" data-slot="name-animation" aria-hidden="true"></div>
+        <Signature class="hero-signature" />
         <h1 id="hero-title" class="display hero-name">
           Praveen<br />Tak
         </h1>
@@ -34,19 +35,7 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
         </ul>
       </div>
 
-      <figure class="portrait-slot col-span-4 md:col-span-5" data-slot="binary-portrait">
-        <!-- Phase 2: binary particle portrait (D1 reconstruct, D2 hover + scroll). -->
-        <svg class="orbit" viewBox="0 0 400 520" aria-hidden="true">
-          <ellipse cx="200" cy="260" rx="190" ry="70" transform="rotate(-24 200 260)" />
-          <ellipse cx="200" cy="260" rx="170" ry="58" transform="rotate(-18 200 260)" />
-          <path d="M318 132 l0 -10 m0 20 l0 10 m-10 -10 l-10 0 m20 0 l10 0" />
-        </svg>
-        <div class="portrait-glow" aria-hidden="true"></div>
-        <figcaption class="micro portrait-caption">
-          <span>Fig. 01 — Binary portrait</span>
-          <span class="text-muted">010101 / SYS_{SITE.year}</span>
-        </figcaption>
-      </figure>
+      <BinaryPortrait class="hero-portrait col-span-4 md:col-span-5" scrollTarget="#hero" />
     </div>
 
     <div class="grid-12 hero-foot">
@@ -132,8 +121,9 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
   .hero-hi {
     margin: 0 0 8px;
   }
-  .signature-slot {
-    min-height: 0;
+  .hero-copy :global(.hero-signature) {
+    width: clamp(240px, 34vw, 520px);
+    margin: 0 0 clamp(4px, 1vw, 16px) -0.5%;
   }
   .hero-name {
     font-size: clamp(4.5rem, 1rem + 14vw, 15rem);
@@ -148,47 +138,9 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
     padding: 0;
   }
 
-  /* Portrait placeholder: Warp-gradient heat + orbit lines */
-  .portrait-slot {
-    position: relative;
-    margin: 0;
-    aspect-ratio: 4 / 5;
-    width: 100%;
-    max-width: 520px;
+  .hero-grid :global(.hero-portrait) {
+    max-width: 540px;
     justify-self: center;
-    isolation: isolate;
-  }
-  .portrait-glow {
-    position: absolute;
-    inset: 12% 18%;
-    z-index: -1;
-    border-radius: 50%;
-    background:
-      radial-gradient(40% 50% at 55% 40%, var(--charcoal) 0%, transparent 70%),
-      radial-gradient(60% 70% at 50% 50%, var(--orange) 0%, transparent 72%);
-    filter: blur(28px);
-    opacity: 0.85;
-  }
-  .orbit {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    fill: none;
-    stroke: var(--concrete);
-    stroke-width: 0.75;
-  }
-  .orbit path {
-    stroke: var(--charcoal);
-  }
-  .portrait-caption {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
   }
 
   .hero-foot {

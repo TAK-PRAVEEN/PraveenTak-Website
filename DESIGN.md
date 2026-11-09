@@ -2,7 +2,7 @@
 
 **Swiss Futurism / Digital Matter.** Editorial precision × computational art × cinematic 3D.
 
-Status: **Phase 1 complete (foundation) — 09 Nov 2026.** Next: Phase 2 (hero signatures). Branch: `feature/redesign-2026`.
+Status: **Phase 2a complete (signatures) — 09 Nov 2026.** Name animation, binary portrait and orb cursor are live; hero scroll transition + liquid nav (2b) await your review of 2a. Branch: `feature/redesign-2026`.
 Source brief: `Portfolio.pdf` (09 Nov 2026) and 14 reference images. This document adopts that
 brief and records where Phase 0 inspection changes or tightens it (marked **▲ change**).
 
@@ -151,7 +151,7 @@ Never more than one blurred layer stacked over another; no glass on body section
 4. Bake to a compact binary file `portrait.bin` (xyz + brightness + glyph id, ~300 KB) instead of
    shipping the 7 MB PNG.
 
-**Rendering:** vanilla Three.js `Points` with a custom shader. Each point samples a 2-glyph atlas
+**Rendering:** ▲ raw WebGL2 point sprites (`src/lib/gl.ts`) instead of Three.js — both signatures are a single draw call, so this saves ~120 KB gz on the home page (portrait + orb code ≈ 19 KB). Three.js arrives with Phase 4 GLB scenes, on the pages that use them. Each point samples a 2-glyph atlas
 (`0`, `1` in Space Mono), so particles are real binary characters. Brightness → glyph size and
 opacity, depth → parallax. Glyphs occasionally flip 0↔1 (cheap, in shader).
 
@@ -230,7 +230,7 @@ public/fonts/     scripts/   (portrait bake, video encode)   reference/  (kept, 
 |---|---|---|
 | Framework | `astro`, `@astrojs/cloudflare`, `@astrojs/sitemap` | |
 | Styling | `tailwindcss` v4 (`@tailwindcss/vite`) | Tokens as CSS variables; Tailwind reads them |
-| 3D | `three` | No R3F/Drei at first; add only if a React 3D scene needs it |
+| 3D | raw WebGL2 for signatures; `three` from Phase 4 | No R3F/Drei at first; add only if a React 3D scene needs it |
 | Animation | `gsap` (incl. ScrollTrigger, SplitText — all free now) | |
 | Smooth scroll | `lenis` — **only if native scroll feels wrong** | ▲ `@studio-freight/lenis` is deprecated, the package is now `lenis` |
 | Icons | `@lucide/astro` | |
@@ -271,7 +271,7 @@ support, AVIF/WebP, WebM/MP4, KTX2/Draco GLB, real-device testing.
 |---|---|---|
 | 0 | This spec | ✓ D1–D4 approved |
 | 1 | ✓ Astro 7 + Cloudflare scaffold, tokens, fonts, grid, nav, layouts, content schemas, migrated old content | ✓ Builds + runs in local Workers runtime. Deploy + Lighthouse baseline wait for Cloudflare login |
-| 2 | Name animation, binary portrait, orb cursor, hero transition, liquid nav | You sign off the hero |
+| 2 | ✓ 2a: name animation (WebM/WebP, 18 MB → 0.47 MB), binary portrait (24k / 9k pts), orb cursor · 2b: hero scroll transition, liquid nav | You sign off the hero |
 | 3 | About, Work (+ case study), Lab, Experiments, Experience, Contact | All pages with real content |
 | 4 | Blender assets → GLB, shaders, scroll 3D | Budgets still met |
 | 5 | Contact API, chatbot, analytics, SEO/OG | End-to-end on preview |
