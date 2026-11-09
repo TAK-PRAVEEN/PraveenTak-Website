@@ -1,13 +1,21 @@
 """
-Matte stone that disintegrates into grains (ref: dark rock sphere with sparkle).
-Frame 1 = solid rock, last frame = fully scattered dust. The site plays the
-sequence forward on hover and backward on leave (slowly).
+About-page rock (ref: Praveen's video): faceted sphere -> lumpy stone -> the
+surface peels into particle membranes -> they unfold into ink/smoke wisps.
+
+Deterministic per frame (no cached simulation), so the site can scrub it both
+ways: hover plays forward, leaving plays back.
 
   "D:/Blender/blender-5.2.2-windows-x64/blender.exe" -b --factory-startup \
-      --python scripts/render-rock.py -- --frames 48 --size 720 --out scratch/rock/rock_
+      --python scripts/render-rock.py -- --frames 60 --size 720 --out scratch/rock/rock_
+  # test: specific timeline points T in 0..1
+  ... -- --test 0,0.2,0.4,0.6,0.85 --size 400 --out scratch/rockt/r_
 
-Geometry Nodes: rock faces dissolve at random while grains distributed on the
-surface fly outward along their normals with a little turbulence.
+Geometry Nodes, driven by one value T (0..1):
+  - low-poly ico (T < 0.12) morphs into a displaced stone (0.05..0.25)
+  - stone faces dissolve (0.22..0.5) while dense surface points appear
+  - points are advected through a chain of noise steps whose strength grows
+    with T -> smooth membranes that stretch into curling wisps
+  - points thin out at the end (fade)
 """
 
 import argparse
@@ -19,10 +27,11 @@ import bpy
 argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
 ap = argparse.ArgumentParser()
 ap.add_argument("--out", required=True)
-ap.add_argument("--frames", type=int, default=48)
+ap.add_argument("--frames", type=int, default=60)
 ap.add_argument("--size", type=int, default=720)
-ap.add_argument("--samples", type=int, default=64)
-ap.add_argument("--only", type=str, default="", help="comma list of frames to render (test)")
+ap.add_argument("--samples", type=int, default=48)
+ap.add_argument("--points", type=float, default=26000.0, help="surface point density")
+ap.add_argument("--test", type=str, default="", help="comma list of T values to render as stills")
 a = ap.parse_args(argv)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -41,138 +50,210 @@ sc.render.resolution_x = sc.render.resolution_y = a.size
 sc.render.image_settings.file_format = "PNG"
 sc.render.image_settings.color_mode = "RGBA"
 sc.view_settings.view_transform = "AgX"
-sc.view_settings.look = "AgX - Medium High Contrast"
+sc.view_settings.look = "AgX - Base Contrast"
 
-# ---------- rock mesh: lumpy, faceted ----------
-bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=6, radius=1.0)
-rock = bpy.context.active_object
-for name, kind, scale, strength in [("lumps", "CLOUDS", 0.8, 0.32), ("facets", "VORONOI", 0.45, 0.06), ("grit", "CLOUDS", 0.12, 0.012)]:
-    t = bpy.data.textures.new(name, type=kind)
-    t.noise_scale = scale
-    m = rock.modifiers.new(name, "DISPLACE")
-    m.texture, m.strength = t, strength
-bpy.ops.object.modifier_apply(modifier="lumps")
-bpy.ops.object.modifier_apply(modifier="facets")
-bpy.ops.object.modifier_apply(modifier="grit")
-bpy.ops.object.shade_smooth()
-rock.rotation_euler = (math.radians(14), math.radians(-18), math.radians(8))
+# ---------- materials ----------
+def mat_stone():
+    m = bpy.data.materials.new("Stone")
+    m.use_nodes = True
+    b = m.node_tree.nodes["Principled BSDF"]
+    b.inputs["Base Color"].default_value = (0.008, 0.008, 0.009, 1)
+    b.inputs["Roughness"].default_value = 0.9
+    nt = m.node_tree
+    v = nt.nodes.new("ShaderNodeTexVoronoi"); v.inputs["Scale"].default_value = 300.0
+    lt = nt.nodes.new("ShaderNodeMath"); lt.operation = "LESS_THAN"; lt.inputs[1].default_value = 0.08
+    mu = nt.nodes.new("ShaderNodeMath"); mu.operation = "MULTIPLY"; mu.inputs[1].default_value = 2.5
+    nt.links.new(v.outputs["Distance"], lt.inputs[0]); nt.links.new(lt.outputs[0], mu.inputs[0])
+    b.inputs["Emission Color"].default_value = (1, 1, 1, 1)
+    nt.links.new(mu.outputs[0], b.inputs["Emission Strength"])
+    return m
 
-# ---------- material: matte charcoal with fine sparkle ----------
-mat = bpy.data.materials.new("Stone")
-mat.use_nodes = True
-nt = mat.node_tree
-bsdf = nt.nodes["Principled BSDF"]
-bsdf.inputs["Base Color"].default_value = (0.022, 0.022, 0.024, 1)
-bsdf.inputs["Roughness"].default_value = 0.88
-spark = nt.nodes.new("ShaderNodeTexVoronoi")
-spark.inputs["Scale"].default_value = 260.0
-dist = nt.nodes.new("ShaderNodeMath")
-dist.operation = "LESS_THAN"
-dist.inputs[1].default_value = 0.09
-nt.links.new(spark.outputs["Distance"], dist.inputs[0])
-bsdf.inputs["Emission Color"].default_value = (1, 1, 1, 1)
-emis = nt.nodes.new("ShaderNodeMath")
-emis.operation = "MULTIPLY"
-emis.inputs[1].default_value = 4.0
-nt.links.new(dist.outputs[0], emis.inputs[0])
-nt.links.new(emis.outputs[0], bsdf.inputs["Emission Strength"])
-rock.data.materials.append(mat)
 
-# ---------- geometry nodes: dissolve + grains ----------
-ng = bpy.data.node_groups.new("Disintegrate", "GeometryNodeTree")
+def mat_ash():
+    """Soot particles: dark, partly transparent so overlapping sheets build density."""
+    m = bpy.data.materials.new("Ash")
+    m.use_nodes = True
+    nt = m.node_tree
+    for n in list(nt.nodes):
+        nt.nodes.remove(n)
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    dif = nt.nodes.new("ShaderNodeBsdfDiffuse"); dif.inputs["Color"].default_value = (0.006, 0.006, 0.007, 1)
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    mix = nt.nodes.new("ShaderNodeMixShader"); mix.inputs["Fac"].default_value = 0.55
+    nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(dif.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    return m
+
+
+STONE, ASH = mat_stone(), mat_ash()
+
+# ---------- base object (geometry is generated in nodes) ----------
+bpy.ops.mesh.primitive_plane_add(size=0.01)
+obj = bpy.context.active_object
+obj.data.materials.append(STONE)
+obj.data.materials.append(ASH)
+
+ng = bpy.data.node_groups.new("RockToSmoke", "GeometryNodeTree")
 ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
 ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
-N = ng.nodes
-L = ng.links
-gi = N.new("NodeGroupInput")
+N, L = ng.nodes, ng.links
 go = N.new("NodeGroupOutput")
-val = N.new("ShaderNodeValue")  # scatter 0..1 (animated)
-val.name = "Scatter"
+T = N.new("ShaderNodeValue"); T.name = "T"
 
-# rock faces vanish at random as scatter rises
-rnd_face = N.new("FunctionNodeRandomValue")
-rnd_face.data_type = "FLOAT"
-rnd_face.inputs["Seed"].default_value = 3
-thr = N.new("ShaderNodeMath"); thr.operation = "MULTIPLY"; thr.inputs[1].default_value = 1.35
-L.new(val.outputs[0], thr.inputs[0])
-lt = N.new("ShaderNodeMath"); lt.operation = "LESS_THAN"
-L.new(rnd_face.outputs["Value"], lt.inputs[0]); L.new(thr.outputs[0], lt.inputs[1])
-dele = N.new("GeometryNodeDeleteGeometry"); dele.domain = "FACE"
-L.new(gi.outputs[0], dele.inputs["Geometry"]); L.new(lt.outputs[0], dele.inputs["Selection"])
 
-# grains on the surface
-dist_n = N.new("GeometryNodeDistributePointsOnFaces")
-dist_n.inputs["Density"].default_value = 1700.0
-L.new(gi.outputs[0], dist_n.inputs["Mesh"])
-rnd_amt = N.new("FunctionNodeRandomValue"); rnd_amt.data_type = "FLOAT"
-rnd_amt.inputs["Min"].default_value = 0.15; rnd_amt.inputs["Max"].default_value = 0.85; rnd_amt.inputs["Seed"].default_value = 11
-rnd_vec = N.new("FunctionNodeRandomValue"); rnd_vec.data_type = "FLOAT_VECTOR"
-rnd_vec.inputs["Min"].default_value = (-1, -1, -1); rnd_vec.inputs["Max"].default_value = (1, 1, 1); rnd_vec.inputs["Seed"].default_value = 5
-# per-grain delay so they peel off progressively: k = clamp(scatter*1.6 - delay)
-delay = N.new("FunctionNodeRandomValue"); delay.data_type = "FLOAT"
-delay.inputs["Min"].default_value = 0.0; delay.inputs["Max"].default_value = 0.6; delay.inputs["Seed"].default_value = 9
-s16 = N.new("ShaderNodeMath"); s16.operation = "MULTIPLY"; s16.inputs[1].default_value = 1.6
-L.new(val.outputs[0], s16.inputs[0])
-sub = N.new("ShaderNodeMath"); sub.operation = "SUBTRACT"; sub.use_clamp = True
-L.new(s16.outputs[0], sub.inputs[0]); L.new(delay.outputs["Value"], sub.inputs[1])
-# offset = (normal * amt + rndvec*0.45 + (0,-0.25,0)*k) * k
-nscale = N.new("ShaderNodeVectorMath"); nscale.operation = "SCALE"
-L.new(dist_n.outputs["Normal"], nscale.inputs[0]); L.new(rnd_amt.outputs["Value"], nscale.inputs["Scale"])
-tscale = N.new("ShaderNodeVectorMath"); tscale.operation = "SCALE"; tscale.inputs["Scale"].default_value = 0.25
-L.new(rnd_vec.outputs["Value"], tscale.inputs[0])
-add = N.new("ShaderNodeVectorMath"); add.operation = "ADD"
-L.new(nscale.outputs[0], add.inputs[0]); L.new(tscale.outputs[0], add.inputs[1])
-kscale = N.new("ShaderNodeVectorMath"); kscale.operation = "SCALE"
-L.new(add.outputs[0], kscale.inputs[0]); L.new(sub.outputs[0], kscale.inputs["Scale"])
-setp = N.new("GeometryNodeSetPosition")
-L.new(dist_n.outputs["Points"], setp.inputs["Geometry"]); L.new(kscale.outputs[0], setp.inputs["Offset"])
+def mnode(op, a_=None, b_=None, clamp=False):
+    n = N.new("ShaderNodeMath"); n.operation = op; n.use_clamp = clamp
+    for i, x in enumerate((a_, b_)):
+        if x is None:
+            continue
+        if isinstance(x, (int, float)):
+            n.inputs[i].default_value = x
+        else:
+            L.new(x, n.inputs[i])
+    return n.outputs[0]
 
-ico = N.new("GeometryNodeMeshIcoSphere"); ico.inputs["Radius"].default_value = 0.011; ico.inputs["Subdivisions"].default_value = 1
-gsize = N.new("FunctionNodeRandomValue"); gsize.data_type = "FLOAT"
-gsize.inputs["Min"].default_value = 0.5; gsize.inputs["Max"].default_value = 1.4; gsize.inputs["Seed"].default_value = 2
-inst = N.new("GeometryNodeInstanceOnPoints")
-L.new(setp.outputs[0], inst.inputs["Points"]); L.new(ico.outputs["Mesh"], inst.inputs["Instance"])
-L.new(gsize.outputs["Value"], inst.inputs["Scale"])
-smat = N.new("GeometryNodeSetMaterial"); smat.inputs["Material"].default_value = mat
-L.new(inst.outputs[0], smat.inputs["Geometry"])
+
+def ramp(lo, hi):
+    """clamp((T - lo) / (hi - lo))"""
+    return mnode("MULTIPLY", mnode("SUBTRACT", T.outputs[0], lo), 1.0 / (hi - lo), clamp=True)
+
+
+def vmath(op, a_, b_=None, scale=None):
+    n = N.new("ShaderNodeVectorMath"); n.operation = op
+    L.new(a_, n.inputs[0])
+    if b_ is not None:
+        if isinstance(b_, tuple):
+            n.inputs[1].default_value = b_
+        else:
+            L.new(b_, n.inputs[1])
+    if scale is not None:
+        if isinstance(scale, (int, float)):
+            n.inputs["Scale"].default_value = scale
+        else:
+            L.new(scale, n.inputs["Scale"])
+    return n.outputs[0]
+
+
+# 1. faceted low-poly sphere, visible only at the very start
+ico_lo = N.new("GeometryNodeMeshIcoSphere"); ico_lo.inputs["Radius"].default_value = 1.0; ico_lo.inputs["Subdivisions"].default_value = 2
+del_lo = N.new("GeometryNodeDeleteGeometry"); del_lo.domain = "FACE"
+L.new(ico_lo.outputs["Mesh"], del_lo.inputs["Geometry"])
+L.new(mnode("GREATER_THAN", T.outputs[0], 0.1), del_lo.inputs["Selection"])
+flat = N.new("GeometryNodeSetShadeSmooth"); flat.inputs["Shade Smooth"].default_value = False
+L.new(del_lo.outputs[0], flat.inputs["Geometry"])
+
+# 2. stone: dense sphere displaced by noise (amount grows 0.05..0.25)
+ico = N.new("GeometryNodeMeshIcoSphere"); ico.inputs["Radius"].default_value = 1.0; ico.inputs["Subdivisions"].default_value = 6
+pos = N.new("GeometryNodeInputPosition")
+nz = N.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 1.6; nz.inputs["Detail"].default_value = 4.0
+L.new(pos.outputs[0], nz.inputs["Vector"])
+lump = mnode("MULTIPLY", mnode("SUBTRACT", nz.outputs["Fac"], 0.5), ramp(0.04, 0.25))
+lump = mnode("MULTIPLY", lump, 0.75)
+nrm = N.new("GeometryNodeInputNormal")
+setp_rock = N.new("GeometryNodeSetPosition")
+L.new(ico.outputs["Mesh"], setp_rock.inputs["Geometry"])
+L.new(vmath("SCALE", nrm.outputs[0], scale=lump), setp_rock.inputs["Offset"])
+# dissolve rock faces 0.22..0.5 (random order), hidden before the low-poly hands over
+rnd = N.new("FunctionNodeRandomValue"); rnd.data_type = "FLOAT"; rnd.inputs["Seed"].default_value = 4
+gone = mnode("LESS_THAN", rnd.outputs["Value"], ramp(0.22, 0.5))
+before = mnode("LESS_THAN", T.outputs[0], 0.1)
+del_rock = N.new("GeometryNodeDeleteGeometry"); del_rock.domain = "FACE"
+L.new(setp_rock.outputs[0], del_rock.inputs["Geometry"])
+L.new(mnode("MAXIMUM", gone, before), del_rock.inputs["Selection"])
+smooth = N.new("GeometryNodeSetShadeSmooth")
+L.new(del_rock.outputs[0], smooth.inputs["Geometry"])
+
+# 3. ash points from the stone surface, appearing from 0.2
+dist = N.new("GeometryNodeDistributePointsOnFaces")
+dist.inputs["Density"].default_value = a.points
+L.new(setp_rock.outputs[0], dist.inputs["Mesh"])
+appear = mnode("LESS_THAN", N.new("FunctionNodeRandomValue").outputs["Value"], ramp(0.18, 0.42))
+# advection: 8 chained noise steps, strength grows with T (membranes -> wisps)
+flow = ramp(0.22, 1.0)
+flow = mnode("POWER", flow, 1.3)
+geo = dist.outputs["Points"]
+for k in range(12):
+    p = N.new("GeometryNodeInputPosition")
+    n = N.new("ShaderNodeTexNoise")
+    n.noise_dimensions = "4D"
+    n.inputs["Scale"].default_value = 0.3 * (1.18 ** k)  # big sheets first, then finer curls
+    n.inputs["Detail"].default_value = 1.0
+    n.inputs["W"].default_value = k * 1.7
+    L.new(p.outputs[0], n.inputs["Vector"])
+    v = vmath("SUBTRACT", n.outputs["Color"], (0.5, 0.5, 0.5))
+    v = vmath("ADD", v, (0.0, 0.0, 0.025))  # gentle rise, like smoke
+    off = vmath("SCALE", v, scale=mnode("MULTIPLY", flow, 3.4 / (1.0 + 0.12 * k)))
+    sp = N.new("GeometryNodeSetPosition")
+    L.new(geo, sp.inputs["Geometry"]); L.new(off, sp.inputs["Offset"])
+    geo = sp.outputs[0]
+# keep only appeared points; thin out at the end
+rfade = N.new("FunctionNodeRandomValue"); rfade.data_type = "FLOAT"; rfade.inputs["Seed"].default_value = 21
+fade = mnode("LESS_THAN", rfade.outputs["Value"], ramp(0.7, 1.0))
+hide = mnode("MAXIMUM", mnode("SUBTRACT", 1.0, appear), fade)
+del_pts = N.new("GeometryNodeDeleteGeometry"); del_pts.domain = "POINT"
+L.new(geo, del_pts.inputs["Geometry"]); L.new(hide, del_pts.inputs["Selection"])
+rad = N.new("GeometryNodeSetPointRadius"); rad.inputs["Radius"].default_value = 0.0035
+L.new(del_pts.outputs[0], rad.inputs["Points"])
+m_ash = N.new("GeometryNodeSetMaterial"); m_ash.inputs["Material"].default_value = ASH
+L.new(rad.outputs[0], m_ash.inputs["Geometry"])
+m_st = N.new("GeometryNodeSetMaterial"); m_st.inputs["Material"].default_value = STONE
+join_st = N.new("GeometryNodeJoinGeometry")
+L.new(flat.outputs[0], join_st.inputs[0]); L.new(smooth.outputs[0], join_st.inputs[0])
+L.new(join_st.outputs[0], m_st.inputs["Geometry"])
 
 join = N.new("GeometryNodeJoinGeometry")
-L.new(dele.outputs[0], join.inputs[0]); L.new(smat.outputs[0], join.inputs[0])
+L.new(m_st.outputs[0], join.inputs[0]); L.new(m_ash.outputs[0], join.inputs[0])
 L.new(join.outputs[0], go.inputs[0])
-mod = rock.modifiers.new("Disintegrate", "NODES")
+mod = obj.modifiers.new("RockToSmoke", "NODES")
 mod.node_group = ng
+obj.rotation_euler = (math.radians(15), math.radians(-20), 0)
 
-# animate scatter 0 -> 1 (ease in/out)
-F = a.frames
-for f, v in [(1, 0.0), (F, 1.0)]:
-    val.outputs[0].default_value = v
-    val.outputs[0].keyframe_insert("default_value", frame=f)
-
-# ---------- light: soft studio, upper-left key (matte look) ----------
+# ---------- studio light (matte grey look from the ref) ----------
 def area(name, loc, rot, size, energy):
     d = bpy.data.lights.new(name, "AREA"); d.size = size; d.energy = energy
     o = bpy.data.objects.new(name, d); bpy.context.collection.objects.link(o)
     o.location = loc; o.rotation_euler = [math.radians(r) for r in rot]
 
-area("Key", (-3.5, -3.0, 3.5), (50, 0, -45), 4.0, 900)
-area("Fill", (3.5, -2.5, 0.5), (80, 0, 50), 5.0, 160)
-area("Rim", (0.5, 3.5, 2.0), (-60, 0, 180), 3.0, 350)
+area("Key", (-3.5, -3.5, 4.0), (48, 0, -42), 5.0, 1100)
+area("Fill", (4.0, -3.0, 0.5), (80, 0, 52), 6.0, 260)
+area("Top", (0, 0, 6), (0, 0, 0), 5.0, 300)
 w = bpy.data.worlds.new("W"); sc.world = w; w.use_nodes = True
-w.node_tree.nodes["Background"].inputs["Color"].default_value = (0.55, 0.55, 0.56, 1)
-w.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.35
+w.node_tree.nodes["Background"].inputs["Color"].default_value = (0.6, 0.6, 0.61, 1)
+w.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.45
 
-cd = bpy.data.cameras.new("Cam"); cd.lens = 70
+cd = bpy.data.cameras.new("Cam"); cd.lens = 60
 cam = bpy.data.objects.new("Cam", cd); bpy.context.collection.objects.link(cam)
-cam.location = (0, -10.5, 0.3); cam.rotation_euler = (math.radians(88), 0, 0)
+cam.location = (0, -9.0, 0.3); cam.rotation_euler = (math.radians(88), 0, 0)
 sc.camera = cam
 
-sc.frame_start, sc.frame_end = 1, F
-sc.render.filepath = a.out
-if a.only:
-    for f in [int(x) for x in a.only.split(",")]:
-        sc.frame_set(f)
-        sc.render.filepath = f"{a.out}{f:04d}"
+if a.test:
+    for i, t in enumerate(float(x) for x in a.test.split(",")):
+        T.outputs[0].default_value = t
+        dg = bpy.context.evaluated_depsgraph_get(); dg.update()
+        ev = obj.evaluated_get(dg)
+        for g in dg.object_instances:
+            pass
+        pc = [o for o in dg.objects if o.name.startswith(obj.name)]
+        try:
+            import mathutils
+            geo = ev.evaluated_geometry()
+            pts = geo.pointcloud
+            if pts:
+                co = [v.vector for v in pts.attributes["position"].data]
+                xs = [c.x for c in co]; zs = [c.z for c in co]
+                print("DEBUG T", t, "points", len(co), "x", round(min(xs),2), round(max(xs),2), "z", round(min(zs),2), round(max(zs),2))
+            else:
+                print("DEBUG T", t, "no pointcloud")
+        except Exception as e:
+            print("DEBUG err", e)
+        sc.render.filepath = f"{a.out}{i:02d}"
         bpy.ops.render.render(write_still=True)
 else:
+    F = a.frames
+    sc.frame_start, sc.frame_end = 1, F
+    for f in range(1, F + 1):
+        T.outputs[0].default_value = (f - 1) / (F - 1)
+        T.outputs[0].keyframe_insert("default_value", frame=f)
+    sc.render.filepath = a.out
     bpy.ops.render.render(animation=True)
 print("RENDERED", a.out)

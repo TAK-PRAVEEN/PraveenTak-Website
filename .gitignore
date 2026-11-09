@@ -19,3 +19,6 @@ node_modules/
 !.vscode/extensions.json
 # Claude Code local config & installed skills
 .claude/
+
+# Third-party inspiration (Pinterest refs) — local only, never committed
+reference/inspiration/
