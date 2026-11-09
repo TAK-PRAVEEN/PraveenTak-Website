@@ -77,7 +77,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
           window.__themeSwap = true;
           // ClientRouter replaces <html> attributes on navigation: carry the theme across.
           document.addEventListener("astro:before-swap", function (e) {
-            e.newDocument.documentElement.dataset.theme = document.documentElement.dataset.theme;
+            var cur = document.documentElement, next = e.newDocument.documentElement;
+            next.dataset.theme = cur.dataset.theme;
+            // Runtime switches set by persisted islands must survive the <html> swap.
+            ["ink-bg-on", "orb-on", "ink-nav", "lenis", "lenis-smooth", "lenis-stopped"].forEach(function (c) {
+              if (cur.classList.contains(c)) next.classList.add(c);
+            });
           });
         }
       })();

@@ -144,7 +144,8 @@ const statementLead = statementWords.join(" ");
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: var(--band-bg, var(--ink));
+    /* Slightly see-through: the ink background glows through like ink in dark water. */
+    background: color-mix(in oklab, var(--band-bg, var(--ink)) 84%, transparent);
   }
   .band-inner {
     min-height: min(100svh, 980px);

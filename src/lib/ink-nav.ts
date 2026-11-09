@@ -1,8 +1,8 @@
 /**
  * Ink page transition. Clicking an internal link drops ink at the click point:
  * it bursts out fast, then soaks across the paper slowly until the page is
- * covered; the next page loads underneath; then the stain slowly shrinks back
- * to the click point, revealing the new page.
+ * covered; the next page loads underneath; then the stain slowly shrinks
+ * toward wherever the cursor is now (following it), revealing the new page.
  *
  * The edge uses the same fibre-torn SVG noise mask as the theme switch.
  * Hooked into Astro's ClientRouter via astro:before-preparation (the loader
@@ -17,6 +17,8 @@ const REVEAL_MS = 1250;
 
 let last = { x: window.innerWidth / 2, y: window.innerHeight / 2, t: 0 };
 let active: { x: number; y: number; drops: Drop[]; seed: number } | null = null;
+// Live cursor position: the stain recedes toward it.
+const cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2, known: false };
 
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // Fast burst, long slow soak (like ink hitting wet paper).
@@ -70,6 +72,15 @@ function accentFor(url: URL) {
 
 export function initInkNav() {
   // Remember where the visitor clicked (keyboard / palette navigation falls back to the centre).
+  window.addEventListener(
+    "pointermove",
+    (e) => {
+      cursor.x = e.clientX;
+      cursor.y = e.clientY;
+      cursor.known = true;
+    },
+    { passive: true },
+  );
   document.addEventListener(
     "pointerdown",
     (e) => (last = { x: e.clientX, y: e.clientY, t: performance.now() }),
@@ -110,7 +121,26 @@ export function initInkNav() {
     const { root } = overlay();
     if (!active || !root?.classList.contains("on")) return;
     await new Promise((r) => setTimeout(r, 80));
-    await animate(maxRadius(active.x, active.y), 0, REVEAL_MS, easeInOut);
+    // Recede: the centre glides from the click point to the (live) cursor while the stain shrinks.
+    const from = { x: active.x, y: active.y };
+    const r0 = maxRadius(from.x, from.y);
+    await new Promise<void>((resolve) => {
+      const start = performance.now();
+      const step = (now: number) => {
+        if (!active) return resolve();
+        const t = Math.min(1, (now - start) / REVEAL_MS);
+        const k = easeInOut(t);
+        const tx = cursor.known ? cursor.x : from.x;
+        const ty = cursor.known ? cursor.y : from.y;
+        active.x = from.x + (tx - from.x) * Math.min(1, k * 1.6);
+        active.y = from.y + (ty - from.y) * Math.min(1, k * 1.6);
+        // Keep the shrinking stain covering the screen until it is well under way.
+        paint(Math.max(r0 * (1 - k), 0) * (1 + 0.25 * (1 - k)));
+        if (t < 1) requestAnimationFrame(step);
+        else resolve();
+      };
+      requestAnimationFrame(step);
+    });
     root.classList.remove("on");
     document.documentElement.classList.remove("ink-nav");
     active = null;

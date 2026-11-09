@@ -27,13 +27,15 @@ import bpy
 
 argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
 ap = argparse.ArgumentParser()
-ap.add_argument("--shape", choices=["ribbon", "text"], default="ribbon")
+ap.add_argument("--shape", choices=["ribbon", "text", "orb"], default="ribbon")
 ap.add_argument("--text", default="PT")
 ap.add_argument("--tint", default="#A78BFA")
 ap.add_argument("--out", required=True)
 ap.add_argument("--size", type=int, default=1600)
 ap.add_argument("--samples", type=int, default=160)
 ap.add_argument("--frames", type=int, default=0, help="render an N-frame 360° turntable instead of a still")
+ap.add_argument("--spin", choices=["turntable", "bangle"], default="turntable",
+                help="turntable: rotate about the world vertical; bangle: the ring revolves about its own axis, like a bracelet on a wrist")
 ap.add_argument("--seed", type=int, default=7)
 ap.add_argument("--core", type=float, default=0.55, help="how pale the facing core is (1 = white, 0 = full tint)")
 ap.add_argument("--film", type=float, default=380.0, help="thin-film thickness in nm (0 = off; it shifts hues toward blue)")
@@ -131,6 +133,39 @@ def ribbon():
     return obj
 
 
+FLOW = None  # empty whose orbit drives the orb's flowing surface (loops seamlessly)
+
+
+def orb():
+    """Liquid-chrome sphere: a flowing surface (refs: liquid chrome ball) with
+    pressed-in bubble cells (refs: glass bubble orb)."""
+    global FLOW
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=192, ring_count=96, radius=1.15)
+    o = bpy.context.active_object
+    FLOW = bpy.data.objects.new("Flow", None)
+    bpy.context.collection.objects.link(FLOW)
+    # Liquid folds (ref: liquid chrome ball): broad marble ridges + a slow swell,
+    # both sampled through the moving empty so the liquid flows and loops.
+    t1 = bpy.data.textures.new("folds", type="MARBLE")
+    t1.marble_type = "SHARPER"
+    t1.noise_scale = 0.42
+    t1.turbulence = 5.0
+    t1.noise_depth = 1
+    d1 = o.modifiers.new("Folds", "DISPLACE")
+    d1.texture, d1.texture_coords, d1.texture_coords_object = t1, "OBJECT", FLOW
+    d1.strength, d1.mid_level = 0.11, 0.5
+    t2 = bpy.data.textures.new("swell", type="CLOUDS")
+    t2.noise_scale = 1.1
+    t2.noise_depth = 0
+    d2 = o.modifiers.new("Swell", "DISPLACE")
+    d2.texture, d2.texture_coords, d2.texture_coords_object = t2, "OBJECT", FLOW
+    d2.strength, d2.mid_level = 0.1, 0.5
+    o.modifiers.new("Smooth", "SUBSURF").levels = 2
+    bpy.ops.object.shade_smooth()
+    o.rotation_euler = (math.radians(18), math.radians(-24), 0)
+    return o
+
+
 def text_object():
     curve = bpy.data.curves.new("type", "FONT")
     curve.body = a.text
@@ -152,7 +187,7 @@ def text_object():
     return obj
 
 
-obj = ribbon() if a.shape == "ribbon" else text_object()
+obj = {"ribbon": ribbon, "text": text_object, "orb": orb}[a.shape]()
 obj.data.materials.append(chrome_material())
 
 # Pivot for the turntable: parent the sculpture so its own tilt is preserved.
@@ -199,6 +234,23 @@ nt.links.new(grad.outputs["Fac"], ramp.inputs["Fac"])
 nt.links.new(ramp.outputs["Color"], bg.inputs["Color"])
 bg.inputs["Strength"].default_value = 0.9
 
+if a.shape == "orb":
+    # Real studio: dark room, the softboxes do the work (chrome reflects them as
+    # long white highlights) + two small coloured strips for the orange / blue glints.
+    softbox("GlintOrange", (-2.8, -2.2, -0.4), (95, 0, -50), (2.2, 0.18), 260, color=(1.0, 0.42, 0.12))
+    softbox("GlintBlue", (2.9, -1.6, 1.8), (60, 0, 60), (2.4, 0.16), 300, color=(0.25, 0.45, 1.0))
+    softbox("Under", (0.0, -1.5, -3.5), (160, 0, 0), (4.0, 0.5), 220)
+    ramp.color_ramp.elements[1].color = (0.75, 0.76, 0.8, 1)
+    ramp.color_ramp.elements[0].position = 0.35
+    ramp.color_ramp.elements[0].color = (0.1, 0.1, 0.11, 1)
+    # Silver chrome: plain metal, no tint ramp; a light soap-film for the A-ref glints.
+    m = obj.data.materials[0]
+    b = m.node_tree.nodes["Principled BSDF"]
+    for l in list(b.inputs["Base Color"].links):
+        m.node_tree.links.remove(l)
+    b.inputs["Base Color"].default_value = (0.92, 0.93, 0.95, 1)
+    b.inputs["Roughness"].default_value = 0.06
+
 # ---------- camera ----------
 cam_data = bpy.data.cameras.new("Cam")
 cam_data.lens = 62
@@ -210,10 +262,24 @@ scene.camera = cam
 
 if a.frames > 0:
     scene.frame_start, scene.frame_end = 1, a.frames
-    pivot.rotation_euler = (0, 0, 0)
-    pivot.keyframe_insert("rotation_euler", frame=1)
-    pivot.rotation_euler = (0, 0, math.tau * a.frames / (a.frames + 1))
-    pivot.keyframe_insert("rotation_euler", frame=a.frames)
+    # Bangle: move the sculpture's tilt onto the pivot, then spin the sculpture about its
+    # own loop axis (local Z) — the ring revolves around its hole like a bracelet on a wrist.
+    spinner = pivot
+    if a.spin == "bangle":
+        pivot.rotation_euler = obj.rotation_euler.copy()
+        obj.rotation_euler = (0, 0, 0)
+        spinner = obj
+    base = spinner.rotation_euler.copy()
+    spinner.keyframe_insert("rotation_euler", frame=1)
+    spinner.rotation_euler = (base[0], base[1], base[2] + math.tau * a.frames / (a.frames + 1))
+    spinner.keyframe_insert("rotation_euler", frame=a.frames)
+    pivot = spinner
+    # Orb: the flow empty travels a closed circle, so the liquid surface loops seamlessly.
+    if FLOW is not None:
+        for f in range(1, a.frames + 1):
+            ang = math.tau * (f - 1) / a.frames
+            FLOW.location = (0.55 * math.cos(ang), 0.55 * math.sin(ang), 0.3 * math.sin(2 * ang))
+            FLOW.keyframe_insert("location", frame=f)
     for fc in pivot.animation_data.action.fcurves if hasattr(pivot.animation_data.action, "fcurves") else []:
         for k in fc.keyframe_points:
             k.interpolation = "LINEAR"
