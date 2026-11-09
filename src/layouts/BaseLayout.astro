@@ -14,6 +14,7 @@ import Hud from "../components/layout/Hud.astro";
 import CommandPalette from "../components/layout/CommandPalette.astro";
 import InkBackground from "../components/3d/InkBackground.astro";
 import InkNav from "../components/motion/InkNav.astro";
+import ChatBot from "../components/layout/ChatBot.astro";
 import { SITE, experienceFor, type Accent, type Surface } from "../config/site";
 
 interface Props {
@@ -102,6 +103,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
     <TextFX />
     <Hud />
     <CommandPalette />
+    <ChatBot />
     <OrbCursor />
   </body>
 </html>

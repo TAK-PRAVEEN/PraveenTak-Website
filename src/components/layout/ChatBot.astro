@@ -1,0 +1,283 @@
+---
+/** Portfolio assistant: glass launcher + panel (talks to /api/chat). Persisted across pages. */
+import { GREETING, SUGGESTIONS } from "../../lib/chat-kb";
+---
+
+<div class="chat" data-chat transition:persist="chatbot">
+  <button class="launcher" type="button" data-chat-toggle aria-expanded="false" aria-controls="chat-panel">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="hud">Ask Praveen's AI</span>
+  </button>
+
+  <section id="chat-panel" class="panel" role="dialog" aria-label="Chat with Praveen's assistant" hidden data-chat-panel>
+    <header class="head">
+      <div>
+        <p class="hud title">Assistant</p>
+        <p class="micro sub">Answers about Praveen · may be imperfect</p>
+      </div>
+      <button class="close" type="button" data-chat-close aria-label="Close chat">✕</button>
+    </header>
+    <ol class="log" data-chat-log data-lenis-prevent aria-live="polite">
+      <li class="msg bot">{GREETING}</li>
+    </ol>
+    <div class="chips" data-chat-chips>
+      {SUGGESTIONS.map((s) => <button type="button" class="chip micro" data-chat-suggest>{s}</button>)}
+    </div>
+    <form class="form" data-chat-form>
+      <label class="sr-only" for="chat-input">Your question</label>
+      <input id="chat-input" name="q" type="text" maxlength="500" autocomplete="off" placeholder="Ask anything about Praveen…" data-chat-input />
+      <button type="submit" class="send" aria-label="Send">→</button>
+    </form>
+  </section>
+</div>
+
+<script>
+  type Msg = { role: "user" | "assistant"; content: string };
+  let ready = false;
+  function init() {
+    const root = document.querySelector<HTMLElement>("[data-chat]");
+    if (!root || ready) return;
+    ready = true;
+    const toggle = root.querySelector<HTMLButtonElement>("[data-chat-toggle]")!;
+    const panel = root.querySelector<HTMLElement>("[data-chat-panel]")!;
+    const log = root.querySelector<HTMLOListElement>("[data-chat-log]")!;
+    const form = root.querySelector<HTMLFormElement>("[data-chat-form]")!;
+    const input = root.querySelector<HTMLInputElement>("[data-chat-input]")!;
+    const chips = root.querySelector<HTMLElement>("[data-chat-chips]")!;
+    const history: Msg[] = [];
+    let busy = false;
+
+    const setOpen = (open: boolean) => {
+      panel.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+      root.classList.toggle("open", open);
+      if (open) input.focus();
+    };
+    toggle.onclick = () => setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    root.querySelector<HTMLButtonElement>("[data-chat-close]")!.onclick = () => {
+      setOpen(false);
+      toggle.focus();
+    };
+    window.addEventListener("keydown", (e) => e.key === "Escape" && !panel.hidden && setOpen(false));
+
+    const add = (cls: string, text: string) => {
+      const li = document.createElement("li");
+      li.className = `msg ${cls}`;
+      li.textContent = text;
+      log.append(li);
+      log.scrollTop = log.scrollHeight;
+      return li;
+    };
+    const ask = async (q: string) => {
+      q = q.trim();
+      if (!q || busy) return;
+      busy = true;
+      chips.hidden = true;
+      add("user", q);
+      history.push({ role: "user", content: q });
+      const typing = add("bot typing", "…");
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ messages: history.slice(-6) }),
+        });
+        const data = (await res.json()) as { answer?: string; error?: string };
+        const answer = data.answer ?? data.error ?? "Sorry, something went wrong.";
+        typing.classList.remove("typing");
+        typing.textContent = answer;
+        history.push({ role: "assistant", content: answer });
+      } catch {
+        typing.classList.remove("typing");
+        typing.textContent = "I couldn't reach the server. Please try again, or use the Contact page.";
+      } finally {
+        busy = false;
+        log.scrollTop = log.scrollHeight;
+      }
+    };
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const q = input.value;
+      input.value = "";
+      void ask(q);
+    };
+    root.querySelectorAll<HTMLButtonElement>("[data-chat-suggest]").forEach((b) => (b.onclick = () => void ask(b.textContent ?? "")));
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .chat {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 60;
+  }
+  .launcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent);
+    border-radius: 999px;
+    color: var(--fg);
+    background: color-mix(in oklab, var(--bg) 60%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 30%, transparent),
+      0 12px 30px -16px rgb(0 0 0 / 0.45);
+    cursor: pointer;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 10px var(--orange);
+  }
+  .chat.open .launcher {
+    display: none;
+  }
+  .panel {
+    width: min(380px, calc(100vw - 32px));
+    height: min(560px, calc(100svh - 120px));
+    display: flex;
+    flex-direction: column;
+    border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+    border-radius: 22px;
+    overflow: hidden;
+    color: var(--fg);
+    background: color-mix(in oklab, var(--bg) 78%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    backdrop-filter: blur(22px) saturate(1.5);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 25%, transparent),
+      0 30px 70px -30px rgb(0 0 0 / 0.55);
+  }
+  .panel[hidden] {
+    display: none;
+  }
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .title {
+    margin: 0;
+  }
+  .sub {
+    margin: 4px 0 0;
+    color: var(--fg-muted);
+    font-size: 10px;
+  }
+  .close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .log {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overscroll-behavior: contain;
+  }
+  .log :global(.msg) {
+    max-width: 86%;
+    padding: 10px 13px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+  .log :global(.msg.bot) {
+    align-self: flex-start;
+    background: color-mix(in oklab, var(--fg) 7%, transparent);
+    border-bottom-left-radius: 4px;
+  }
+  .log :global(.msg.user) {
+    align-self: flex-end;
+    background: var(--orange);
+    color: var(--charcoal);
+    border-bottom-right-radius: 4px;
+  }
+  .log :global(.msg.typing) {
+    letter-spacing: 0.2em;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% {
+      opacity: 0.4;
+    }
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 16px 12px;
+  }
+  .chips[hidden] {
+    display: none;
+  }
+  .chip {
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+    font-size: 10px;
+  }
+  .chip:hover {
+    border-color: var(--line-strong);
+  }
+  .form {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .form input {
+    flex: 1;
+    min-width: 0;
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    font-size: 14px;
+  }
+  .form input:focus-visible {
+    outline: none;
+    border-color: var(--orange);
+  }
+  .send {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--fg);
+    color: var(--bg);
+    font-size: 18px;
+    cursor: pointer;
+  }
+  @media (max-width: 767px) {
+    .launcher .hud {
+      font-size: 9px;
+    }
+  }
+</style>

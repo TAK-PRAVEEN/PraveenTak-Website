@@ -10,6 +10,10 @@
 		"html_handling": "drop-trailing-slash",
 		"not_found_handling": "404-page"
 	},
+	// Workers AI powers /api/chat. It needs a Cloudflare login (wrangler always runs AI
+	// remotely), so it is switched on at deploy time — see DESIGN.md §14. Until then
+	// the chatbot answers from its scripted fallback.
+	// "ai": { "binding": "AI" },
 	"observability": {
 		"enabled": true
 	}
