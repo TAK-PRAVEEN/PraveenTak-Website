@@ -9,6 +9,9 @@ import Nav from "../components/layout/Nav.astro";
 import Footer from "../components/layout/Footer.astro";
 import OrbCursor from "../components/3d/OrbCursor.astro";
 import LiquidFX from "../components/motion/LiquidFX.astro";
+import TextFX from "../components/motion/TextFX.astro";
+import Hud from "../components/layout/Hud.astro";
+import CommandPalette from "../components/layout/CommandPalette.astro";
 import { SITE, experienceFor, type Accent, type Surface } from "../config/site";
 
 interface Props {
@@ -55,6 +58,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
 
     <link rel="preload" href="/fonts/space-grotesk-var.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/manrope-var.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/space-mono-400.woff2" as="font" type="font/woff2" crossorigin />
 
     <!-- Theme before first paint (no flash): the visitor's stored choice, else light (the brand default). -->
     <script is:inline>
@@ -82,6 +86,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
     </main>
     {!bare && <Footer />}
     <LiquidFX />
+    <TextFX />
+    <Hud />
+    <CommandPalette />
     <OrbCursor />
   </body>
 </html>

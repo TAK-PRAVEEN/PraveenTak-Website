@@ -16,12 +16,12 @@ const long = title.length > 12;
 
 <header class="frame page-header">
   <div class="meta micro">
-    <span>{exp.index} — {exp.label}</span>
-    <span class="text-muted">{exp.summary}</span>
-    <span class="text-muted">SYS_{new Date().getFullYear()}</span>
+    <span data-decode>{exp.index} — {exp.label}</span>
+    <span class="text-muted" data-decode>{exp.summary}</span>
+    <span class="text-muted caret">SYS_{new Date().getFullYear()}</span>
   </div>
   <hr class="rule-strong" />
-  <h1 class:list={["display title", { long }]}>{title}</h1>
+  <h1 class:list={["display title", { long }]} data-reveal-lines>{title}</h1>
   {
     (lead || statement) && (
       <div class="grid-12 below">

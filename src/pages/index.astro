@@ -21,7 +21,7 @@ const statementLead = statementWords.join(" ");
   <!-- 01 — HERO ----------------------------------------------------------- -->
   <section id="hero" class="hero frame" aria-labelledby="hero-title">
     <div class="hero-meta micro">
-      <span>01 — Portfolio {SITE.year}</span>
+      <span data-decode>01 — Portfolio {SITE.year}</span>
       <span class="text-muted">{profile.location.coords}</span>
       <StatusDot open={profile.availability.open} label={profile.availability.label} />
     </div>
@@ -57,7 +57,7 @@ const statementLead = statementWords.join(" ");
     <div class="band-ink" data-band-ink aria-hidden="true"></div>
     <div class="frame band-inner" data-band-inner>
       <div class="band-meta micro">
-        <span>01.1 — Statement</span>
+        <span data-decode>01.1 — Statement</span>
         <span class="text-muted">{profile.location.coords}</span>
       </div>
       <!-- Slot for Praveen's own one-liner (pending); falls back to the brief's statement. -->
@@ -76,15 +76,15 @@ const statementLead = statementWords.join(" ");
   <!-- INDEX OF EXPERIENCES ------------------------------------------------- -->
   <section class="frame chapters" aria-labelledby="chapters-title">
     <div class="section-meta micro">
-      <h2 id="chapters-title">Index</h2>
+      <h2 id="chapters-title" data-decode>Index</h2>
       <span class="text-muted">{chapters.length} chapters</span>
     </div>
     <ol class="chapter-list">
       {
         chapters.map((c) => (
           <li>
-            <a href={c.href} class="chapter" data-liquid>
-              <span class="micro chapter-index">{c.index}</span>
+            <a href={c.href} class="chapter" data-liquid data-decode-hover>
+              <span class="micro chapter-index" data-decode-target>{c.index}</span>
               <span class="heading chapter-label">{c.label}</span>
               <span class="chapter-summary">{c.summary}</span>
               <ArrowUpRight class="chapter-arrow" size={28} aria-hidden="true" />
@@ -98,7 +98,7 @@ const statementLead = statementWords.join(" ");
   <!-- FEATURED WORK -------------------------------------------------------- -->
   <section class="frame featured" aria-labelledby="featured-title">
     <div class="section-meta micro">
-      <h2 id="featured-title">Selected work</h2>
+      <h2 id="featured-title" data-decode>Selected work</h2>
       <a href="/work" class="link-underline">All projects →</a>
     </div>
     <div class="grid-12 featured-grid">

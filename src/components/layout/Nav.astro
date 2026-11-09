@@ -11,6 +11,8 @@ interface Props {
 }
 const { current } = Astro.props;
 const links = EXPERIENCES.filter((e) => e.href !== "/");
+const total = String(EXPERIENCES.length).padStart(2, "0");
+const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
 ---
 
 <header class="nav" data-nav transition:persist="nav">
@@ -20,21 +22,29 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
       <span class="micro brand-name">{SITE.name}</span>
     </a>
 
+    <!-- Instrument panel: live Jaipur time + current chapter (desktop). -->
+    <div class="hud nav-hud" aria-hidden="true">
+      <span><span class="hud-dim">IST</span> <span data-hud-time>--:--:--</span></span>
+      <span><span class="hud-dim">CH</span> <span data-hud-chapter>{chapter}</span>/{total}</span>
+    </div>
+
     <nav aria-label="Primary" class="nav-desktop">
       <ul data-nav-list>
         <li class="nav-blob" data-nav-blob aria-hidden="true"></li>
         {
           links.map((l) => (
             <li>
-              <a href={l.href} class="micro nav-link" data-liquid aria-current={current === l.href ? "page" : undefined}>
+              <a href={l.href} class="micro nav-link" data-liquid data-decode-hover aria-current={current === l.href ? "page" : undefined}>
                 <span class="nav-index" aria-hidden="true">{l.index}</span>
-                {l.label}
+                <span data-decode-target>{l.label}</span>
               </a>
             </li>
           ))
         }
       </ul>
     </nav>
+
+    <button class="hud palette-btn" type="button" data-liquid data-palette-open aria-label="Open command palette (Ctrl+K)">⌘K</button>
 
     <button class="theme-toggle" type="button" data-liquid data-theme-toggle aria-label="Switch to dark theme" title="Switch theme">
       <Sun class="icon-sun" size={16} aria-hidden="true" />
@@ -46,20 +56,38 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     </button>
   </div>
 
+  <div class="nav-progress" data-hud-progress aria-hidden="true"></div>
+
   <div id="nav-panel" class="nav-panel" hidden data-nav-panel>
-    <nav aria-label="Primary mobile" class="frame">
-      <ul>
-        {
-          [EXPERIENCES[0], ...links].map((l) => (
-            <li>
-              <a href={l.href} class="nav-panel-link" aria-current={current === l.href ? "page" : undefined}>
-                <span class="micro">{l.index}</span>
-                <span class="heading">{l.label}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
+    <!-- Radial dial (references: Huly dial, space UI). Drag to spin; it snaps one page to the top. -->
+    <nav aria-label="Primary mobile" class="dial-wrap">
+      <div class="dial" data-dial style={`--n:${EXPERIENCES.length}`}>
+        <svg class="dial-ticks" viewBox="-100 -100 200 200" aria-hidden="true">
+          {
+            Array.from({ length: 72 }, (_, i) => (
+              <line x1="0" y1={i % 6 === 0 ? -99 : -96} x2="0" y2="-92" transform={`rotate(${i * 5})`} class:list={{ major: i % 6 === 0 }} />
+            ))
+          }
+          <path d="M0 -99 L4 -104 L-4 -104 Z" class="dial-pointer" />
+        </svg>
+        <ul class="dial-ring" data-dial-ring>
+          {
+            EXPERIENCES.map((l, i) => (
+              <li style={`--i:${i}`}>
+                <a href={l.href} class="dial-item" data-dial-item={i} aria-current={current === l.href ? "page" : undefined}>
+                  <span class="hud">{l.index}</span>
+                  <span class="dial-label">{l.label}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <a href={current} class="dial-core" data-dial-core data-liquid aria-label="Open selected page">
+          <span class="hud" data-dial-core-index>01</span>
+          <span class="dial-core-label" data-dial-core-label>Home</span>
+          <span class="micro dial-core-hint">Spin · tap to open</span>
+        </a>
+      </div>
     </nav>
   </div>
 </header>
@@ -67,6 +95,90 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
 <script>
   import { currentTheme, onThemeChange, setTheme } from "../../lib/theme";
   import { inkTransition } from "../../lib/ink-transition";
+  import { gsap } from "gsap";
+
+  /** Radial dial: drag to spin, snaps one page to the pointer at the top; the core opens it. */
+  function setupDial() {
+    const dial = document.querySelector<HTMLElement>("[data-dial]");
+    if (!dial || dial.dataset.ready) return null;
+    dial.dataset.ready = "true";
+    const items = Array.from(dial.querySelectorAll<HTMLAnchorElement>("[data-dial-item]"));
+    const core = dial.querySelector<HTMLAnchorElement>("[data-dial-core]")!;
+    const coreIdx = dial.querySelector<HTMLElement>("[data-dial-core-index]")!;
+    const coreLabel = dial.querySelector<HTMLElement>("[data-dial-core-label]")!;
+    const n = items.length;
+    const step = 360 / n;
+    const state = { deg: 0 };
+
+    const render = () => {
+      dial.style.setProperty("--ring", `${state.deg}deg`);
+      const sel = (((Math.round(-state.deg / step)) % n) + n) % n;
+      items.forEach((a, i) => a.toggleAttribute("data-selected", i === sel));
+      const a = items[sel];
+      core.href = a.getAttribute("href") ?? "/";
+      coreIdx.textContent = a.querySelector(".hud")?.textContent ?? "";
+      coreLabel.textContent = a.querySelector(".dial-label")?.textContent ?? "";
+    };
+    const snap = () =>
+      gsap.to(state, { deg: Math.round(state.deg / step) * step, duration: 0.7, ease: "elastic.out(1, 0.55)", onUpdate: render });
+
+    let dragging = false;
+    let moved = 0;
+    let last = 0;
+    const angle = (e: PointerEvent) => {
+      const r = dial.getBoundingClientRect();
+      return (Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180) / Math.PI;
+    };
+    dial.addEventListener("pointerdown", (e) => {
+      if ((e.target as HTMLElement).closest("[data-dial-core]")) return;
+      dragging = true;
+      moved = 0;
+      last = angle(e);
+      gsap.killTweensOf(state);
+    });
+    window.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      let d = angle(e) - last;
+      if (d > 180) d -= 360;
+      if (d < -180) d += 360;
+      last += d;
+      moved += Math.abs(d);
+      state.deg += d;
+      render();
+    });
+    window.addEventListener("pointerup", () => {
+      if (!dragging) return;
+      dragging = false;
+      snap();
+    });
+    // A drag must never also count as a tap on a link.
+    dial.addEventListener("click", (e) => {
+      if (moved > 6 && !(e.target as HTMLElement).closest("[data-dial-core]")) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      moved = 0;
+    }, true);
+
+    return {
+      /** Spin the ring in and settle on the current page. */
+      spinIn() {
+        const cur = Math.max(0, items.findIndex((a) => a.getAttribute("aria-current") === "page"));
+        const target = -cur * step;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        gsap.killTweensOf(state);
+        if (reduced) {
+          state.deg = target;
+          render();
+          return;
+        }
+        state.deg = target - 160;
+        render();
+        gsap.to(state, { deg: target, duration: 1.1, ease: "expo.out", onUpdate: render });
+      },
+    };
+  }
+  let dialApi: ReturnType<typeof setupDial> = null;
 
   function setupNav() {
     const nav = document.querySelector<HTMLElement>("[data-nav]");
@@ -81,7 +193,10 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
       toggle.setAttribute("aria-expanded", String(open));
       label.textContent = open ? "Close" : "Menu";
       document.documentElement.style.overflow = open ? "hidden" : "";
-      if (open) panel.hidden = false;
+      if (open) {
+        panel.hidden = false;
+        dialApi?.spinIn();
+      }
       if (animate) {
         busy = true;
         try {
@@ -94,6 +209,7 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
       if (!open) panel.hidden = true;
     };
     void setOpen(false, false);
+    dialApi = dialApi ?? setupDial();
     // The nav is persisted across navigations: bind listeners only once.
     if (nav.dataset.ready) return;
     nav.dataset.ready = "true";
@@ -105,6 +221,8 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     syncThemeLabel();
     onThemeChange(syncThemeLabel);
     // Ink drops from the button and spreads across the page (see ink-transition.ts).
+    const palBtn = document.querySelector<HTMLButtonElement>("[data-palette-open]");
+    if (palBtn) palBtn.onclick = () => document.dispatchEvent(new Event("palette:open"));
     let switching = false;
     if (themeBtn)
       themeBtn.onclick = async () => {
@@ -197,6 +315,34 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
       margin-left: auto;
     }
   }
+  .nav-hud {
+    display: none;
+    gap: 22px;
+    color: var(--fg);
+  }
+  .nav-hud .hud-dim {
+    color: var(--fg-muted);
+  }
+  @media (min-width: 1180px) {
+    .nav-hud {
+      display: flex;
+    }
+  }
+  /* Scroll progress line along the bottom edge of the bar. */
+  .nav-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--accent);
+    transform-origin: 0 50%;
+    transform: scaleX(var(--progress, 0));
+    pointer-events: none;
+  }
+  :global(:root[data-accent="mono"]) .nav-progress {
+    background: var(--orange);
+  }
   .brand {
     display: inline-flex;
     align-items: center;
@@ -261,6 +407,25 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
   .nav-link[aria-current="page"] .nav-index {
     opacity: 1;
   }
+  .palette-btn {
+    display: none;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fg-muted);
+    cursor: pointer;
+  }
+  .palette-btn:hover {
+    color: var(--fg);
+    border-color: var(--line-strong);
+  }
+  @media (min-width: 960px) {
+    .palette-btn {
+      display: inline-block;
+    }
+  }
   .theme-toggle {
     display: grid;
     place-items: center;
@@ -320,24 +485,104 @@ const links = EXPERIENCES.filter((e) => e.href !== "/");
     overflow-y: auto;
     padding-block: 16px 48px;
   }
-  .nav-panel ul {
-    list-style: none;
+  .dial-wrap {
+    display: grid;
+    place-items: center;
+    min-height: calc(100svh - var(--nav-h) - 64px);
+  }
+  .dial {
+    --r: min(36vw, 150px);
+    --ring: 0deg;
+    position: relative;
+    width: calc(var(--r) * 2 + 120px);
+    aspect-ratio: 1;
+    touch-action: none;
+    user-select: none;
+  }
+  .dial-ticks {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(var(--ring));
+    stroke: var(--fg-muted);
+    stroke-width: 0.6;
+    opacity: 0.7;
+  }
+  .dial-ticks .major {
+    stroke: var(--fg);
+    stroke-width: 1;
+  }
+  .dial-ticks .dial-pointer {
+    fill: var(--orange);
+    stroke: none;
+    transform: rotate(calc(-1 * var(--ring)));
+  }
+  .dial-ring {
+    position: absolute;
+    inset: 0;
     margin: 0;
     padding: 0;
+    list-style: none;
+    transform: rotate(var(--ring));
   }
-  .nav-panel-link {
+  .dial-ring li {
+    --a: calc(var(--i) * 360deg / var(--n));
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: rotate(var(--a)) translateY(calc(var(--r) * -1)) rotate(calc(-1 * (var(--a) + var(--ring))));
+  }
+  .dial-item {
     display: flex;
-    align-items: baseline;
-    gap: 16px;
-    padding-block: 14px;
-    border-bottom: 1px solid var(--line);
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transform: translate(-50%, -50%);
+    padding: 8px;
+    color: var(--fg-muted);
+    transition: color var(--dur-fast);
   }
-  .nav-panel-link .heading {
-    font-size: clamp(2.25rem, 9vw, 3.5rem);
+  .dial-item[aria-current="page"],
+  .dial-item[data-selected] {
+    color: var(--fg);
   }
-  .nav-panel-link[aria-current="page"] .heading {
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 6px;
+  .dial-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .dial-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--r) * 1.05);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 50%;
+    text-align: center;
+    border: 1px solid var(--line);
+    background: radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--bg) 70%, white), var(--panel));
+    box-shadow:
+      inset 0 2px 0 color-mix(in oklab, white 55%, transparent),
+      inset 0 -10px 24px color-mix(in oklab, var(--fg) 8%, transparent),
+      0 18px 40px -18px rgb(0 0 0 / 0.45);
+  }
+  .dial-core-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.4rem, 6vw, 2rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .dial-core-hint {
+    color: var(--fg-muted);
+    font-size: 9px;
   }
 </style>

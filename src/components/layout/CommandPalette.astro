@@ -1,0 +1,259 @@
+---
+/**
+ * Command palette (Ctrl/⌘ + K): terminal-style launcher for pages, projects,
+ * lab entries and actions. Accessible combobox + listbox inside a <dialog>.
+ */
+import { getCollection, getEntry } from "astro:content";
+import { EXPERIENCES } from "../../config/site";
+
+const profile = (await getEntry("profile", "main"))!.data;
+const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
+const lab = (await getCollection("lab")).sort((a, b) => a.data.order - b.data.order);
+
+type Item = { kind: string; label: string; hint?: string; href?: string; action?: string; keys?: string };
+const items: Item[] = [
+  ...EXPERIENCES.map((e) => ({ kind: "Page", label: e.label, hint: e.index, href: e.href, keys: e.summary })),
+  ...projects.map((p) => ({ kind: "Work", label: p.data.title, hint: p.data.client ?? String(p.data.year ?? ""), href: `/work/${p.id}`, keys: p.data.stack.join(" ") })),
+  ...lab.map((l) => ({ kind: "Lab", label: l.data.title, hint: l.data.area, href: `/lab/${l.id}`, keys: l.data.stack.join(" ") })),
+  { kind: "Action", label: "Switch light / dark theme", action: "theme", keys: "dark light mode ink" },
+  { kind: "Action", label: "Copy email address", hint: profile.contact.email, action: "copy-email", keys: "contact mail" },
+  ...profile.socials.map((s) => ({ kind: "Link", label: `Open ${s.label}`, href: s.href, keys: s.label })),
+];
+---
+
+<dialog class="palette" data-palette aria-label="Command palette" transition:persist="palette">
+  <div class="panel">
+    <div class="prompt">
+      <span class="hud sign" aria-hidden="true">&gt;_</span>
+      <input
+        type="text"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="palette-list"
+        aria-autocomplete="list"
+        aria-label="Search pages, projects and actions"
+        placeholder="Type a command or search…"
+        autocomplete="off"
+        spellcheck="false"
+        data-palette-input
+      />
+      <kbd class="hud">ESC</kbd>
+    </div>
+    <ul id="palette-list" role="listbox" class="list" data-palette-list>
+      {
+        items.map((it, i) => (
+          <li
+            id={`pal-${i}`}
+            role="option"
+            aria-selected="false"
+            class="item"
+            data-href={it.href}
+            data-action={it.action}
+            data-search={`${it.kind} ${it.label} ${it.hint ?? ""} ${it.keys ?? ""}`.toLowerCase()}
+          >
+            <span class="hud kind">{it.kind}</span>
+            <span class="label">{it.label}</span>
+            {it.hint && <span class="micro hint">{it.hint}</span>}
+          </li>
+        ))
+      }
+    </ul>
+    <p class="empty micro" data-palette-empty hidden>No match. Try “work”, “lab” or a technology.</p>
+    <div class="foot hud" aria-hidden="true">
+      <span>↑↓ Navigate</span><span>↵ Open</span><span>Ctrl K Toggle</span>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  import { navigate } from "astro:transitions/client";
+  import { currentTheme, setTheme } from "../../lib/theme";
+
+  let ready = false;
+  function init() {
+    if (ready) return;
+    const dlg = document.querySelector<HTMLDialogElement>("[data-palette]");
+    const input = document.querySelector<HTMLInputElement>("[data-palette-input]");
+    const list = document.querySelector<HTMLElement>("[data-palette-list]");
+    const empty = document.querySelector<HTMLElement>("[data-palette-empty]");
+    if (!dlg || !input || !list || !empty) return;
+    ready = true;
+    const all = Array.from(list.querySelectorAll<HTMLLIElement>("[role=option]"));
+    let visible = all;
+    let active = 0;
+
+    const setActive = (i: number) => {
+      if (!visible.length) return;
+      active = (i + visible.length) % visible.length;
+      all.forEach((el) => el.setAttribute("aria-selected", "false"));
+      const el = visible[active];
+      el.setAttribute("aria-selected", "true");
+      input.setAttribute("aria-activedescendant", el.id);
+      el.scrollIntoView({ block: "nearest" });
+    };
+    const filter = () => {
+      const q = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      visible = all.filter((el) => {
+        const hay = el.dataset.search ?? "";
+        const show = q.every((w) => hay.includes(w));
+        el.hidden = !show;
+        return show;
+      });
+      empty.hidden = visible.length > 0;
+      setActive(0);
+    };
+    const open = () => {
+      if (dlg.open) return;
+      input.value = "";
+      filter();
+      dlg.showModal();
+      input.focus();
+    };
+    const close = () => dlg.open && dlg.close();
+    const run = async (el: HTMLElement | undefined) => {
+      if (!el) return;
+      close();
+      const { href, action } = el.dataset;
+      if (action === "theme") {
+        const { inkTransition } = await import("../../lib/ink-transition");
+        const next = currentTheme() === "dark" ? "light" : "dark";
+        void inkTransition(document.querySelector("[data-theme-toggle]"), () => setTheme(next));
+      } else if (action === "copy-email") {
+        const email = el.querySelector(".hint")?.textContent ?? "";
+        await navigator.clipboard?.writeText(email).catch(() => {});
+      } else if (href) {
+        if (/^https?:/.test(href)) window.open(href, "_blank", "noopener");
+        else navigate(href);
+      }
+    };
+
+    input.addEventListener("input", filter);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") (e.preventDefault(), setActive(active + 1));
+      else if (e.key === "ArrowUp") (e.preventDefault(), setActive(active - 1));
+      else if (e.key === "Enter") (e.preventDefault(), void run(visible[active]));
+    });
+    list.addEventListener("click", (e) => void run((e.target as HTMLElement).closest<HTMLElement>("[role=option]") ?? undefined));
+    list.addEventListener("pointermove", (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>("[role=option]");
+      const i = el ? visible.indexOf(el as HTMLLIElement) : -1;
+      if (i >= 0 && i !== active) setActive(i);
+    });
+    dlg.addEventListener("click", (e) => e.target === dlg && close()); // backdrop
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        dlg.open ? close() : open();
+      }
+    });
+    document.addEventListener("palette:open", open);
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .palette {
+    width: min(640px, calc(100vw - 32px));
+    margin: 14vh auto auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+  }
+  .palette::backdrop {
+    background: color-mix(in oklab, var(--ink) 45%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .panel {
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: color-mix(in oklab, var(--bg) 82%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    backdrop-filter: blur(18px) saturate(1.3);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 30%, transparent),
+      0 30px 80px -30px rgb(0 0 0 / 0.5);
+    overflow: hidden;
+  }
+  .prompt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sign {
+    color: var(--orange);
+  }
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    outline: none;
+  }
+  kbd {
+    padding: 4px 6px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--fg-muted);
+  }
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .item[aria-selected="true"] {
+    background: color-mix(in oklab, var(--fg) 8%, transparent);
+  }
+  .item[aria-selected="true"] .label::before {
+    content: "› ";
+    color: var(--orange);
+  }
+  .kind {
+    color: var(--fg-muted);
+    font-size: 9px;
+  }
+  .label {
+    font-family: var(--font-display);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hint {
+    color: var(--fg-muted);
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .empty {
+    margin: 0;
+    padding: 18px 20px;
+    color: var(--fg-muted);
+  }
+  .foot {
+    display: flex;
+    gap: 18px;
+    padding: 10px 18px;
+    border-top: 1px solid var(--line);
+    color: var(--fg-muted);
+    font-size: 9px;
+  }
+</style>

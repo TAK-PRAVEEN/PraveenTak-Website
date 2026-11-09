@@ -25,8 +25,8 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
     groups.map((g) => (
       <section class="frame group" aria-labelledby={`g-${g.key}`}>
         <div class="group-head micro">
-          <h2 id={`g-${g.key}`}>{g.label}</h2>
-          <span class="text-muted">{g.note}</span>
+          <h2 id={`g-${g.key}`} data-decode>{g.label}</h2>
+          <span class="text-muted" data-decode>{g.note}</span>
         </div>
         <ol class="projects">
           {g.items.map(({ p, i }) => (

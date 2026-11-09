@@ -1,0 +1,16 @@
+---
+/** Boots the site-wide text effects on every page (see text-fx.ts). */
+---
+
+<script>
+  let cleanup: (() => void) | null = null;
+  document.addEventListener("astro:page-load", async () => {
+    const { initTextFx } = await import("./text-fx");
+    cleanup?.();
+    cleanup = initTextFx();
+  });
+  document.addEventListener("astro:before-swap", () => {
+    cleanup?.();
+    cleanup = null;
+  });
+</script>

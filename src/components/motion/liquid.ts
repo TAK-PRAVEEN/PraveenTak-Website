@@ -134,7 +134,8 @@ export function animatePanel(panel: HTMLElement, origin: HTMLElement, open: bool
       },
     );
     if (open) {
-      gsap.fromTo(panel.querySelectorAll("li"), { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", stagger: 0.04, delay: 0.1 });
+      // Items are positioned by the dial's own transforms: animate the dial as a whole.
+      gsap.fromTo(panel.querySelector("[data-dial]"), { scale: 0.86, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: "expo.out", delay: 0.05 });
     }
   });
 }
