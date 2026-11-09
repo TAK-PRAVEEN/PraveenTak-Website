@@ -16,7 +16,7 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
 <section class="win" data-win aria-labelledby="win-title">
   <div class="win-sticky">
     <p class="hud win-before" aria-hidden="true" data-win-before>Look through ↓</p>
-    <div class="win-pane" data-win-pane data-surface="ink" data-accent="blue">
+    <div class="win-pane" data-win-pane data-ink-dark data-surface="ink" data-accent="blue">
       <div class="win-glow" aria-hidden="true"></div>
       <img class="win-still" src="/media/turntable/blue-00.webp" alt="" width="900" height="900" loading="lazy" decoding="async" data-win-still />
       <canvas class="win-canvas" aria-hidden="true" data-win-canvas></canvas>
@@ -222,6 +222,6 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
   }
   /* Only see-through when the ink background is running behind it (desktop). */
   :global(html.ink-bg-on) .win-pane {
-    background: color-mix(in oklab, var(--ink) 86%, transparent);
+    background: transparent;
   }
 </style>

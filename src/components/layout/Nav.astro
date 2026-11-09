@@ -34,7 +34,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
         {
           links.map((l) => (
             <li>
-              <a href={l.href} class="micro nav-link" data-liquid aria-current={current === l.href ? "page" : undefined}>
+              <a href={l.href} class="micro nav-link" aria-current={current === l.href ? "page" : undefined}>
                 <span class="nav-index" aria-hidden="true">{l.index}</span>
                 <span>{l.label}</span>
               </a>
@@ -265,6 +265,8 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
   // Keep aria-current correct when the persisted nav survives a navigation.
   document.addEventListener("astro:after-swap", () => {
     const path = "/" + (location.pathname.split("/")[1] ?? "");
+    // The nav persists across pages: drop focus from the clicked link so no ring lingers.
+    (document.activeElement as HTMLElement | null)?.closest?.("[data-nav]") && (document.activeElement as HTMLElement).blur();
     document.querySelectorAll<HTMLAnchorElement>("[data-nav] a[href]").forEach((a) => {
       if (a.getAttribute("href") === path) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
@@ -579,5 +581,15 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
   .dial-core-hint {
     color: var(--fg-muted);
     font-size: 9px;
+  }
+  /* Mouse clicks leave no box; keyboard focus still gets a soft ring. */
+  .nav-link:focus,
+  .brand:focus {
+    outline: none;
+  }
+  .nav-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--line-strong);
+    border-radius: 999px;
   }
 </style>

@@ -59,7 +59,11 @@ const FS = {
   absorb: head + `uniform sampler2D uStain, uDye; uniform float dt, fade;
     void main() { vec3 st = texture(uStain, vUv).rgb * (1.0 - fade * dt); vec3 d = texture(uDye, vUv).rgb;
       o = vec4(max(st, d * 0.6), 1.0); }`,
-  display: head + `uniform sampler2D uDye, uStain; uniform vec3 uBg; uniform float uStrength, uDark, uPaper, uTime;
+  display: head + `uniform sampler2D uDye, uStain; uniform vec3 uBg, uInkBg; uniform float uStrength, uDark, uPaper, uTime;
+    // Dark sections on paper pages (rounded rects in px, gl coords): true black + neon ink inside.
+    uniform vec4 uRect[4]; uniform float uRad[4]; uniform int uCount;
+    float sdRound(vec2 p, vec4 r, float rad) { vec2 c = (r.xy + r.zw) * 0.5, b = (r.zw - r.xy) * 0.5 - rad;
+      vec2 q = abs(p - c) - b; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - rad; }
     float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
       return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
@@ -92,7 +96,15 @@ const FS = {
       // A faint wet sheen of the moving water stays on top of the stains.
       bleed = mix(bleed, liquid, 0.25);
 
-      o = vec4(mix(liquid, bleed, uPaper), 1.0);
+      vec3 lit = mix(liquid, bleed, uPaper);
+
+      // ---- neon on black: dark pages / dark-mode and dark sections ----
+      float inDark = 0.0;
+      for (int k = 0; k < 4; k++) { if (k >= uCount) break;
+        inDark = max(inDark, 1.0 - smoothstep(-1.0, 1.0, sdRound(gl_FragCoord.xy, uRect[k], uRad[k]))); }
+      vec3 dyeRaw = texture(uDye, vUv).rgb;
+      vec3 neon = uInkBg + dyeRaw * 0.45 + sc * 0.3 * (body * 0.8 + rim) * uPaper;
+      o = vec4(mix(lit, neon, max(uDark, inDark)), 1.0);
     }`,
 };
 
@@ -214,6 +226,21 @@ export function mountInkFluid(canvas: HTMLCanvasElement, opts: { mode?: "paper" 
     return [c[0] * k, c[1] * k, c[2] * k] as [number, number, number];
   };
   let bg = rgb("#f0f0ee");
+  const inkBg = rgb(getComputedStyle(document.documentElement).getPropertyValue("--ink") || "#080809");
+  // Elements that render as true black with neon ink (data-ink-dark); refreshed per page.
+  let darkEls: HTMLElement[] = [];
+  const collectDark = () => (darkEls = Array.from(document.querySelectorAll<HTMLElement>("[data-ink-dark]")));
+  collectDark();
+  document.addEventListener("astro:page-load", collectDark);
+  /** clip-path: inset(t r b l round R) -> px [t, r, b, l, R]. */
+  const parseInset = (cp: string, w: number, h: number) => {
+    const m = cp && cp.match(/inset\(([^)]*)\)/);
+    if (!m) return [0, 0, 0, 0, 0];
+    const [box, round] = m[1].split("round");
+    const v = box.trim().split(/\s+/).map((t, i) => (t.endsWith("%") ? (parseFloat(t) / 100) * (i % 2 ? w : h) : parseFloat(t) || 0));
+    const [t, r = t, b = t, l = r] = v;
+    return [t, r, b, l, round ? parseFloat(round) || 0 : 0];
+  };
   let dark = 0;
   const applyTheme = () => {
     const isDark = currentTheme() === "dark" || document.documentElement.dataset.surface === "ink";
@@ -387,7 +414,29 @@ export function mountInkFluid(canvas: HTMLCanvasElement, opts: { mode?: "paper" 
       stain.swap();
     }
 
+    // Dark sections: rects (with their animated clip-path inset) in GL pixel coords.
+    const rects: number[] = [];
+    const rads: number[] = [];
+    for (const el of darkEls) {
+      if (rects.length >= 16) break;
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight || r.width === 0) continue;
+      const ins = parseInset(getComputedStyle(el).clipPath, r.width, r.height);
+      const x0 = r.left + ins[3], x1 = r.right - ins[1];
+      const y0 = window.innerHeight - (r.bottom - ins[2]), y1 = window.innerHeight - (r.top + ins[0]);
+      if (x1 <= x0 || y1 <= y0) continue;
+      rects.push(x0, y0, x1, y1);
+      rads.push(Math.min(ins[4], (x1 - x0) / 2, (y1 - y0) / 2));
+    }
+    const count = rects.length / 4;
+    while (rects.length < 16) rects.push(0, 0, 0, 0);
+    while (rads.length < 4) rads.push(0);
+
     run("display", null, (u) => {
+      gl.uniform4fv(u("uRect"), rects);
+      gl.uniform1fv(u("uRad"), rads);
+      gl.uniform1i(u("uCount"), count);
+      gl.uniform3f(u("uInkBg"), inkBg[0], inkBg[1], inkBg[2]);
       gl.uniform1i(u("uDye"), bindTex(dye.read.tex));
       gl.uniform1i(u("uStain"), bindTex(stain.read.tex));
       gl.uniform1f(u("uPaper"), paperMode);

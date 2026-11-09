@@ -14,15 +14,19 @@ webp() { # in out width quality
   ffmpeg -v error -y -i "$1" -vf "scale=$3:-1:flags=lanczos,format=yuva420p" -c:v libwebp -q:v "$4" -compression_level 6 "$2"
 }
 
-webp "$R/sculpture-blue.png" "$OUT/sculpture-blue.webp" 1200 80
-webp "$R/sculpture-lavender.png" "$OUT/sculpture-lavender.webp" 1200 80
-webp "$R/chrome-pt.png" "$OUT/chrome-pt.webp" 1200 82
-
-i=0
-for f in $(ls "$T"/blue_*.png | sort); do
-  webp "$f" "$OUT/turntable/blue-$(printf %02d $i).webp" 720 72
-  i=$((i + 1))
+# Stills are optional: only converted when present in <render-dir>.
+for n in sculpture-blue sculpture-lavender; do
+  [ -f "$R/$n.png" ] && webp "$R/$n.png" "$OUT/$n.webp" 1200 80
 done
+
+# One ffmpeg call for the whole sequence (90 launches took ~13 min on Windows).
+# Usage extra: PREFIX=orb bash scripts/prepare-renders.sh <render-dir> <turntable-dir>
+PREFIX="${PREFIX:-blue}"
+first=$(ls "$T"/*_*.png | sort | head -1)
+pattern="$(dirname "$first")/$(basename "$first" | sed -E 's/[0-9]{4}\.png$/%04d.png/')"
+start=$(basename "$first" | grep -oE '[0-9]{4}' | tail -1)
+ffmpeg -v error -y -start_number "$((10#$start))" -i "$pattern"   -vf "scale=720:-1:flags=lanczos,format=yuva420p" -c:v libwebp -q:v 72 -compression_level 6   -start_number 0 "$OUT/turntable/$PREFIX-%02d.webp"
+i=$(ls "$OUT"/turntable/"$PREFIX"-*.webp | wc -l)
 echo "turntable frames: $i"
-du -ch "$OUT"/turntable/*.webp | tail -1
-ls -la "$OUT"/sculpture-*.webp "$OUT"/chrome-pt.webp
+du -ch "$OUT"/turntable/"$PREFIX"-*.webp | tail -1
+ls -la "$OUT"/sculpture-*.webp

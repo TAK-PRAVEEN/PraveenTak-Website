@@ -57,7 +57,7 @@ const statementLead = statementWords.join(" ");
 
   <!-- PAPER → INK: scroll transition out of the hero ----------------------- -->
   <section class="band" data-surface="ink" data-accent="orange" data-band aria-labelledby="statement">
-    <div class="band-ink" data-band-ink aria-hidden="true"></div>
+    <div class="band-ink" data-band-ink data-ink-dark aria-hidden="true"></div>
     <div class="frame band-inner" data-band-inner>
       <div class="band-meta micro">
         <span data-decode>01.1 — Statement</span>
@@ -228,7 +228,8 @@ const statementLead = statementWords.join(" ");
   }
 
   /* Slightly see-through when the ink background runs: ink glows through like ink in dark water. */
+  /* Ink running: the canvas paints true black + neon ink inside this shape (data-ink-dark). */
   :global(html.ink-bg-on) .band-ink {
-    background: color-mix(in oklab, var(--band-bg, var(--ink)) 84%, transparent);
+    background: transparent;
   }
 </style>
