@@ -21,7 +21,7 @@ done
 
 # One ffmpeg call for the whole sequence (90 launches took ~13 min on Windows).
 # Usage extra: PREFIX=orb bash scripts/prepare-renders.sh <render-dir> <turntable-dir>
-PREFIX="${PREFIX:-blue}"
+PREFIX="${PREFIX:-orb}"
 first=$(ls "$T"/*_*.png | sort | head -1)
 pattern="$(dirname "$first")/$(basename "$first" | sed -E 's/[0-9]{4}\.png$/%04d.png/')"
 start=$(basename "$first" | grep -oE '[0-9]{4}' | tail -1)

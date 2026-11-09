@@ -123,7 +123,7 @@ function windowScene(): () => void {
     for (let i = 0; i < TOTAL; i += stepBy) {
       const img = new Image();
       img.decoding = "async";
-      img.src = `/media/turntable/blue-${String(i).padStart(2, "0")}.webp`;
+      img.src = `/media/turntable/orb-${String(i).padStart(2, "0")}.webp`;
       img.onload = () => {
         frames[i] = img;
         if (i === 0) {
