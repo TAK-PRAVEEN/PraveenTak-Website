@@ -28,21 +28,19 @@ const { href, variant = "solid", external = false } = Astro.props;
     min-height: 44px;
     padding: 0 18px;
     border: 1px solid var(--line-strong);
-    transition:
-      background-color var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
+    transition: color 0.45s var(--ease-out) 0.05s;
+  }
+  /* The page-colour ink (global.css "Ink hover on links") fills the whole button. */
+  .btn::before {
+    inset: -1px;
+    border-radius: 0;
   }
   .btn-solid {
     background: var(--fg);
     color: var(--bg);
   }
-  .btn-solid:hover {
-    background: var(--accent);
+  /* On the ink, text turns the accent's readable partner (black on light accents). */
+  .btn:is(:hover, :focus-visible, :active) {
     color: var(--accent-text);
-    border-color: var(--accent);
-  }
-  .btn-outline:hover {
-    background: var(--fg);
-    color: var(--bg);
   }
 </style>

@@ -34,10 +34,10 @@ export const SITE = {
 export const EXPERIENCES: Experience[] = [
   { index: "01", label: "Home", href: "/", surface: "paper", accent: "orange", summary: "Identity and signature." },
   { index: "02", label: "About", href: "/about", surface: "paper", accent: "red", summary: "Who I am and how I work." },
-  { index: "03", label: "Work", href: "/work", surface: "paper", accent: "lime", summary: "Selected projects and case studies." },
-  { index: "04", label: "Lab", href: "/lab", surface: "ink", accent: "blue", summary: "AI / ML experiments and research." },
-  { index: "05", label: "Experiments", href: "/experiments", surface: "ink", accent: "lavender", summary: "Creative technology: 3D, shaders, motion." },
-  { index: "06", label: "Experience", href: "/experience", surface: "paper", accent: "amber", summary: "Roles, internships, education." },
+  { index: "03", label: "Work", href: "/work", surface: "paper", accent: "lavender", summary: "Selected projects and case studies." },
+  { index: "04", label: "Lab", href: "/lab", surface: "ink", accent: "amber", summary: "AI / ML experiments and research." },
+  { index: "05", label: "Experiments", href: "/experiments", surface: "ink", accent: "lime", summary: "Creative technology: 3D, shaders, motion." },
+  { index: "06", label: "Experience", href: "/experience", surface: "paper", accent: "blue", summary: "Roles, internships, education." },
   { index: "07", label: "Contact", href: "/contact", surface: "paper", accent: "cyan", summary: "Start a conversation." },
 ];
 

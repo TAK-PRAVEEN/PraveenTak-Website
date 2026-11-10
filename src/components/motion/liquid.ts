@@ -1,7 +1,7 @@
 /**
  * Liquid interactions — DESIGN.md §5 "Glass and liquid (restrained)".
  *
- *  - Press ripple: any [data-liquid] element is briefly run through the shared
+ *  - Press ripple: any [data-liquid] element or link is briefly run through the shared
  *    SVG displacement filter (#liquid) and settles with an elastic squash.
  *    The filter is attached only for ~0.45 s, so it costs nothing at rest.
  *  - Nav blob: a glass pill that flows between desktop nav links, stretching
@@ -40,7 +40,8 @@ function ripple(el: HTMLElement) {
 function initRipple(): () => void {
   const onDown = (e: PointerEvent) => {
     if (e.button !== 0 || reduced()) return;
-    const el = (e.target as Element | null)?.closest<HTMLElement>("[data-liquid]");
+    // [data-liquid] blocks, plus every link on the page (all wiggle when clicked)
+    const el = (e.target as Element | null)?.closest<HTMLElement>("[data-liquid], main a, footer a, .nav a");
     if (el) ripple(el);
   };
   document.addEventListener("pointerdown", onDown, { passive: true });

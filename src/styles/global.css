@@ -481,24 +481,29 @@ html.lenis body {
 }
 
 /* ---------- Ink hover on links ----------
- * Hover / press a link and the page's accent ink spreads out of its bottom-left
+ * Hover / press a link and the page's accent ink spreads from its bottom-left
  * corner (fast, then slowly soaking in); leave and it dries back the same way.
- * The ink is a radial gradient whose radius (--ink-r) is animated; an SVG filter
- * (#ink-link, in BaseLayout) tears its edge so it reads as wet ink, not a circle.
- * Large block links (cards, rows, menu dial) and the brand keep their own hovers;
- * the big footer heading gets the ink inside its letters instead (Footer.astro). */
-/* (see also .ink-text below: block-link titles and the top nav change TEXT colour only) */
+ * --ink-r (the ink radius) is what animates.
+ *
+ *  - Links within the site (href="/...") : only the TEXT changes colour (.ink-text
+ *    on titles inside big block links, or the link's own text).
+ *  - Links that leave the site (email, phone, socials, demo/source buttons): the
+ *    ink fills a block behind the text; an SVG filter (#ink-link, BaseLayout)
+ *    tears its edge so it reads as wet ink.
+ *  - The big footer heading has its own version (Footer.astro). */
 @property --ink-r {
   syntax: "<percentage>";
   inherits: false;
   initial-value: 0%;
 }
-:is(main, footer) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta) {
+
+/* Outside links: ink block behind the text */
+:is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link) {
   position: relative;
   isolation: isolate;
   transition: color 0.45s var(--ease-out) 0.05s;
 }
-:is(main, footer) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta)::before {
+:is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link)::before {
   content: "";
   position: absolute;
   inset: -0.2em -0.35em;
@@ -507,55 +512,55 @@ html.lenis body {
   border-radius: 0.3em;
   background: radial-gradient(circle at 0% 100%, var(--accent) var(--ink-r), transparent calc(var(--ink-r) + 1.5%));
   filter: url(#ink-link);
-  /* drying out: quick at first, then slowly */
   transition: --ink-r 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @media (hover: hover) {
-  :is(main, footer) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta):hover {
+  :is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link):hover {
     color: var(--accent-text);
   }
-  :is(main, footer) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta):hover::before {
+  :is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link):hover::before {
     --ink-r: 105%;
     transition-duration: 1.3s;
   }
 }
-:is(main, footer) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta):is(:focus-visible, :active) {
+:is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link):is(:focus-visible, :active) {
   color: var(--accent-text);
 }
-:is(main, footer) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta):is(:focus-visible, :active)::before {
+:is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link):is(:focus-visible, :active)::before {
   --ink-r: 105%;
   transition-duration: 1.3s;
 }
-@media (prefers-reduced-motion: reduce) {
-  :is(main, footer) a::before {
-    transition: none !important;
-  }
-}
 
-/* ---------- Ink text ----------
- * Same ink spread, but inside the letters: the text itself turns the page's
- * accent, starting at the bottom-left corner, then dries back on leave.
- * Used on titles inside big block links (projects, lab entries, chapters,
- * "next" links) and on the top-nav labels. Keeps each element's own colour at rest. */
-.ink-text {
-  background: radial-gradient(circle at 0% 100%, var(--accent-as-text) var(--ink-r), currentColor calc(var(--ink-r) + 4%));
+/* Links within the site: ink inside the letters only.
+ * Keeps each element's own colour at rest; spreads the page's accent on hover. */
+.ink-text,
+:is(main, footer) a[href^="/"]:not(:has(.ink-text), .card, .project, .entry, .chapter, .footer-cta, .dial-item, .dial-core) {
+  background: radial-gradient(circle at 0% 100%, var(--accent) var(--ink-r), currentColor calc(var(--ink-r) + 4%));
+  /* background-clip:text only paints inside the box: pad it so descenders (g, p, y)
+     and overhangs are not cut off, and pull the margin back so layout is unchanged */
+  padding: 0.06em 0.06em 0.2em;
+  margin: -0.06em -0.06em -0.2em;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   transition: --ink-r 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @media (hover: hover) {
-  a:hover .ink-text {
+  a:hover .ink-text,
+  :is(main, footer) a[href^="/"]:not(:has(.ink-text), .card, .project, .entry, .chapter, .footer-cta, .dial-item, .dial-core):hover {
     --ink-r: 115%;
     transition-duration: 2s;
   }
 }
-a:is(:focus-visible, :active) .ink-text {
+a:is(:focus-visible, :active) .ink-text,
+:is(main, footer) a[href^="/"]:not(:has(.ink-text), .card, .project, .entry, .chapter, .footer-cta, .dial-item, .dial-core):is(:focus-visible, :active) {
   --ink-r: 115%;
   transition-duration: 2s;
 }
 @media (prefers-reduced-motion: reduce) {
-  .ink-text {
-    transition: none;
+  :is(main, footer) a::before,
+  .ink-text,
+  :is(main, footer) a[href^="/"]:not(:has(.ink-text), .card, .project, .entry, .chapter, .footer-cta, .dial-item, .dial-core) {
+    transition: none !important;
   }
 }
