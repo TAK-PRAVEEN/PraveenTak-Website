@@ -81,5 +81,23 @@ await shoot(icon(0.08), 192, 192, "icons/icon-192.png");
 await shoot(icon(0.2), 512, 512, "icons/maskable-512.png");
 await shoot(icon(0.08), 180, 180, "icons/apple-touch-icon.png");
 await shoot(og, 1200, 630, "og.png");
+// Nav monogram mask: the letters only (tip cut, no square), tightly cropped, plus the
+// square's position as % of that box (Nav.astro paints letters via mask, square via %).
+{
+  const p = await browser.newPage({ viewport: { width: 1400, height: 700 } });
+  const file = join(tmp, "mono.html");
+  writeFileSync(file, `<!doctype html><html><head><style>${fonts} html,body{background:transparent} .pt{font:700 400px/1 "Inter Tight";color:#000;position:absolute;left:100px;top:100px} .pt-sq{visibility:hidden}</style></head><body>${MONO}</body></html>`);
+  await p.goto(pathToFileURL(file).href, { waitUntil: "load" });
+  await p.evaluate(() => document.fonts.ready);
+  const box = await p.evaluate(() => {
+    const b = document.querySelector(".pt").getBoundingClientRect();
+    const q = document.querySelector(".pt-sq").getBoundingClientRect();
+    const r = (v) => Math.round(v * 1000) / 10;
+    return { x: b.x, y: b.y, w: b.width, h: b.height, sq: { left: r((q.x - b.x) / b.width), top: r((q.y - b.y) / b.height), w: r(q.width / b.width), h: r(q.height / b.height) } };
+  });
+  await p.screenshot({ path: resolve(root, "public/icons/monogram-mask.png"), omitBackground: true, clip: { x: box.x, y: box.y, width: box.w, height: box.h } });
+  console.log("monogram box", Math.round(box.w), "x", Math.round(box.h), "square %", JSON.stringify(box.sq));
+  await p.close();
+}
 await browser.close();
 rmSync(tmp, { recursive: true, force: true });

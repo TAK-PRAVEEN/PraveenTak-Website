@@ -19,7 +19,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
   <div class="frame nav-row">
     <a href="/" class="brand" aria-label={`${SITE.name} — home`}>
       <!-- PT monogram: site display font; the tip of the T's top bar is an orange square -->
-      <span class="brand-mark" aria-hidden="true"><span class="pt"><span class="pt-p">P</span><span class="pt-t"><span class="pt-tg">T</span><i class="pt-sq"></i></span></span></span>
+      <span class="brand-mark" aria-hidden="true"><span class="mono"><i class="mono-letters"></i><i class="mono-sq"></i></span></span>
       <span class="brand-sig" aria-hidden="true">
         <!-- Still by default; upgraded by script: VP9-alpha video (Chrome/Edge/Firefox) or animated WebP (Safari, no VP9 alpha). -->
         <img class="brand-sig-media" src="/media/signature-still.webp" width="1200" height="342" alt="" decoding="async" data-brand-sig />
@@ -379,41 +379,30 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     font-size: 14px;
     line-height: 1;
   }
-  /* "P T" with a little air between the letters. The right tip of the T's top bar
-     is cut out of the glyph (clip-path) and replaced by an orange square of the bar's
-     own thickness, after a hairline gap. Measured on Inter Tight 700: bar 0.127em
-     thick, its right tip 0.021em inside the glyph box.
-     Same construction in scripts/make-brand-assets.mjs (favicon, icons, share image). */
-  .pt {
-    --bar-top: 0.135em;
-    --bar: 0.127em;
-    --rsb: 0.021em;
-    --gap: 0.02em;
-    display: inline-flex;
-  }
-  .pt-p {
-    margin-right: 0.07em;
-  }
-  .pt-t {
+  /* PT monogram. At nav size live text snaps to whole pixels and the T's bar drifts
+     away from the square, so the letters are a high-res mask (painted in the text
+     colour, so they follow light/dark) and the square is placed by exact percentages.
+     Both come from scripts/make-brand-assets.mjs (Inter Tight 700; the T's bar tip is
+     cut and replaced by an orange square of the bar's thickness after a hairline gap). */
+  .mono {
     position: relative;
-  }
-  .pt-tg {
     display: block;
-    clip-path: polygon(
-      0 0,
-      calc(100% - var(--rsb) - var(--bar) - var(--gap)) 0,
-      calc(100% - var(--rsb) - var(--bar) - var(--gap)) calc(var(--bar-top) + var(--bar) + 0.02em),
-      100% calc(var(--bar-top) + var(--bar) + 0.02em),
-      100% 100%,
-      0 100%
-    );
+    height: 17px;
+    aspect-ratio: 528 / 400;
   }
-  .pt-sq {
+  .mono-letters {
     position: absolute;
-    right: var(--rsb);
-    top: var(--bar-top);
-    width: var(--bar);
-    height: var(--bar);
+    inset: 0;
+    background: currentColor;
+    -webkit-mask: url("/icons/monogram-mask.png") center / 100% 100% no-repeat;
+    mask: url("/icons/monogram-mask.png") center / 100% 100% no-repeat;
+  }
+  .mono-sq {
+    position: absolute;
+    left: 88.8%;
+    top: 13.5%;
+    width: 9.6%;
+    height: 12.7%;
     background: var(--orange);
   }
   .nav-desktop {

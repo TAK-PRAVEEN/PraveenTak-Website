@@ -1,9 +1,10 @@
 ---
 /**
  * Animated favicon: the orange square is a pen that writes "PT" in the browser tab.
- *   P — up the stem from the bottom, across the top, round the bowl and back to the stem.
- *   T — up its stem, left to the start of the bar, then right along the bar, stopping
- *       at the bar's tip where it stays as the orange square.
+ *   A faint "PT" shows the way; each stroke fills in solid exactly as the pen passes:
+ *   P — up the stem, right along the top, round the bowl and back to the stem.
+ *   T — up its stem, left to the start of the bar, then right along the whole bar,
+ *       stopping at the bar's tip where it stays as the orange square.
  * Frames are drawn on a small canvas and swapped into <link rel="icon">. Plays on the
  * first load and again when the visitor returns to the tab. Skipped under reduced motion.
  * Browsers that ignore favicon changes (Safari) keep the static /icons/favicon-48.png.
@@ -15,43 +16,62 @@
 
 <script>
   const SIZE = 64; // favicon canvas
-  const K = SIZE / 256;
+  const K = SIZE / 256; // glyph space (256) -> canvas
   const SQ = 16.6; // square side (= bar thickness)
-  const FINAL = { x: 193.6 + SQ / 2, y: 79 + SQ / 2 }; // square's resting centre (bar tip)
+  const FINAL_X = 193.6 + SQ / 2; // square's resting centre (the T bar's tip)
+  const BAR_Y = 87; // centre line of the top bars
 
-  type Pt = [number, number];
-  // P: stem bottom -> top -> right along the top -> round the bowl -> back to the stem.
-  const arc = (cx: number, cy: number, r: number, a0: number, a1: number, n = 18): Pt[] =>
-    Array.from({ length: n + 1 }, (_, i) => {
-      const a = a0 + ((a1 - a0) * i) / n;
-      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-    });
-  const P: Pt[] = [[57, 182], [57, 87], [85, 87], ...arc(85, 110.75, 23.75, -Math.PI / 2, Math.PI / 2).slice(1), [57, 134.5]];
-  // T: stem bottom -> top -> left end of the bar -> right along the bar to the square's spot.
-  const T: Pt[] = [[172, 182], [172, 87], [128, 87], [FINAL.x, FINAL.y]];
-
-  const measure = (pts: Pt[]) => {
-    const cum = [0];
-    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-    return { pts, cum, len: cum[cum.length - 1] };
+  /**
+   * The writing, as segments in glyph space (from /icons/favicon-glyph.png).
+   * Each reveals exactly its own stroke (no wider), so nothing appears before the
+   * pen reaches it. `reveal(g, t)` paints the uncovered area for progress t (0..1);
+   * `pen(t)` is the square's centre.
+   */
+  type Seg = { len: number; reveal: (g: CanvasRenderingContext2D, t: number) => void; pen: (t: number) => [number, number] };
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const vertical = (x0: number, x1: number, yFrom: number, yTo: number, cx: number): Seg => ({
+    len: Math.abs(yTo - yFrom),
+    reveal: (g, t) => {
+      const y = lerp(yFrom, yTo, t);
+      g.fillRect(x0, Math.min(y, yFrom), x1 - x0, Math.abs(yFrom - y));
+    },
+    pen: (t) => [cx, lerp(yFrom, yTo, t)],
+  });
+  const horizontal = (y0: number, y1: number, xFrom: number, xTo: number, cy: number): Seg => ({
+    len: Math.abs(xTo - xFrom),
+    reveal: (g, t) => {
+      const x = lerp(xFrom, xTo, t);
+      g.fillRect(Math.min(x, xFrom), y0, Math.abs(x - xFrom), y1 - y0);
+    },
+    pen: (t) => [lerp(xFrom, xTo, t), cy],
+  });
+  // P bowl: half-circle centred (85, 110.75), stroke radius 23.75, from the top round to the bottom
+  const bowl: Seg = {
+    len: Math.PI * 23.75,
+    reveal: (g, t) => {
+      g.save();
+      g.lineWidth = 24;
+      g.lineCap = "butt";
+      g.beginPath();
+      g.arc(85, 110.75, 23.75, -Math.PI / 2, -Math.PI / 2 + Math.PI * t);
+      g.stroke();
+      g.restore();
+    },
+    pen: (t) => {
+      const a = -Math.PI / 2 + Math.PI * t;
+      return [85 + 23.75 * Math.cos(a), 110.75 + 23.75 * Math.sin(a)];
+    },
   };
-  const strokes = [measure(P), measure(T)];
-  const total = strokes[0].len + strokes[1].len;
-
-  /** Points of a stroke up to distance d, plus the pen position at d. */
-  const upTo = (s: ReturnType<typeof measure>, d: number): { path: Pt[]; at: Pt } => {
-    const path: Pt[] = [s.pts[0]];
-    for (let i = 1; i < s.pts.length; i++) {
-      if (s.cum[i] <= d) path.push(s.pts[i]);
-      else {
-        const t = (d - s.cum[i - 1]) / (s.cum[i] - s.cum[i - 1]);
-        const p: Pt = [s.pts[i - 1][0] + (s.pts[i][0] - s.pts[i - 1][0]) * t, s.pts[i - 1][1] + (s.pts[i][1] - s.pts[i - 1][1]) * t];
-        path.push(p);
-        return { path, at: p };
-      }
-    }
-    return { path, at: s.pts[s.pts.length - 1] };
-  };
+  const SEGS: Seg[] = [
+    vertical(46, 68, 174, 78, 57), // P stem, bottom -> top
+    horizontal(78, 96, 47, 85, BAR_Y), // P top, left -> right (start of the curve)
+    bowl, // round the bowl, down
+    horizontal(126, 143, 85, 66, 134.5), // back to the stem (P complete)
+    vertical(161, 183, 174, 78, 172), // T stem, bottom -> top
+    horizontal(78, 96, 172, 132, BAR_Y), // T bar, to the left end
+    horizontal(78, 96, 132, 192, BAR_Y), // T bar, all the way right to the tip
+  ];
+  const TOTAL = SEGS.reduce((a, s) => a + s.len, 0) + 60; // + a short hop from P to T
 
   function start() {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -64,40 +84,42 @@
     const c = document.createElement("canvas");
     c.width = c.height = SIZE;
     const g = c.getContext("2d")!;
-    const mask = document.createElement("canvas");
-    mask.width = mask.height = SIZE;
-    const m = mask.getContext("2d")!;
+    const ink = document.createElement("canvas");
+    ink.width = ink.height = SIZE;
+    const m = ink.getContext("2d")!;
 
     const frame = (p: number) => {
-      // progress (0..1) -> distance along P then T
-      const d = p * total;
-      const parts = d <= strokes[0].len ? [upTo(strokes[0], d)] : [upTo(strokes[0], strokes[0].len), upTo(strokes[1], d - strokes[0].len)];
-      // mask: a thick pen line along the written part
+      let d = p * TOTAL;
+      let penAt: [number, number] = [57, 174];
+      // reveal mask (glyph space)
       m.clearRect(0, 0, SIZE, SIZE);
       m.save();
       m.scale(K, K);
-      m.lineWidth = 27;
-      m.lineCap = "butt";
-      m.lineJoin = "miter";
-      m.strokeStyle = "#000";
-      for (const { path } of parts) {
-        m.beginPath();
-        path.forEach(([x, y], i) => (i ? m.lineTo(x, y) : m.moveTo(x, y)));
-        m.stroke();
-      }
+      m.fillStyle = m.strokeStyle = "#000";
+      SEGS.forEach((s, i) => {
+        if (i === 4) d -= 60; // the hop between letters draws nothing
+        if (d <= 0) return;
+        const t = Math.min(1, d / s.len);
+        s.reveal(m, t);
+        penAt = s.pen(t);
+        d -= s.len;
+      });
+      if (d > -60 && d <= 0 && p > 0.4 && p < 0.6) penAt = [172, 174]; // during the hop: wait at the T's foot
       m.globalCompositeOperation = "source-in";
       m.drawImage(glyph, 0, 0, 256, 256);
       m.restore();
-      // tile + revealed letters + the pen (orange square)
+      // tile, faint ghost letters, written letters, the pen
       g.clearRect(0, 0, SIZE, SIZE);
       g.fillStyle = "#171719";
       g.beginPath();
       g.roundRect(0, 0, SIZE, SIZE, SIZE * 0.18);
       g.fill();
-      g.drawImage(mask, 0, 0);
-      const [px, py] = parts[parts.length - 1].at;
+      g.globalAlpha = 0.16;
+      g.drawImage(glyph, 0, 0, SIZE, SIZE);
+      g.globalAlpha = 1;
+      g.drawImage(ink, 0, 0);
       g.fillStyle = "#ff5a1f";
-      g.fillRect((px - SQ / 2) * K, (py - SQ / 2) * K, SQ * K, SQ * K);
+      g.fillRect((penAt[0] - SQ / 2) * K, (penAt[1] - SQ / 2) * K, SQ * K, SQ * K);
       link.href = c.toDataURL("image/png");
     };
 
@@ -105,14 +127,14 @@
     const play = () => {
       clearInterval(timer);
       const t0 = performance.now();
-      const DUR = 2600;
+      const DUR = 3000;
       const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
       timer = window.setInterval(() => {
         const p = Math.min(1, (performance.now() - t0) / DUR);
         frame(ease(p));
         if (p >= 1) {
           clearInterval(timer);
-          link.href = staticHref; // final state = the static icon (identical)
+          link.href = staticHref; // the finished mark = the static icon
         }
       }, 40);
     };
