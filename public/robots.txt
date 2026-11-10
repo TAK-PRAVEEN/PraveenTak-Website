@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://praveen-tak-portfolio.workers.dev/sitemap-index.xml
+Sitemap: https://praveentak.dev/sitemap-index.xml
