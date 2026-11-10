@@ -45,7 +45,7 @@ export function initHomeMotion(): () => void {
         // where it starts: rising from the bottom-middle of the hero (= top of the band)
         geo.r0 = m.width * 0.36; // just around the moon disc
         geo.cx = b.width / 2;
-        geo.cy = geo.r0 + 6; // a full circle just inside the band's top edge
+        geo.cy = 0; // centred on the band's top edge: its top half peeks out of the hero
         geo.r1 = Math.hypot(Math.max(geo.mx, b.width - geo.mx), Math.max(geo.my, b.height - geo.my)) + 40;
       };
       const st = { p: 0 };
