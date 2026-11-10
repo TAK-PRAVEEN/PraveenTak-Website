@@ -19,8 +19,8 @@
 	"send_email": [{ "name": "EMAIL", "destination_address": "hello.praveentak@gmail.com" }],
 	"vars": {
 		"CONTACT_TO": "hello.praveentak@gmail.com",
-		// e.g. "contact@<domain>" once the domain is chosen and onboarded.
-		"CONTACT_FROM": ""
+		// Sender on praveentak.dev (Email Routing enabled); delivery only to the verified Gmail above.
+		"CONTACT_FROM": "contact@praveentak.dev"
 	},
 	// Secret (never in this file): TURNSTILE_SECRET — `wrangler secret put TURNSTILE_SECRET` at deploy;
 	// locally it lives in .dev.vars (Turnstile's public test secret).
