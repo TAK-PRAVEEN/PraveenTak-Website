@@ -29,7 +29,7 @@ const chapters = EXPERIENCES.filter((e) => e.href !== "/");
               {VISUAL[c.href] && <img class="chapter-visual" src={VISUAL[c.href]} alt="" loading="lazy" decoding="async" />}
               <span class="chapter-text">
                 <span class="hud chapter-kicker" data-decode-target>{c.index} / {c.label}</span>
-                <span class="display chapter-label">{c.label}</span>
+                <span class="display chapter-label ink-text">{c.label}</span>
                 <span class="chapter-summary">{c.summary}</span>
               </span>
             </a>

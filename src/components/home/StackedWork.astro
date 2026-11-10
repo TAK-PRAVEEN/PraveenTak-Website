@@ -29,7 +29,7 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
                   {p.data.client && <span class="dim">{p.data.client}</span>}
                   {p.data.year && <span class="dim">{p.data.year}</span>}
                 </p>
-                <h3 class="display card-title">{p.data.title}</h3>
+                <h3 class="display card-title ink-text">{p.data.title}</h3>
                 <p class="card-summary">{p.data.summary}</p>
                 {p.data.metrics[0] && (
                   <p class="card-metric">

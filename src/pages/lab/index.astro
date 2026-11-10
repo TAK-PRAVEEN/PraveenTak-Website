@@ -37,7 +37,7 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
                     <span>{month(e.data.date)}</span>
                     {e.data.context && <span class="ctx">{e.data.context}</span>}
                   </p>
-                  <h2 class="heading title">{e.data.title}</h2>
+                  <h2 class="heading title ink-text">{e.data.title}</h2>
                   <p class="summary">{e.data.summary}</p>
                 </div>
                 {e.data.metrics[0] && (

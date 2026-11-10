@@ -67,7 +67,7 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
                       {p.data.status && <span class="text-muted">{p.data.status}</span>}
                     </p>
                   )}
-                  <h3 class="heading project-title">{p.data.title}</h3>
+                  <h3 class="heading project-title ink-text">{p.data.title}</h3>
                   <p class="project-summary">{p.data.summary}</p>
                   <ul class="stack">
                     {p.data.stack.slice(0, 5).map((s) => (

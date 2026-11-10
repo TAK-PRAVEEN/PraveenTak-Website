@@ -47,7 +47,7 @@ function initRipple(): () => void {
   return () => document.removeEventListener("pointerdown", onDown);
 }
 
-/** Glass droplet that flows between the desktop nav links. */
+/** Glass droplet under the current page's nav link; flows to the new link on navigation. */
 function initNavBlob(): () => void {
   const list = document.querySelector<HTMLElement>("[data-nav-list]");
   const blob = document.querySelector<HTMLElement>("[data-nav-blob]");
@@ -74,16 +74,8 @@ function initNavBlob(): () => void {
     }
   };
 
+  // Marks the current page only; hovering a link changes its text colour (ink-text), not this.
   const current = () => list.querySelector<HTMLElement>('a[aria-current="page"]');
-  const onEnter = (e: Event) => place((e.target as HTMLElement).closest("a"), true);
-  const onLeave = () => place(current(), true);
-  const links = Array.from(list.querySelectorAll<HTMLElement>("a"));
-  links.forEach((a) => {
-    a.addEventListener("pointerenter", onEnter);
-    a.addEventListener("focus", onEnter);
-  });
-  list.addEventListener("pointerleave", onLeave);
-  list.addEventListener("focusout", onLeave);
 
   const settle = () => place(current(), true);
   const onResize = () => place(current(), false);
@@ -94,12 +86,6 @@ function initNavBlob(): () => void {
   place(current(), false);
 
   return () => {
-    links.forEach((a) => {
-      a.removeEventListener("pointerenter", onEnter);
-      a.removeEventListener("focus", onEnter);
-    });
-    list.removeEventListener("pointerleave", onLeave);
-    list.removeEventListener("focusout", onLeave);
     document.removeEventListener("astro:after-swap", settle);
     window.removeEventListener("resize", onResize);
   };
