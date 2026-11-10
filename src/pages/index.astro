@@ -11,7 +11,6 @@ import ChapterStrip from "../components/home/ChapterStrip.astro";
 import BigNumbers from "../components/home/BigNumbers.astro";
 import Intro from "../components/motion/Intro.astro";
 import RefSequence from "../components/3d/RefSequence.astro";
-import InkStamp from "../components/home/InkStamp.astro";
 import { SITE } from "../config/site";
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -40,24 +39,23 @@ const statementLead = statementWords.join(" ");
           <span class="sr-only">Praveen Tak</span>
           <Signature class="hero-signature" />
         </h1>
+        <!-- Role in the Valorant face: small, with an occasional digital glitch. -->
+        <div data-hero-fade><p class="hero-role" data-text="AI / ML ENGINEER">AI / ML ENGINEER</p></div>
         <ul class="roles" aria-label="Roles" data-hero-fade>
           {profile.roles.map((r, i) => <li class="micro"><span class="text-muted">0{i + 1}</span> {r}</li>)}
         </ul>
+        <!-- Intro + actions sit under the name in the left column (saves a whole row). -->
+        <p class="hero-intro" data-hero-fade>{profile.intro}</p>
+        <div class="hero-actions" data-hero-fade>
+          <LinkButton href="/work">Selected work</LinkButton>
+          <LinkButton href="/contact" variant="outline">Get in touch</LinkButton>
+        </div>
       </div>
 
       <BinaryPortrait class="hero-portrait col-span-4 md:col-span-5" scrollTarget="#hero" />
     </div>
 
-    <div class="grid-12 hero-foot">
-      <p class="hero-intro col-span-4 md:col-span-6">{profile.intro}</p>
-      <div class="hero-actions col-span-4 md:col-span-5 md:col-start-8">
-        <LinkButton href="/work">Selected work</LinkButton>
-        <LinkButton href="/contact" variant="outline">Get in touch</LinkButton>
-      </div>
-    </div>
   </section>
-
-  <InkStamp />
 
   <!-- PAPER → INK: scroll transition out of the hero ----------------------- -->
   <section class="band" data-surface="ink" data-accent="orange" data-band aria-labelledby="statement">
@@ -194,6 +192,70 @@ const statementLead = statementWords.join(" ");
     color: var(--accent-as-text);
     margin-right: 8px;
   }
+  /* Small Valorant role line. Two offset copies (accent + cyan) flicker in sliced
+     bursts for a fraction of a second every few seconds; the real text stays put. */
+  .hero-role {
+    position: relative;
+    width: fit-content;
+    margin: clamp(16px, 2.4vw, 28px) 0 0;
+    font-family: "Valorant", var(--font-display);
+    font-size: clamp(1.05rem, 0.7rem + 1.3vw, 1.75rem);
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: var(--fg);
+    animation: role-jitter 5.2s steps(1) infinite;
+  }
+  .hero-role::before,
+  .hero-role::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .hero-role::before {
+    color: var(--orange);
+    animation: role-glitch-a 5.2s steps(1) infinite;
+  }
+  .hero-role::after {
+    color: var(--cyan);
+    mix-blend-mode: multiply;
+    animation: role-glitch-b 5.2s steps(1) infinite;
+  }
+  :global(:root[data-theme="dark"]) .hero-role::after {
+    mix-blend-mode: screen;
+  }
+  @keyframes role-jitter {
+    0%, 88%, 100% { transform: none; }
+    89% { transform: translateX(2px) skewX(-8deg); }
+    91% { transform: translateX(-2px); }
+    93% { transform: skewX(6deg); }
+    95% { transform: none; }
+    97% { transform: translateX(1px); }
+  }
+  @keyframes role-glitch-a {
+    0%, 88%, 99%, 100% { opacity: 0; clip-path: inset(0 0 0 0); transform: none; }
+    89% { opacity: 1; clip-path: inset(10% 0 62% 0); transform: translate(-4px, -1px); }
+    91% { opacity: 1; clip-path: inset(58% 0 12% 0); transform: translate(5px, 1px); }
+    93% { opacity: 1; clip-path: inset(30% 0 40% 0); transform: translate(-3px, 0); }
+    95% { opacity: 1; clip-path: inset(75% 0 2% 0); transform: translate(3px, 0); }
+    97% { opacity: 1; clip-path: inset(0 0 80% 0); transform: translate(-2px, 0); }
+  }
+  @keyframes role-glitch-b {
+    0%, 88%, 99%, 100% { opacity: 0; clip-path: inset(0 0 0 0); transform: none; }
+    89% { opacity: 1; clip-path: inset(48% 0 22% 0); transform: translate(4px, 1px); }
+    91% { opacity: 1; clip-path: inset(5% 0 70% 0); transform: translate(-5px, 0); }
+    93% { opacity: 1; clip-path: inset(66% 0 6% 0); transform: translate(3px, -1px); }
+    95% { opacity: 1; clip-path: inset(20% 0 55% 0); transform: translate(-3px, 0); }
+    97% { opacity: 1; clip-path: inset(85% 0 0 0); transform: translate(2px, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-role,
+    .hero-role::before,
+    .hero-role::after {
+      animation: none;
+    }
+  }
   .roles {
     display: flex;
     flex-wrap: wrap;
@@ -208,27 +270,18 @@ const statementLead = statementWords.join(" ");
     justify-self: center;
   }
 
-  .hero-foot {
-    padding-block: 24px 40px;
-    border-top: 1px solid var(--line);
-    row-gap: 24px;
-    align-items: end;
-  }
   .hero-intro {
-    margin: 0;
-    font-size: var(--text-lead);
-    line-height: 1.45;
+    max-width: 46ch;
+    margin: clamp(20px, 2.6vw, 32px) 0 0;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--fg-muted);
   }
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    justify-content: flex-start;
-  }
-  @media (min-width: 768px) {
-    .hero-actions {
-      justify-content: flex-end;
-    }
+    gap: 10px;
+    margin-top: 20px;
   }
 
   /* Slightly see-through when the ink background runs: ink glows through like ink in dark water. */
@@ -251,8 +304,16 @@ const statementLead = statementWords.join(" ");
       position: relative;
       right: auto;
       top: auto;
-      margin: 0 auto -20%;
-      width: 80vw;
+      margin: 0 auto -12%;
+      padding-top: 40px;
+      width: 62vw;
+    }
+    /* Phones: the band sizes to its content (no full-screen height = no empty black). */
+    .band-inner {
+      min-height: 0;
+      justify-content: flex-start;
+      gap: 36px;
+      padding-block: 24px 56px;
     }
   }
 </style>

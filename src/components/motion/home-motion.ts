@@ -2,8 +2,8 @@
  * Home scroll choreography — DESIGN.md §2 (quiet ↔ loud) and §7 (Home: Paper → Ink).
  *
  *  1. Hero exit: copy drifts up and dims while the portrait dollies (portrait has its own loop).
- *  2. Ink wipe: the statement band's ink layer opens from a rounded, inset "drop"
- *     to full bleed — the liquid moment between Paper and Ink.
+ *  2. Moon window: the statement band opens as a circle from around the moon
+ *     (in the middle) to full bleed while the moon drifts to its place on the right.
  *  3. Statement: words light up one by one as they scroll through.
  *
  * Everything is scrubbed to scroll (no autoplay), and nothing runs under
@@ -29,25 +29,61 @@ export function initHomeMotion(): () => void {
     exit.to(hero.querySelectorAll("[data-hero-fade]"), { yPercent: -18, opacity: 0.1, ease: "none", stagger: 0.04 }, 0);
     exit.to(hero.querySelector("[data-hero-name]"), { y: -60, opacity: 0.25, ease: "none" }, 0);
 
-    // 2 — Ink wipe: a rounded drop of ink that spreads to full bleed.
+    // 2 — Moon window: the moon (spinning on its own) rises at the bottom-middle of
+    //     the hero inside a small round window of night; scrolling opens that window
+    //     as a circle to full bleed while the moon drifts to its place on the right.
     const ink = band.querySelector<HTMLElement>("[data-band-ink]");
-    if (ink) {
-      gsap.fromTo(
-        ink,
-        { clipPath: "inset(22% 9% 22% 9% round 48px)" },
-        {
-          clipPath: "inset(0% 0% 0% 0% round 0px)",
-          ease: "power2.inOut",
-          scrollTrigger: { trigger: band, start: "top bottom", end: "top 15%", scrub: 0.8 },
+    const moon = band.querySelector<HTMLElement>("[data-band-moon]");
+    if (ink && moon) {
+      const geo = { cx: 0, cy: 0, mx: 0, my: 0, r0: 0, r1: 0 };
+      const measure = () => {
+        gsap.set(moon, { x: 0, y: 0, scale: 1 });
+        const b = band.getBoundingClientRect();
+        const m = moon.getBoundingClientRect();
+        geo.mx = m.left - b.left + m.width / 2; // moon's resting centre (right side)
+        geo.my = m.top - b.top + m.height / 2;
+        // where it starts: rising from the bottom-middle of the hero (= top of the band)
+        geo.r0 = m.width * 0.36; // just around the moon disc
+        geo.cx = b.width / 2;
+        geo.cy = geo.r0 + 6; // a full circle just inside the band's top edge
+        geo.r1 = Math.hypot(Math.max(geo.mx, b.width - geo.mx), Math.max(geo.my, b.height - geo.my)) + 40;
+      };
+      const st = { p: 0 };
+      const render = () => {
+        const e = st.p;
+        const move = gsap.parseEase("power2.inOut")(Math.min(1, e * 1.15));
+        const x = geo.cx + (geo.mx - geo.cx) * move;
+        const y = geo.cy + (geo.my - geo.cy) * move;
+        const r = geo.r0 + (geo.r1 - geo.r0) * gsap.parseEase("power2.in")(e);
+        // A circle written as a rounded square (the ink canvas reads inset() shapes);
+        // once it outgrows the band it becomes a rounded window, then full bleed.
+        const W = band.clientWidth, H = band.clientHeight;
+        const t = Math.max(0, y - r), b = Math.max(0, H - y - r), l = Math.max(0, x - r), rt = Math.max(0, W - x - r);
+        const R = r * (1 - gsap.utils.clamp(0, 1, (e - 0.8) / 0.2));
+        ink.style.clipPath = `inset(${t.toFixed(1)}px ${rt.toFixed(1)}px ${b.toFixed(1)}px ${l.toFixed(1)}px round ${R.toFixed(1)}px)`;
+        gsap.set(moon, { x: x - geo.mx, y: y - geo.my, scale: 0.82 + 0.18 * move });
+      };
+      measure();
+      render();
+      gsap.to(st, {
+        p: 1,
+        ease: "none",
+        onUpdate: render,
+        scrollTrigger: {
+          trigger: band,
+          start: "top 85%",
+          end: "top top",
+          scrub: 0.8,
+          onRefresh: () => (measure(), render()),
         },
-      );
+      });
     }
 
     // Band content (light-on-dark) appears only once enough ink is behind it.
     gsap.fromTo(
       band.querySelector("[data-band-inner]"),
       { opacity: 0 },
-      { opacity: 1, ease: "none", scrollTrigger: { trigger: band, start: "top 55%", end: "top 20%", scrub: 0.6 } },
+      { opacity: 1, ease: "none", scrollTrigger: { trigger: band, start: "top 25%", end: "top 0%", scrub: 0.6 } },
     );
 
     // 3 — Statement words light up.
