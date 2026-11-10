@@ -6,7 +6,7 @@
  */
 
 export type Surface = "paper" | "ink";
-export type Accent = "orange" | "lime" | "blue" | "lavender" | "amber" | "mono";
+export type Accent = "orange" | "lime" | "blue" | "lavender" | "amber" | "red" | "cyan" | "mono";
 
 export interface Experience {
   /** Two-digit index shown in labels: "03 — WORK". */
@@ -33,12 +33,12 @@ export const SITE = {
 /** The seven experiences, in reading order. Accent allocation: DESIGN.md §3. */
 export const EXPERIENCES: Experience[] = [
   { index: "01", label: "Home", href: "/", surface: "paper", accent: "orange", summary: "Identity and signature." },
-  { index: "02", label: "About", href: "/about", surface: "paper", accent: "mono", summary: "Who I am and how I work." },
+  { index: "02", label: "About", href: "/about", surface: "paper", accent: "red", summary: "Who I am and how I work." },
   { index: "03", label: "Work", href: "/work", surface: "paper", accent: "lime", summary: "Selected projects and case studies." },
   { index: "04", label: "Lab", href: "/lab", surface: "ink", accent: "blue", summary: "AI / ML experiments and research." },
   { index: "05", label: "Experiments", href: "/experiments", surface: "ink", accent: "lavender", summary: "Creative technology: 3D, shaders, motion." },
   { index: "06", label: "Experience", href: "/experience", surface: "paper", accent: "amber", summary: "Roles, internships, education." },
-  { index: "07", label: "Contact", href: "/contact", surface: "paper", accent: "orange", summary: "Start a conversation." },
+  { index: "07", label: "Contact", href: "/contact", surface: "paper", accent: "cyan", summary: "Start a conversation." },
 ];
 
 export function experienceFor(href: string): Experience {

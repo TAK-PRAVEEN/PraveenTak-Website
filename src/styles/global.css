@@ -78,6 +78,11 @@
   --blue-on-ink: #5b86ff;
   --lavender: #a78bfa;
   --amber: #ffbf00;
+  --amber-deep: #875f00; /* amber that reads as text on paper (5:1) */
+  --red: #ff2c2c;
+  --red-deep: #c41a1a; /* 5.2:1 on paper */
+  --cyan: #2cffff;
+  --cyan-deep: #006b6b; /* 5.5:1 on paper */
 
   /* Semantic (Paper surface is the default) */
   --bg: var(--paper);
@@ -147,6 +152,17 @@
 [data-accent="amber"] {
   --accent: var(--amber);
   --accent-text: var(--charcoal);
+  --accent-as-text: var(--amber-deep);
+}
+[data-accent="red"] {
+  --accent: var(--red);
+  --accent-text: var(--charcoal);
+  --accent-as-text: var(--red-deep);
+}
+[data-accent="cyan"] {
+  --accent: var(--cyan);
+  --accent-text: var(--charcoal);
+  --accent-as-text: var(--cyan-deep);
 }
 [data-accent="lavender"] {
   --accent: var(--lavender);
@@ -162,6 +178,8 @@
 [data-surface="ink"][data-accent="blue"] { --accent-as-text: var(--blue-on-ink); --accent: var(--blue-on-ink); }
 [data-surface="ink"][data-accent="lavender"] { --accent-as-text: var(--lavender); }
 [data-surface="ink"][data-accent="amber"] { --accent-as-text: var(--amber); }
+[data-surface="ink"][data-accent="red"] { --accent-as-text: var(--red); }
+[data-surface="ink"][data-accent="cyan"] { --accent-as-text: var(--cyan); }
 [data-surface="ink"][data-accent="mono"] { --accent: var(--paper); --accent-text: var(--ink); --accent-as-text: var(--paper); }
 
 /* ---------- Dark theme (user toggle / system preference) ----------
@@ -187,6 +205,8 @@
 :root[data-theme="dark"][data-accent="blue"] { --accent-as-text: var(--blue-on-ink); --accent: var(--blue-on-ink); }
 :root[data-theme="dark"][data-accent="lavender"] { --accent-as-text: var(--lavender); }
 :root[data-theme="dark"][data-accent="amber"] { --accent-as-text: var(--amber); }
+:root[data-theme="dark"][data-accent="red"] { --accent-as-text: var(--red); }
+:root[data-theme="dark"][data-accent="cyan"] { --accent-as-text: var(--cyan); }
 :root[data-theme="dark"][data-accent="mono"] { --accent: var(--paper); --accent-text: var(--ink); --accent-as-text: var(--paper); }
 
 /* ---------- Tailwind theme bridge ---------- */
@@ -449,5 +469,55 @@ html.lenis body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Ink hover on links ----------
+ * Hover / press a link and the page's accent ink spreads out of its bottom-left
+ * corner (fast, then slowly soaking in); leave and it dries back the same way.
+ * The ink is a radial gradient whose radius (--ink-r) is animated; an SVG filter
+ * (#ink-link, in BaseLayout) tears its edge so it reads as wet ink, not a circle.
+ * Large block links (cards, rows, menu dial) and the brand keep their own hovers. */
+@property --ink-r {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+:is(main, footer, .nav) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta) {
+  position: relative;
+  isolation: isolate;
+  transition: color 0.45s var(--ease-out) 0.05s;
+}
+:is(main, footer, .nav) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta)::before {
+  content: "";
+  position: absolute;
+  inset: -0.2em -0.35em;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 0.3em;
+  background: radial-gradient(circle at 0% 100%, var(--accent) var(--ink-r), transparent calc(var(--ink-r) + 1.5%));
+  filter: url(#ink-link);
+  /* drying out: quick at first, then slowly */
+  transition: --ink-r 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (hover: hover) {
+  :is(main, footer, .nav) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta):hover {
+    color: var(--accent-text);
+  }
+  :is(main, footer, .nav) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta):hover::before {
+    --ink-r: 105%;
+    transition-duration: 1.3s;
+  }
+}
+:is(main, footer, .nav) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta):is(:focus-visible, :active) {
+  color: var(--accent-text);
+}
+:is(main, footer, .nav) a:not(.brand, .skip-link, .dial-item, .dial-core, .card, .project, .entry, .chapter, .footer-cta):is(:focus-visible, :active)::before {
+  --ink-r: 105%;
+  transition-duration: 1.3s;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(main, footer, .nav) a::before {
+    transition: none !important;
   }
 }

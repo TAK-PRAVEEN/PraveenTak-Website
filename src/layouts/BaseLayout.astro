@@ -91,6 +91,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
     <ClientRouter fallback="swap" />
   </head>
   <body>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+      <!-- tears the edge of the link-hover ink (global.css "Ink hover on links") -->
+      <filter id="ink-link" x="-10%" y="-30%" width="120%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="3" seed="7" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
     <InkBackground />
     <a href="#main" class="skip-link micro">Skip to content</a>
     <Nav current={exp.href} />

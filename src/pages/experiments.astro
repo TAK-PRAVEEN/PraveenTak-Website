@@ -16,6 +16,14 @@ const areas = [
 ---
 
 <BaseLayout title="Experiments" section="/experiments" description="Creative technology experiments by Praveen Tak: 3D, shaders, motion.">
-  <PageHeader section="/experiments" title="Experiments" lead="Creative technology — 3D, shaders, generative systems and motion."><RefSequence slot="visual" name="torus" frames={60} fps={15} /></PageHeader>
+  <PageHeader section="/experiments" title="Experiments" lead="Creative technology — 3D, shaders, generative systems and motion."><RefSequence slot="visual" name="torus" frames={60} fps={15} class="torus-fade" /></PageHeader>
   {entries.length === 0 && <EmptyChapter areas={areas} note="Renders and prototypes are in production — first pieces land with the Phase 3 release." />}
 </BaseLayout>
+
+<style>
+  /* The source torus clip is cropped at its bottom edge; fade it out so there is no hard cut. */
+  :global(.torus-fade) {
+    -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 94%);
+    mask-image: linear-gradient(to bottom, #000 62%, transparent 94%);
+  }
+</style>
