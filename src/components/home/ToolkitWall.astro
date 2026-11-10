@@ -1,0 +1,125 @@
+---
+/**
+ * Variant 3 — Toolkit wall.
+ * Huge outlined technology names in three rows that slide in opposite directions
+ * with the scroll (faster when you scroll faster). A word fills with ink while it
+ * crosses the centre of the screen. Words come from the projects' stacks.
+ */
+import { getCollection } from "astro:content";
+
+const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
+const words = [...new Set(projects.flatMap((p) => p.data.stack.map((s) => s.split(/[ (/]/)[0])))].filter((s) => s.length > 1).slice(0, 24);
+const rows = [0, 1, 2].map((r) => words.filter((_, i) => i % 3 === r));
+---
+
+<section class="wall" data-variant="3" data-wall aria-labelledby="wall-title">
+  <div class="frame wall-head micro">
+    <h2 id="wall-title" data-decode>01.4 — Toolkit</h2>
+    <span class="text-muted">Used in shipped projects</span>
+  </div>
+  <div class="wall-rows" aria-label={words.join(", ")}>
+    {
+      rows.map((row, r) => (
+        <div class="wall-row" data-wall-row data-dir={r % 2 ? "1" : "-1"} aria-hidden="true">
+          {[...row, ...row].map((w) => (
+            <span class="display wall-word" data-wall-word>
+              {w}
+            </span>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  document.addEventListener("astro:page-load", () => {
+    const sec = document.querySelector<HTMLElement>("[data-wall]");
+    if (!sec || sec.dataset.ready) return;
+    sec.dataset.ready = "1";
+    const rows = Array.from(sec.querySelectorAll<HTMLElement>("[data-wall-row]"));
+    const words = Array.from(sec.querySelectorAll<HTMLElement>("[data-wall-word]"));
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return words.forEach((w) => w.classList.add("lit"));
+    const pos = rows.map((_, i) => (i % 2 ? -25 : 0)); // % of row width
+    let boost = 0;
+    let progress = 0;
+    ScrollTrigger.create({
+      trigger: sec,
+      start: "top bottom",
+      end: "bottom top",
+      onUpdate: (self) => {
+        progress = self.progress;
+        boost += Math.abs(self.getVelocity()) / 4000;
+      },
+    });
+    let visible = false;
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(sec);
+    gsap.ticker.add(() => {
+      if (!visible) return;
+      boost *= 0.92;
+      rows.forEach((row, i) => {
+        const dir = Number(row.dataset.dir);
+        // scroll position sets the base offset; scroll speed adds a little drift
+        pos[i] += dir * Math.min(0.6, boost) * 0.4;
+        const x = ((pos[i] + dir * progress * 30) % 50) - (dir > 0 ? 50 : 0);
+        row.style.transform = `translate3d(${x.toFixed(2)}%,0,0)`;
+      });
+      const mid = innerWidth / 2;
+      words.forEach((w) => {
+        const r = w.getBoundingClientRect();
+        w.classList.toggle("lit", Math.abs(r.left + r.width / 2 - mid) < Math.max(140, r.width * 0.6));
+      });
+    });
+  });
+</script>
+
+<style>
+  .wall {
+    overflow: hidden;
+    padding-block: clamp(40px, 6vw, 96px);
+  }
+  .wall-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: clamp(24px, 4vw, 56px);
+  }
+  .wall-head h2 {
+    font: inherit;
+    margin: 0;
+  }
+  .wall-rows {
+    display: grid;
+    gap: clamp(4px, 1vw, 14px);
+  }
+  .wall-row {
+    display: flex;
+    width: max-content;
+    gap: 0.5em;
+    font-size: clamp(3rem, 1.5rem + 7vw, 9.5rem);
+    will-change: transform;
+  }
+  .wall-word {
+    line-height: 1;
+    text-transform: uppercase;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--fg);
+    transition:
+      color 0.5s var(--ease-out),
+      -webkit-text-stroke-color 0.5s var(--ease-out);
+  }
+  .wall-word:global(.lit) {
+    color: var(--fg);
+  }
+  .wall-row:nth-child(2) .wall-word:global(.lit) {
+    color: var(--accent);
+    -webkit-text-stroke-color: var(--accent);
+  }
+</style>
