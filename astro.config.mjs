@@ -7,7 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 // https://astro.build/config
 export default defineConfig({
   // Placeholder origin until the domain is chosen (see DESIGN.md §12 / src/config/site.ts).
-  site: "https://praveen-tak-portfolio.workers.dev",
+  site: "https://praveen-tak-portfolio.praveentak715.workers.dev",
   // Static-first: every page is prerendered; API routes opt out with `prerender = false` (Phase 5).
   output: "static",
   // Emit about.html (not about/index.html) so /about is served without a redirect.

@@ -8,9 +8,10 @@ import RefSequence from "../components/3d/RefSequence.astro";
 
 
 const profile = (await getEntry("profile", "main"))!.data;
-// Turnstile site key is public. Set PUBLIC_TURNSTILE_SITE_KEY at build time for production;
-// the default is Cloudflare's documented always-pass TEST key for local development.
-const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
+// Turnstile site key is public. Set PUBLIC_TURNSTILE_SITE_KEY at build time for production.
+// Local dev uses Cloudflare's documented always-pass TEST key; a production build without a
+// real key renders no widget (the form then falls back to the visitor's mail app).
+const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.env.DEV ? "1x00000000000000000000AA" : "");
 ---
 
 <BaseLayout title="Contact" section="/contact" description="Get in touch with Praveen Tak." bare>
@@ -58,7 +59,7 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000
         <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
       </div>
       <!-- Cloudflare Turnstile: usually invisible; shows a checkbox only if unsure. -->
-      <div class="turnstile" data-turnstile data-sitekey={turnstileKey}></div>
+      {turnstileKey && <div class="turnstile" data-turnstile data-sitekey={turnstileKey}></div>}
       <p class="micro form-error" role="alert" data-form-error hidden></p>
       <p class="form-done" role="status" data-form-done hidden>Thanks — your message is on its way. I'll reply soon.</p>
       <button type="submit" class="micro submit" data-liquid data-submit>Send message →</button>
@@ -68,7 +69,7 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000
 </BaseLayout>
 
 
-<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+{turnstileKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>}
 
 <script>
   // Sends through POST /api/contact (Turnstile-checked, emailed via Cloudflare Email Service).
@@ -86,17 +87,21 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000
     const done = document.querySelector<HTMLElement>("[data-form-done]");
     const button = document.querySelector<HTMLButtonElement>("[data-submit]");
     const box = document.querySelector<HTMLElement>("[data-turnstile]");
-    if (!form || !error || !done || !button || !box) return;
+    if (!form || !error || !done || !button) return;
 
+    // Turnstile is optional: without a site key (before launch setup) there is no widget,
+    // the server answers "fallback" and the visitor's mail app opens instead.
     let widget: string | null = null;
-    const mount = () => {
-      const t = ts();
-      if (!t || widget !== null || !box.isConnected) return;
-      widget = t.render(box, { sitekey: box.dataset.sitekey, appearance: "interaction-only", theme: "auto", action: "contact" });
-    };
-    // The script loads async: try now, and poll briefly until it is ready.
-    mount();
-    const wait = window.setInterval(() => (widget !== null || !box.isConnected ? clearInterval(wait) : mount()), 300);
+    if (box) {
+      const mount = () => {
+        const t = ts();
+        if (!t || widget !== null || !box.isConnected) return;
+        widget = t.render(box, { sitekey: box.dataset.sitekey, appearance: "interaction-only", theme: "auto", action: "contact" });
+      };
+      // The script loads async: try now, and poll briefly until it is ready.
+      mount();
+      const wait = window.setInterval(() => (widget !== null || !box.isConnected ? clearInterval(wait) : mount()), 300);
+    }
 
     const fail = (msg: string) => {
       error.textContent = msg;
