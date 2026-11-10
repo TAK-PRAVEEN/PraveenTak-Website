@@ -79,6 +79,10 @@
   --lavender: #a78bfa;
   --amber: #ffbf00;
   --amber-deep: #875f00; /* amber that reads as text on paper (5:1) */
+  --orange-deep: #c2410c; /* deep shades: accent as text on paper, >= 4.5:1 */
+  --lime-deep: #4f6b00;
+  --blue-deep: #2f5ae0;
+  --lavender-deep: #6a4bd6;
   --red: #ff2c2c;
   --red-deep: #c41a1a; /* 5.2:1 on paper */
   --cyan: #2cffff;
@@ -139,14 +143,17 @@
 /* ---------- Accents (contrast rules: DESIGN.md §3) ---------- */
 [data-accent="orange"] {
   --accent: var(--orange);
+  --accent-as-text: var(--orange-deep);
   --accent-text: var(--charcoal);
 }
 [data-accent="lime"] {
   --accent: var(--lime);
+  --accent-as-text: var(--lime-deep);
   --accent-text: var(--charcoal);
 }
 [data-accent="blue"] {
   --accent: var(--blue);
+  --accent-as-text: var(--blue-deep);
   --accent-text: var(--paper);
 }
 [data-accent="amber"] {
@@ -166,6 +173,7 @@
 }
 [data-accent="lavender"] {
   --accent: var(--lavender);
+  --accent-as-text: var(--lavender-deep);
   --accent-text: var(--charcoal);
 }
 [data-accent="mono"] {
@@ -477,7 +485,8 @@ html.lenis body {
  * corner (fast, then slowly soaking in); leave and it dries back the same way.
  * The ink is a radial gradient whose radius (--ink-r) is animated; an SVG filter
  * (#ink-link, in BaseLayout) tears its edge so it reads as wet ink, not a circle.
- * Large block links (cards, rows, menu dial) and the brand keep their own hovers. */
+ * Large block links (cards, rows, menu dial) and the brand keep their own hovers;
+ * the big footer heading gets the ink inside its letters instead (Footer.astro). */
 @property --ink-r {
   syntax: "<percentage>";
   inherits: false;
