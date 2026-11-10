@@ -7,7 +7,7 @@
  *  - /api/* and other origins: never touched (contact form, chat always hit the network).
  * Bump VERSION to drop old caches.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const CORE = `core-${VERSION}`;
 const PAGES = `pages-${VERSION}`;
 const MEDIA = `media-${VERSION}`;
@@ -16,7 +16,7 @@ const PRECACHE = [
   "/",
   "/offline",
   "/manifest.webmanifest",
-  "/favicon.svg",
+  "/icons/favicon-48.png",
   "/icons/icon-192.png",
   "/fonts/inter-tight-var.woff2",
   "/fonts/ibm-plex-sans-400.woff2",

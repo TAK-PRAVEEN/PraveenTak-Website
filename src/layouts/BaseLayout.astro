@@ -15,6 +15,7 @@ import CommandPalette from "../components/layout/CommandPalette.astro";
 import InkBackground from "../components/3d/InkBackground.astro";
 import InkNav from "../components/motion/InkNav.astro";
 import ChatBot from "../components/layout/ChatBot.astro";
+import FaviconFX from "../components/motion/FaviconFX.astro";
 import { SITE, experienceFor, type Accent, type Surface } from "../config/site";
 
 interface Props {
@@ -54,8 +55,7 @@ const registerSW = import.meta.env.PROD;
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content={surface === "ink" ? "#080809" : "#f0f0ee"} />
     <meta name="color-scheme" content="light dark" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="icon" href="/icons/favicon-48.png" type="image/png" sizes="48x48" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
@@ -123,5 +123,6 @@ const registerSW = import.meta.env.PROD;
     <CommandPalette />
     <ChatBot />
     <OrbCursor />
+    <FaviconFX />
   </body>
 </html>

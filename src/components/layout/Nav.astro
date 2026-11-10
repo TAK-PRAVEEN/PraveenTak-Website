@@ -18,7 +18,8 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
 <header class="nav" data-nav transition:persist="nav">
   <div class="frame nav-row">
     <a href="/" class="brand" aria-label={`${SITE.name} — home`}>
-      <span class="brand-mark" aria-hidden="true">PT<i class="brand-dot"></i></span>
+      <!-- PT monogram: site display font; the tip of the T's top bar is an orange square -->
+      <span class="brand-mark" aria-hidden="true"><span class="pt"><span class="pt-p">P</span><span class="pt-t"><span class="pt-tg">T</span><i class="pt-sq"></i></span></span></span>
       <span class="brand-sig" aria-hidden="true">
         <!-- Still by default; upgraded by script: VP9-alpha video (Chrome/Edge/Firefox) or animated WebP (Safari, no VP9 alpha). -->
         <img class="brand-sig-media" src="/media/signature-still.webp" width="1200" height="342" alt="" decoding="async" data-brand-sig />
@@ -370,13 +371,50 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
   .brand-mark {
     display: grid;
     place-items: center;
-    width: 32px;
+    width: 36px;
     height: 32px;
     border: 1px solid var(--line-strong);
     font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1;
+  }
+  /* "P T" with a little air between the letters. The right tip of the T's top bar
+     is cut out of the glyph (clip-path) and replaced by an orange square of the bar's
+     own thickness, after a hairline gap. Measured on Inter Tight 700: bar 0.127em
+     thick, its right tip 0.021em inside the glyph box.
+     Same construction in scripts/make-brand-assets.mjs (favicon, icons, share image). */
+  .pt {
+    --bar-top: 0.135em;
+    --bar: 0.127em;
+    --rsb: 0.021em;
+    --gap: 0.02em;
+    display: inline-flex;
+  }
+  .pt-p {
+    margin-right: 0.07em;
+  }
+  .pt-t {
+    position: relative;
+  }
+  .pt-tg {
+    display: block;
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--rsb) - var(--bar) - var(--gap)) 0,
+      calc(100% - var(--rsb) - var(--bar) - var(--gap)) calc(var(--bar-top) + var(--bar) + 0.02em),
+      100% calc(var(--bar-top) + var(--bar) + 0.02em),
+      100% 100%,
+      0 100%
+    );
+  }
+  .pt-sq {
+    position: absolute;
+    right: var(--rsb);
+    top: var(--bar-top);
+    width: var(--bar);
+    height: var(--bar);
+    background: var(--orange);
   }
   .nav-desktop {
     display: none;
@@ -668,18 +706,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     }
   }
   /* PT monogram: square box, neon-orange square completing the T at the top right. */
-  .brand-mark {
-    position: relative;
-  }
-  .brand-dot {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 5px;
-    height: 5px;
-    background: var(--orange);
-    box-shadow: 0 0 6px var(--orange);
-  }
+
   /* Animated signature in the bar (same artwork as the hero). */
   .brand-sig {
     display: block;
