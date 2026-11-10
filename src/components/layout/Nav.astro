@@ -660,6 +660,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     pointer-events: none;
   }
   :global(:root[data-theme="dark"]) .brand-sig-media,
+  :global(:root[data-surface="ink"]) .brand-sig-media,
   .nav[data-surface="ink"] .brand-sig-media {
     filter: invert(1);
   }

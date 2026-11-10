@@ -4,6 +4,7 @@ import { ArrowUpRight } from "@lucide/astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
 import StatusDot from "../components/ui/StatusDot.astro";
+import RefSequence from "../components/3d/RefSequence.astro";
 
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -12,7 +13,7 @@ const profile = (await getEntry("profile", "main"))!.data;
 <BaseLayout title="Contact" section="/contact" description="Get in touch with Praveen Tak." bare>
   <div class="sky" aria-hidden="true"><div class="sky-img"></div></div>
   <div class="over-sky">
-  <PageHeader section="/contact" title="Let's talk" />
+  <PageHeader section="/contact" title="Let's talk"><RefSequence slot="visual" name="sphere" frames={90} fps={25} /></PageHeader>
 
   <section class="frame grid-12 contact" aria-label="Contact">
     <div class="col-span-4 md:col-span-5 details">
@@ -168,7 +169,7 @@ const profile = (await getEntry("profile", "main"))!.data;
     border-color: var(--orange);
     color: var(--charcoal);
   }
-  /* Above-the-clouds sky (reference), drifting very slowly behind the page. */
+  /* Painted storm-cloud forest (Praveen's image), drifting very slowly behind the page. */
   .sky {
     position: fixed;
     inset: 0;
@@ -179,7 +180,8 @@ const profile = (await getEntry("profile", "main"))!.data;
   .sky-img {
     position: absolute;
     inset: -6%;
-    background: url("/media/ref/clouds.webp") center 65% / cover no-repeat;
+    /* Praveen's painting. Portrait art; a wide version (contact-wide.webp) replaces it on laptops once generated. */
+    background: url("/media/contact-portrait.webp") center 70% / cover no-repeat;
     animation: sky-drift 70s ease-in-out infinite alternate;
   }
   /* soft paper veil at the top so the title and form stay crisp */
@@ -199,5 +201,15 @@ const profile = (await getEntry("profile", "main"))!.data;
   .over-sky {
     position: relative;
     z-index: 1;
+  }
+  /* Details + form sit on frosted glass so they read over the painting. */
+  .over-sky .contact {
+    margin-bottom: clamp(32px, 5vw, 64px);
+    padding: clamp(20px, 3vw, 40px);
+    border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+    border-radius: 24px;
+    background: color-mix(in oklab, var(--bg) 72%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    backdrop-filter: blur(18px) saturate(1.3);
   }
 </style>
