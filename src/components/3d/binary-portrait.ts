@@ -6,7 +6,7 @@
  * Rendering: one WebGL2 point-sprite draw; every particle effect lives in the
  * vertex shader. JS only updates a handful of uniforms per frame.
  */
-import { attribute, createContext, createProgram, fitCanvas, glyphAtlas, rgb, uniforms } from "../../lib/gl";
+import { attribute, createContext, createPrograms, fitCanvas, glyphAtlas, rgb, uniforms } from "../../lib/gl";
 import { onFrame, spring } from "../../lib/frame";
 import { currentTheme, onThemeChange } from "../../lib/theme";
 
@@ -147,7 +147,7 @@ export async function mountPortrait(canvas: HTMLCanvasElement, opts: PortraitOpt
   const small = window.matchMedia("(max-width: 767px)").matches || (navigator.hardwareConcurrency ?? 8) <= 4;
   const data = await loadPortrait(opts.dataUrl, small ? 9000 : 24000);
 
-  const program = createProgram(gl, VS, FS);
+  const [program] = await createPrograms(gl, [[VS, FS]]); // compiled in the background
   gl.useProgram(program);
   const vao = gl.createVertexArray();
   gl.bindVertexArray(vao);

@@ -132,7 +132,7 @@ export function initHomeMotion(): () => void {
     if (statement) {
       SplitText.create(statement, {
         type: "words",
-        aria: "auto",
+        aria: "none", // keep the real words readable; no aria-label on the <p>
         autoSplit: true,
         onSplit(self) {
           return gsap.fromTo(

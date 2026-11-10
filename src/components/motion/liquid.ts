@@ -126,9 +126,10 @@ export function initLiquid() {
 function initRemeasure() {
   let timer = 0;
   let lastH = document.documentElement.scrollHeight;
+  // re-measuring is costly (forces layout for every trigger): debounce generously
   const refresh = () => {
     clearTimeout(timer);
-    timer = window.setTimeout(() => ScrollTrigger.refresh(), 180);
+    timer = window.setTimeout(() => ScrollTrigger.refresh(), 300);
   };
   new ResizeObserver(() => {
     const h = document.documentElement.scrollHeight;
@@ -137,9 +138,7 @@ function initRemeasure() {
       refresh();
     }
   }).observe(document.body);
-  void document.fonts.ready.then(refresh);
-  window.addEventListener("load", refresh, { once: true });
-  document.addEventListener("astro:page-load", refresh);
+  // (ScrollTrigger already re-measures on load itself; only real height changes need more.)
 }
 
 /** Mobile menu: the panel spills open from the toggle like ink, and drains back. */

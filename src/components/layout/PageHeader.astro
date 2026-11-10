@@ -76,12 +76,33 @@ const long = title.length > 12;
       grid-column: 1 / span 6;
     }
   }
+  /* Fixed grid: the summary types itself in (scramble), so nothing here may wrap or
+     the whole page jumps while it types (layout shift). Each cell stays one line. */
   .meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: baseline;
     gap: 8px 24px;
     padding-bottom: 12px;
+  }
+  .meta > span {
+    white-space: nowrap;
+  }
+  .meta > span:nth-child(2) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+  }
+  @media (max-width: 767px) {
+    .meta {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .meta > span:nth-child(2) {
+      grid-row: 2;
+      grid-column: 1 / -1;
+      text-align: left;
+    }
   }
   .title {
     /* Never wider than the frame: the longest word always fits on one line. */

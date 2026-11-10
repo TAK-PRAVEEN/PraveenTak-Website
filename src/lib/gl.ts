@@ -14,25 +14,42 @@ export function createContext(canvas: HTMLCanvasElement): WebGL2RenderingContext
   });
 }
 
-function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
-  const sh = gl.createShader(type)!;
-  gl.shaderSource(sh, src);
-  gl.compileShader(sh);
-  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-    const log = gl.getShaderInfoLog(sh);
-    gl.deleteShader(sh);
-    throw new Error(`Shader compile failed: ${log}`);
+/**
+ * Compile and link several programs without freezing the page. All shaders are
+ * submitted first; with KHR_parallel_shader_compile the driver builds them in the
+ * background and we only check the results once they are done (polled per frame).
+ * Without the extension this still works, just synchronously at the status check.
+ */
+export async function createPrograms(gl: WebGL2RenderingContext, sources: [vs: string, fs: string][]): Promise<WebGLProgram[]> {
+  const ext = gl.getExtension("KHR_parallel_shader_compile") as { COMPLETION_STATUS_KHR: number } | null;
+  const vsCache = new Map<string, WebGLShader>();
+  const shader = (type: number, src: string) => {
+    const sh = gl.createShader(type)!;
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh); // no status query here: that would force a synchronous wait
+    return sh;
+  };
+  const built = sources.map(([vs, fs]) => {
+    let v = vsCache.get(vs);
+    if (!v) vsCache.set(vs, (v = shader(gl.VERTEX_SHADER, vs)));
+    const f = shader(gl.FRAGMENT_SHADER, fs);
+    const p = gl.createProgram()!;
+    gl.attachShader(p, v);
+    gl.attachShader(p, f);
+    gl.linkProgram(p);
+    return { p, v, f };
+  });
+  if (ext) {
+    const frame = () => new Promise((r) => requestAnimationFrame(r));
+    while (!built.every(({ p }) => gl.getProgramParameter(p, ext.COMPLETION_STATUS_KHR))) await frame();
   }
-  return sh;
-}
-
-export function createProgram(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
-  const p = gl.createProgram()!;
-  gl.attachShader(p, compile(gl, gl.VERTEX_SHADER, vs));
-  gl.attachShader(p, compile(gl, gl.FRAGMENT_SHADER, fs));
-  gl.linkProgram(p);
-  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`Program link failed: ${gl.getProgramInfoLog(p)}`);
-  return p;
+  return built.map(({ p, v, f }) => {
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      const log = gl.getShaderInfoLog(f) || gl.getShaderInfoLog(v) || gl.getProgramInfoLog(p);
+      throw new Error(`Program link failed: ${log}`);
+    }
+    return p;
+  });
 }
 
 /** Upload a Float32Array as an attribute of `size` components. */

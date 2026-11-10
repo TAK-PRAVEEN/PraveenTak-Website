@@ -8,7 +8,7 @@
  * Paper surface: charcoal particles over an orange core (additive glow would be
  * invisible on light paper). Ink surface: orange additive glow.
  */
-import { attribute, createContext, createProgram, rgb, uniforms } from "../../lib/gl";
+import { attribute, createContext, createPrograms, rgb, uniforms } from "../../lib/gl";
 import { onFrame, spring } from "../../lib/frame";
 import { currentTheme, onThemeChange } from "../../lib/theme";
 
@@ -99,13 +99,13 @@ function geometry() {
   return { n, pos, seed, kind };
 }
 
-export function mountOrb(root: HTMLElement): () => void {
+export async function mountOrb(root: HTMLElement): Promise<() => void> {
   const canvas = root.querySelector("canvas")!;
   const dot = root.querySelector<HTMLElement>("[data-orb-dot]")!;
   const gl = createContext(canvas);
   if (!gl) throw new Error("WebGL2 unavailable");
 
-  const program = createProgram(gl, VS, FS);
+  const [program] = await createPrograms(gl, [[VS, FS]]); // compiled in the background
   gl.useProgram(program);
   gl.bindVertexArray(gl.createVertexArray());
   const g = geometry();

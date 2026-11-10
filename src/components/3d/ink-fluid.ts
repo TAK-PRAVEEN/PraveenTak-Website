@@ -7,7 +7,7 @@
  * Technique after Jos Stam "Stable Fluids" (1999) and the well-known WebGL
  * fluid demos; written for this site in WebGL2.
  */
-import { createProgram, rgb } from "../../lib/gl";
+import { createPrograms, rgb } from "../../lib/gl";
 import { onFrame } from "../../lib/frame";
 import { currentTheme, onThemeChange } from "../../lib/theme";
 
@@ -139,7 +139,7 @@ export interface InkController {
 }
 type Double = { read: FBO; write: FBO; swap(): void };
 
-export function mountInkFluid(canvas: HTMLCanvasElement, opts: { mode?: "paper" | "liquid"; clickDrops?: boolean } = {}): InkController {
+export async function mountInkFluid(canvas: HTMLCanvasElement, opts: { mode?: "paper" | "liquid"; clickDrops?: boolean } = {}): Promise<InkController> {
   const gl = canvas.getContext("webgl2", { alpha: false, antialias: false, depth: false, preserveDrawingBuffer: false });
   if (!gl || !gl.getExtension("EXT_color_buffer_float")) throw new Error("float render targets unavailable");
 
@@ -153,9 +153,12 @@ export function mountInkFluid(canvas: HTMLCanvasElement, opts: { mode?: "paper" 
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
 
+  // Shaders compile in the background (no main-thread freeze).
+  const names = Object.keys(FS) as (keyof typeof FS)[];
+  const compiled = await createPrograms(gl, names.map((k) => [VS, FS[k]]));
   const progs = Object.fromEntries(
-    Object.entries(FS).map(([k, src]) => {
-      const p = createProgram(gl, VS, src);
+    names.map((k, i) => {
+      const p = compiled[i];
       const loc = gl.getAttribLocation(p, "aPos");
       return [k, { p, loc, u: (n: string) => gl.getUniformLocation(p, n) }];
     }),

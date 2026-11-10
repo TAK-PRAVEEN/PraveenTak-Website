@@ -20,7 +20,8 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     <a href="/" class="brand" aria-label={`${SITE.name} — home`}>
       <span class="brand-mark" aria-hidden="true">PT<i class="brand-dot"></i></span>
       <span class="brand-sig" aria-hidden="true">
-        <video class="brand-sig-media" src="/media/signature.webm" poster="/media/signature-still.webp" autoplay muted loop playsinline preload="metadata"></video>
+        <!-- Still by default; upgraded by script: VP9-alpha video (Chrome/Edge/Firefox) or animated WebP (Safari, no VP9 alpha). -->
+        <img class="brand-sig-media" src="/media/signature-still.webp" width="1200" height="342" alt="" decoding="async" data-brand-sig />
       </span>
       <span class="sr-only">{SITE.name}</span>
     </a>
@@ -264,6 +265,30 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     document.addEventListener("astro:after-swap", () => requestAnimationFrame(update));
   }
   document.addEventListener("astro:page-load", setupNav);
+
+  // Nav signature: same codec choice as the hero signature (Signature.astro).
+  function setupBrandSig() {
+    const still = document.querySelector<HTMLImageElement>("[data-brand-sig]");
+    if (!still || still.dataset.ready || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    still.dataset.ready = "true";
+    const isSafari = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
+    const probe = document.createElement("video");
+    const vp9 = probe.canPlayType('video/webm; codecs="vp09.00.10.08"') || probe.canPlayType('video/webm; codecs="vp9"');
+    if (isSafari || !vp9) {
+      still.src = "/media/signature.webp";
+      return;
+    }
+    const video = document.createElement("video");
+    Object.assign(video, { muted: true, loop: true, playsInline: true, autoplay: true, preload: "auto" });
+    video.setAttribute("muted", "");
+    video.className = "brand-sig-media";
+    video.src = "/media/signature.webm";
+    video.addEventListener("canplay", () => still.replaceWith(video), { once: true });
+    video.addEventListener("error", () => (still.src = "/media/signature.webp"), { once: true });
+    video.load();
+  }
+  // after the page has loaded, so the video never holds up the load event
+  document.addEventListener("astro:page-load", () => (document.readyState === "complete" ? setupBrandSig() : addEventListener("load", setupBrandSig, { once: true })));
 
   // Keep aria-current correct when the persisted nav survives a navigation.
   document.addEventListener("astro:after-swap", () => {
@@ -580,12 +605,18 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
   }
   .dial-core-hint {
     color: var(--fg-muted);
-    font-size: 9px;
+    font-size: 10px;
   }
   /* Mouse clicks leave no box; keyboard focus still gets a soft ring. */
   .nav-link:focus,
   .brand:focus {
     outline: none;
+  }
+  /* keyboard users still see where they are */
+  .brand:focus-visible {
+    outline: 1px solid var(--line-strong);
+    outline-offset: 6px;
+    border-radius: 4px;
   }
   .nav-link:focus-visible {
     outline: none;

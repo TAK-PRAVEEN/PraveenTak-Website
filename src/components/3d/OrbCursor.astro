@@ -23,7 +23,7 @@ import { MOTION } from "../../config/site";
     root.dataset.mounted = "true";
     try {
       const { mountOrb } = await import("./orb-cursor");
-      mountOrb(root);
+      await mountOrb(root);
     } catch (err) {
       console.warn("[orb] disabled:", err);
       document.documentElement.classList.remove("orb-on");

@@ -108,6 +108,12 @@ const profile = (await getEntry("profile", "main"))!.data;
   .footer-index {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 16px;
+    gap: 2px 18px;
+  }
+  /* comfortable tap targets (≥ 24 px tall) */
+  .footer-index a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
   }
 </style>

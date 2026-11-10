@@ -42,7 +42,8 @@ const facts = [
     <span class="text-muted">Used in shipped projects</span>
   </div>
 
-  <div class="wall-rows" aria-label={words.join(", ")}>
+  <p class="sr-only">Technologies: {words.join(", ")}.</p>
+  <div class="wall-rows">
     {
       rows.map((row, r) => (
         <div class="wall-row" data-wall-row data-dir={r % 2 ? "1" : "-1"} aria-hidden="true">

@@ -35,15 +35,30 @@ const { name, frames, fps, plain = false, class: className } = Astro.props;
     const pad = total > 99 ? 3 : 2;
     const frames: (HTMLImageElement | null)[] = new Array(total).fill(null);
     let loaded = false;
+    const fetchFrame = (i: number) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = `/media/ref/${name}-${String(i).padStart(pad, "0")}.webp`;
+      img.onload = () => (frames[i] = img);
+    };
+    // Never compete with the page's own text, fonts and images: wait for the page to
+    // finish loading, show the first frame, then fetch the rest in idle time, in small batches.
+    const idle = (fn: () => void) =>
+      "requestIdleCallback" in window ? (window as Window).requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200);
     const load = () => {
       if (loaded) return;
       loaded = true;
-      for (let i = 0; i < total; i++) {
-        const img = new Image();
-        img.decoding = "async";
-        img.src = `/media/ref/${name}-${String(i).padStart(pad, "0")}.webp`;
-        img.onload = () => (frames[i] = img);
-      }
+      const start = () => {
+        fetchFrame(0);
+        let i = 1;
+        const batch = () => {
+          for (const end = Math.min(total, i + 12); i < end; i++) fetchFrame(i);
+          if (i < total) idle(batch);
+        };
+        idle(batch);
+      };
+      if (document.readyState === "complete") start();
+      else addEventListener("load", start, { once: true });
     };
     const nearest = (i: number) => {
       for (let d = 0; d < total; d++) {
