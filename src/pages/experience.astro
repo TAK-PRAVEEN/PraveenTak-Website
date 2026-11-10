@@ -9,7 +9,7 @@ const certs = (await getCollection("certifications")).sort((a, b) => b.data.date
 const profile = (await getEntry("profile", "main"))!.data;
 ---
 
-<BaseLayout title="Experience" section="/experience" description="Professional experience, internships and certifications of Praveen Tak.">
+<BaseLayout title="Experience" fullTitle="Experience & Certifications — Praveen Tak, AI/ML Engineer" section="/experience" description="Praveen Tak's work history — AI Engineer at DESIGO® Milk, internships at DRDO, Infosys Springboard and Elevate Labs — plus education and certifications.">
   <PageHeader section="/experience" title="Experience" lead="Internships and research across forecasting, LLM tooling, computer vision and generative models." />
 
   <section class="frame" aria-labelledby="work-title">

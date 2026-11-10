@@ -4,6 +4,7 @@
  * Sets surface (paper | ink) and accent per experience — DESIGN.md §2–3.
  */
 import "../styles/global.css";
+import { getCollection, getEntry } from "astro:content";
 import { ClientRouter } from "astro:transitions";
 import Nav from "../components/layout/Nav.astro";
 import Footer from "../components/layout/Footer.astro";
@@ -29,6 +30,10 @@ interface Props {
   bare?: boolean;
   /** Keep this page out of search engines (internal tools such as /playground). */
   noindex?: boolean;
+  /** Full <title> override (otherwise "title — Praveen Tak"). */
+  fullTitle?: string;
+  /** Extra schema.org object for this page (e.g. a project or article), added to the JSON-LD graph. */
+  schema?: Record<string, unknown>;
 }
 
 const { title, description = SITE.description, section = Astro.url.pathname, bare = false, noindex = false } = Astro.props;
@@ -36,10 +41,40 @@ const exp = experienceFor("/" + (section.split("/")[1] ?? ""));
 const surface = Astro.props.surface ?? exp.surface;
 const accent = Astro.props.accent ?? exp.accent;
 
-const pageTitle = title ? `${title} — ${SITE.name}` : SITE.title;
+const pageTitle = Astro.props.fullTitle ?? (title ? `${title} — ${SITE.name}` : SITE.title);
+// Search engines show ~155 characters: trim longer summaries on a word boundary.
+const metaDescription = description.length > 158 ? description.slice(0, 155).replace(/\s+\S*$/, "") + "…" : description;
 // Pages are built as about.html etc. but served as /about: canonical URLs drop ".html".
 const canonical = new URL(Astro.url.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, ""), Astro.site ?? SITE.url);
 const ogImage = new URL("/og.png", Astro.site ?? SITE.url);
+
+// Structured data (schema.org): who Praveen is, the site, and — per page — what it shows.
+const origin = (Astro.site ?? new URL(SITE.url)).origin;
+const profile = (await getEntry("profile", "main"))!.data;
+const currentRole = (await getCollection("experience", (e) => e.data.kind === "work" && !e.data.end))[0]?.data;
+const school = (await getCollection("experience", (e) => e.data.kind === "education")).map((e) => e.data.org);
+const personId = `${origin}/#person`;
+const graph: Record<string, unknown>[] = [
+  {
+    "@type": "Person",
+    "@id": personId,
+    name: profile.name,
+    url: `${origin}/`,
+    image: `${origin}/og.png`,
+    email: `mailto:${profile.contact.email}`,
+    jobTitle: currentRole?.title ?? profile.roles[0],
+    ...(currentRole && { worksFor: { "@type": "Organization", name: currentRole.org.replace("®", "").trim() } }),
+    alumniOf: school.map((name) => ({ "@type": "EducationalOrganization", name })),
+    address: { "@type": "PostalAddress", addressLocality: profile.location.city, addressRegion: profile.location.region, addressCountry: "IN" },
+    knowsAbout: profile.skills.flatMap((g) => g.items).slice(0, 20),
+    sameAs: profile.socials.map((s) => s.href),
+    description: profile.intro,
+  },
+  { "@type": "WebSite", "@id": `${origin}/#website`, url: `${origin}/`, name: SITE.name, inLanguage: "en-IN", publisher: { "@id": personId } },
+  { "@type": "WebPage", "@id": `${canonical}#page`, url: String(canonical), name: pageTitle, description: metaDescription, isPartOf: { "@id": `${origin}/#website` }, about: { "@id": personId } },
+];
+if (Astro.props.schema) graph.push({ author: { "@id": personId }, ...Astro.props.schema });
+const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replace(/</g, "\u003c");
 // The service worker only runs in production builds (never against the dev server).
 const registerSW = import.meta.env.PROD;
 ---
@@ -50,9 +85,10 @@ const registerSW = import.meta.env.PROD;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={metaDescription} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
     <slot name="head" />
+    {!noindex && <script is:inline type="application/ld+json" set:html={jsonLd} />}
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content={surface === "ink" ? "#080809" : "#f0f0ee"} />
     <meta name="color-scheme" content="light dark" />
@@ -64,7 +100,7 @@ const registerSW = import.meta.env.PROD;
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:title" content={pageTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={metaDescription} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />

@@ -20,7 +20,7 @@ const covered = new Set(entries.map((e) => e.data.area));
 const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: `L—${String(entries.length + i + 1).padStart(2, "0")}`, label: a.label }));
 ---
 
-<BaseLayout title="AI / ML Lab" section="/lab" description="AI and machine-learning research and experiments by Praveen Tak.">
+<BaseLayout title="AI / ML Lab" fullTitle="AI/ML Lab — Computer Vision & GAN Research by Praveen Tak" section="/lab" description="AI and machine-learning research by Praveen Tak: computer vision for milk testing, face-recognition attendance, PPE detection and GAN studies.">
   <PageHeader section="/lab" title="AI / ML Lab" lead="Research and experiments in generative models, computer vision and agentic systems."><RefSequence slot="visual" name="brain" frames={107} fps={15} /></PageHeader>
 
   {

@@ -9,7 +9,7 @@ const profile = (await getEntry("profile", "main"))!.data;
 const education = (await getCollection("experience", (e) => e.data.kind === "education")).sort(byStartDesc);
 ---
 
-<BaseLayout title="About" section="/about" description={profile.intro}>
+<BaseLayout title="About" fullTitle="About Praveen Tak — AI/ML Engineer from Jaipur, India" section="/about" description="About Praveen Tak: AI/ML engineer and full-stack developer from Jaipur — skills, education, achievements, and how he turns data into real systems.">
   <PageHeader section="/about" title="About" statement={profile.statement} lead={profile.intro} />
 
   <section class="frame block" aria-labelledby="identity-title">

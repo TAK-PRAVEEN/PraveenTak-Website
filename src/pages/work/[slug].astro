@@ -20,7 +20,20 @@ const { Content } = await render(project);
 const d = project.data;
 ---
 
-<BaseLayout title={d.title} section="/work" description={d.summary}>
+<BaseLayout
+  title={d.title}
+  section="/work"
+  description={d.summary}
+  schema={{
+    "@type": "CreativeWork",
+    name: d.title,
+    description: d.summary,
+    ...(d.year && { dateCreated: String(d.year) }),
+    keywords: d.stack.join(", "),
+    ...(d.links.demo && { url: d.links.demo }),
+    ...(d.links.code && { codeRepository: d.links.code }),
+  }}
+>
   <PageHeader section="/work" title={d.title} lead={d.summary} />
 
   {

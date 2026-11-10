@@ -20,7 +20,12 @@ const { Content } = await render(entry);
 const d = entry.data;
 ---
 
-<BaseLayout title={d.title} section="/lab" description={d.summary}>
+<BaseLayout
+  title={d.title}
+  section="/lab"
+  description={d.summary}
+  schema={{ "@type": "TechArticle", headline: d.title, description: d.summary, datePublished: d.date, keywords: d.stack.join(", ") }}
+>
   <PageHeader section="/lab" title={d.title} lead={d.summary} />
 
   <article class="frame study grid-12">
