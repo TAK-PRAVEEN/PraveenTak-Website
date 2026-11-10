@@ -40,7 +40,8 @@ async function verifyTurnstile(secret: string, token: string, ip: string | null)
   if (ip) body.append("remoteip", ip);
   try {
     const r = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body });
-    const out = (await r.json()) as { success?: boolean };
+    const out = (await r.json()) as { success?: boolean; "error-codes"?: string[]; hostname?: string };
+    if (out.success !== true) console.error("turnstile rejected", JSON.stringify({ codes: out["error-codes"], hostname: out.hostname, tokenLength: token.length }));
     return out.success === true;
   } catch {
     return false;
@@ -74,6 +75,7 @@ export const POST: APIRoute = async ({ request }) => {
   // Not set up yet (no secret / no sender domain / no binding): hand over to mailto.
   if (!env.TURNSTILE_SECRET || !env.CONTACT_FROM || !env.CONTACT_TO || !env.EMAIL) return json({ ok: false, fallback: "mailto" }, 503);
 
+  if (!token) console.error("turnstile: no token sent by the form");
   if (!token || !(await verifyTurnstile(env.TURNSTILE_SECRET, token, request.headers.get("cf-connecting-ip")))) {
     return json({ ok: false, error: "Couldn't verify you're human. Please try again." }, 403);
   }

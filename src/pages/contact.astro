@@ -94,11 +94,30 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
     // Turnstile is optional: without a site key (before launch setup) there is no widget,
     // the server answers "fallback" and the visitor's mail app opens instead.
     let widget: string | null = null;
+    let token = "";
+    // The visitor may press Send before Turnstile has finished its (invisible) check:
+    // wait up to ~8 s for the token instead of sending an empty one.
+    const waitForToken = async () => {
+      for (let i = 0; i < 40 && !token; i++) {
+        const t = widget !== null ? ts()?.getResponse(widget) : undefined;
+        if (t) token = t;
+        else await new Promise((r) => setTimeout(r, 200));
+      }
+      return token;
+    };
     if (box) {
       const mount = () => {
         const t = ts();
         if (!t || widget !== null || !box.isConnected) return;
-        widget = t.render(box, { sitekey: box.dataset.sitekey, appearance: "interaction-only", theme: "auto", action: "contact" });
+        widget = t.render(box, {
+          sitekey: box.dataset.sitekey,
+          appearance: "interaction-only",
+          theme: "auto",
+          action: "contact",
+          callback: (tok: string) => (token = tok),
+          "expired-callback": () => (token = ""),
+          "error-callback": () => (token = ""),
+        });
       };
       // The script loads async: try now, and poll briefly until it is ready.
       mount();
@@ -125,14 +144,14 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
       if (missing.length) return fail(`Please add ${missing.join(", ")}.`);
       error.hidden = true;
 
-      const token = widget !== null ? ts()?.getResponse(widget) : undefined;
       button.disabled = true;
       button.textContent = "Sending…";
+      const sendToken = box ? await waitForToken() : undefined;
       try {
         const r = await fetch("/api/contact", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ name, email, message, token, website: data.get("website") }),
+          body: JSON.stringify({ name, email, message, token: sendToken, website: data.get("website") }),
         });
         const out = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string; fallback?: string };
         if (out.ok) {
@@ -149,7 +168,10 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
       } finally {
         button.disabled = false;
         if (!button.hidden) button.textContent = "Send message →";
-        if (widget !== null) ts()?.reset(widget);
+        if (widget !== null) {
+          token = ""; // a token is single-use: get a fresh one for the next send
+          ts()?.reset(widget);
+        }
       }
     };
   }
