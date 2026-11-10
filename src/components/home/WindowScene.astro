@@ -40,7 +40,10 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
               ))
             }
           </dl>
-          <a href="/lab" class="hud win-link" data-liquid data-decode-hover><span data-decode-target>Enter the lab</span> →</a>
+          <div class="win-actions">
+            <a href="/lab" class="hud win-link" data-liquid data-decode-hover><span data-decode-target>Enter the lab</span> →</a>
+            <span class="hud win-cap win-cap-sm" aria-hidden="true">Fig. 02 — Glass orb</span>
+          </div>
         </div>
 
         <p class="hud win-cap">Fig. 02 — Glass orb</p>
@@ -79,12 +82,13 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
     }
     .win .win-pane {
       position: relative;
-      min-height: 940px;
+      min-height: 0;
     }
+    /* the orb sits right under the copy */
     .win .win-inner {
       height: auto;
-      padding-top: 48px;
-      padding-bottom: 420px;
+      padding-top: 40px;
+      padding-bottom: calc(86vw + 32px);
     }
   }
   .win-before {
@@ -209,6 +213,25 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
   .win-cap {
     color: var(--fg-muted);
     font-size: 9px;
+  }
+  .win-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+    margin-top: 6px;
+  }
+  /* phones: the caption sits beside the button; desktop keeps it at the bottom */
+  .win-cap-sm {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    .win-cap-sm {
+      display: inline;
+    }
+    .win-inner > .win-cap {
+      display: none;
+    }
   }
   @media (max-width: 767px) {
     .win-copy {

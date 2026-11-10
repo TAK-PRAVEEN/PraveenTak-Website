@@ -87,16 +87,19 @@ const facts = [
       return;
     }
 
-    // Figures land like a stamp (the count-up comes from home-motion's [data-count]).
-    gsap.from(sec.querySelectorAll("[data-wall-fact]"), {
-      opacity: 0,
-      scale: 1.35,
-      rotate: -4,
-      duration: 0.5,
-      ease: "back.out(2.2)",
-      stagger: 0.15,
-      scrollTrigger: { trigger: sec.querySelector(".wall-facts"), start: "top 82%", once: true },
-    });
+    // Figures land like a stamp as soon as they are actually on screen
+    // (the count-up comes from home-motion's [data-count]).
+    const facts = sec.querySelectorAll<HTMLElement>("[data-wall-fact]");
+    gsap.set(facts, { opacity: 0, scale: 1.35, rotate: -4 });
+    const factsIo = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        factsIo.disconnect();
+        gsap.to(facts, { opacity: 1, scale: 1, rotate: 0, duration: 0.5, ease: "back.out(2.2)", stagger: 0.15 });
+      },
+      { threshold: 0.15 },
+    );
+    factsIo.observe(sec.querySelector(".wall-facts")!);
 
     const pos = rows.map((_, i) => (i % 2 ? -25 : 0)); // % of row width
     let boost = 0;

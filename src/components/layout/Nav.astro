@@ -85,7 +85,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
             ))
           }
         </ul>
-        <a href={current} class="dial-core" data-dial-core data-liquid aria-label="Open selected page">
+        <a href={current} class="dial-core" data-dial-core aria-label="Open selected page">
           <span class="hud" data-dial-core-index>01</span>
           <span class="dial-core-label" data-dial-core-label>Home</span>
           <span class="micro dial-core-hint">Spin · tap to open</span>
@@ -485,7 +485,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     min-height: calc(100svh - var(--nav-h) - 64px);
   }
   .dial {
-    --r: min(32vw, 150px);
+    --r: min(34vw, 160px);
     --ring: 0deg;
     position: relative;
     width: min(calc(var(--r) * 2 + 110px), calc(100vw - 16px));
@@ -525,6 +525,9 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     position: absolute;
     left: 50%;
     top: 50%;
+    /* zero-size so it rotates around the dial's centre (not its own), keeping the ring round */
+    width: 0;
+    height: 0;
     transform: rotate(var(--a)) translateY(calc(var(--r) * -1)) rotate(calc(-1 * (var(--a) + var(--ring))));
   }
   .dial-item {
@@ -544,7 +547,7 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
   .dial-label {
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 14px;
     white-space: nowrap;
   }
   .dial-core {

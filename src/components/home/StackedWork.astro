@@ -187,15 +187,50 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     display: grid;
     gap: 6px;
   }
+  /* Phones: each card fits on screen (≈ 62svh) so the next one visibly slides over it. */
   @media (max-width: 767px) {
+    .stack-item {
+      top: calc(var(--nav-h) + 8px + var(--i) * 10px);
+      padding-top: 16px;
+    }
     .card-inner {
       min-height: 0;
+      max-height: calc(100svh - var(--nav-h) - 96px);
+      overflow: hidden;
+      padding: 20px;
+      row-gap: 16px;
+      border-radius: 20px;
+    }
+    .card-inner::after {
+      border-radius: 20px;
+    }
+    .card-copy {
+      gap: 12px;
+    }
+    .card-title {
+      font-size: clamp(1.9rem, 8.5vw, 2.5rem);
+    }
+    .card-summary {
+      font-size: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-metric {
+      margin: 0;
     }
     .card-visual {
       min-height: 0;
     }
-    .card-numeral .numeral {
-      font-size: 5.5rem;
+    .card-visual :global(.card-cover) {
+      aspect-ratio: 16 / 9;
+      height: auto;
+      max-height: 22svh;
+    }
+    /* the big outline number + stack list are desktop decoration */
+    .card-visual:not(:has(:global(.card-cover))) {
+      display: none;
     }
   }
 </style>

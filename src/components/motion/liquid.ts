@@ -10,6 +10,9 @@
  * Skipped entirely under prefers-reduced-motion.
  */
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -42,7 +45,7 @@ function initRipple(): () => void {
   const onDown = (e: PointerEvent) => {
     if (e.button !== 0 || reduced()) return;
     // [data-liquid] blocks, plus every link on the page (all wiggle when clicked)
-    const el = (e.target as Element | null)?.closest<HTMLElement>("[data-liquid], main a, footer a, .nav a");
+    const el = (e.target as Element | null)?.closest<HTMLElement>("[data-liquid], main a, footer a, .nav-desktop a");
     if (el) ripple(el);
   };
   document.addEventListener("pointerdown", onDown, { passive: true });
@@ -100,6 +103,31 @@ export function initLiquid() {
   started = true;
   initRipple();
   initNavBlob();
+  initRemeasure();
+}
+
+/**
+ * Scroll effects measure where sections sit when a page loads. On phones the layout
+ * keeps shifting afterwards (fonts, images, canvases, the address bar), which made
+ * effects fire late. Re-measure whenever the page height really changes.
+ */
+function initRemeasure() {
+  let timer = 0;
+  let lastH = document.documentElement.scrollHeight;
+  const refresh = () => {
+    clearTimeout(timer);
+    timer = window.setTimeout(() => ScrollTrigger.refresh(), 180);
+  };
+  new ResizeObserver(() => {
+    const h = document.documentElement.scrollHeight;
+    if (Math.abs(h - lastH) > 24) {
+      lastH = h;
+      refresh();
+    }
+  }).observe(document.body);
+  void document.fonts.ready.then(refresh);
+  window.addEventListener("load", refresh, { once: true });
+  document.addEventListener("astro:page-load", refresh);
 }
 
 /** Mobile menu: the panel spills open from the toggle like ink, and drains back. */

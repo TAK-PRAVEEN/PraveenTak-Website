@@ -35,52 +35,67 @@ export function initHomeMotion(): () => void {
     const ink = band.querySelector<HTMLElement>("[data-band-ink]");
     const moon = band.querySelector<HTMLElement>("[data-band-moon]");
     const disc = band.querySelector<HTMLElement>("[data-band-disc]");
+    const inner = band.querySelector<HTMLElement>("[data-band-inner]");
     if (ink && moon) {
-      const geo = { cx: 0, cy: 0, mx: 0, my: 0, r0: 0, r1: 0 };
+      // m = moon's resting centre; w = where the window opens (desktop: around the moon;
+      // phones: the band's centre, because there the moon rests at the very top and a
+      // window around it could only grow lopsided, downwards).
+      const geo = { cx: 0, cy: 0, mx: 0, my: 0, wx: 0, wy: 0, r0: 0, rh: 0, r1: 0 };
       const measure = () => {
         gsap.set(moon, { x: 0, y: 0, scale: 1 });
         const b = band.getBoundingClientRect();
         const m = moon.getBoundingClientRect();
-        geo.mx = m.left - b.left + m.width / 2; // moon's resting centre (right side)
+        geo.mx = m.left - b.left + m.width / 2;
         geo.my = m.top - b.top + m.height / 2;
-        // where it starts: rising from the bottom-middle of the hero (= top of the band)
+        const wide = b.width >= 768;
+        geo.wx = wide ? geo.mx : b.width / 2;
+        geo.wy = wide ? geo.my : b.height / 2;
+        // start: rising from the bottom-middle of the hero (= the band's top edge)
         geo.r0 = m.width * 0.36; // just around the moon disc
         geo.cx = b.width / 2;
-        geo.cy = 0; // centred on the band's top edge: its top half peeks out of the hero
-        geo.r1 = Math.hypot(Math.max(geo.mx, b.width - geo.mx), Math.max(geo.my, b.height - geo.my)) + 40;
+        geo.cy = 0;
+        // largest circle around the window centre that stays inside the band
+        geo.rh = Math.max(geo.r0, 0.96 * Math.min(geo.wy, b.height - geo.wy, b.width - geo.wx, geo.wx));
+        geo.r1 = Math.hypot(Math.max(geo.wx, b.width - geo.wx), Math.max(geo.wy, b.height - geo.wy)) + 40;
       };
       const st = { p: 0 };
-      // Two phases, one continuous circle:
-      //  A (0 → SPLIT): only the black disc shows. It carries the moon from the
-      //    hero's bottom edge down to its resting place, growing a little.
-      //    It may overlap the hero, so it is a separate element (not clipped by the band).
-      //  B (SPLIT → 1): the disc now sits fully inside the band; the band's ink takes
-      //    over with the identical circle and opens it to a rounded window, then full bleed.
+      // Two phases, one continuous circle with the moon inside it:
+      //  A (0 → SPLIT): only the black disc shows (a separate element, so it may overlap
+      //    the hero). It carries the moon from the hero's edge to the window centre.
+      //  B (SPLIT → 1): the band's ink takes over with the identical circle and opens it
+      //    evenly to full bleed; on phones the moon then rises to its resting place.
       const SPLIT = 0.5;
+      const ease2 = gsap.parseEase("power2.inOut");
       const render = () => {
         const e = st.p;
         const W = band.clientWidth, H = band.clientHeight;
-        // largest circle around the moon's resting place that stays inside the band
-        const rh = 0.96 * Math.min(geo.my, H - geo.my, W - geo.mx, geo.mx);
-        let x: number, y: number, r: number, move: number;
+        let x: number, y: number, r: number, mxp: number, myp: number, scale: number;
         if (e < SPLIT) {
-          const a = e / SPLIT;
-          move = gsap.parseEase("power2.inOut")(a);
-          x = geo.cx + (geo.mx - geo.cx) * move;
-          y = geo.cy + (geo.my - geo.cy) * move;
-          r = geo.r0 + (rh - geo.r0) * gsap.parseEase("power1.in")(a);
+          const a = ease2(e / SPLIT);
+          x = geo.cx + (geo.wx - geo.cx) * a;
+          y = geo.cy + (geo.wy - geo.cy) * a;
+          r = geo.r0 + (geo.rh - geo.r0) * gsap.parseEase("power1.in")(e / SPLIT);
+          mxp = x;
+          myp = y;
+          scale = 0.82 + 0.18 * a;
         } else {
-          move = 1;
-          x = geo.mx;
-          y = geo.my;
-          r = rh + (geo.r1 - rh) * gsap.parseEase("power2.in")((e - SPLIT) / (1 - SPLIT));
+          const bphase = (e - SPLIT) / (1 - SPLIT);
+          x = geo.wx;
+          y = geo.wy;
+          r = geo.rh + (geo.r1 - geo.rh) * gsap.parseEase("power2.in")(bphase);
+          const mv = ease2(Math.min(1, bphase * 1.25));
+          mxp = geo.wx + (geo.mx - geo.wx) * mv;
+          myp = geo.wy + (geo.my - geo.wy) * mv;
+          scale = 1;
         }
-        gsap.set(moon, { x: x - geo.mx, y: y - geo.my, scale: 0.82 + 0.18 * move });
+        gsap.set(moon, { x: mxp - geo.mx, y: myp - geo.my, scale });
         if (disc) {
           disc.style.width = disc.style.height = `${(2 * r).toFixed(1)}px`;
           disc.style.transform = `translate(${(x - r).toFixed(1)}px, ${(y - r).toFixed(1)}px)`;
           disc.style.visibility = e < SPLIT ? "visible" : "hidden";
         }
+        // the statement fades in as the window finishes opening
+        if (inner) inner.style.opacity = String(gsap.utils.clamp(0, 1, (e - 0.72) / 0.22));
         if (e < SPLIT) {
           ink.style.clipPath = "inset(50% 50% 50% 50%)";
           return;
@@ -97,22 +112,16 @@ export function initHomeMotion(): () => void {
         p: 1,
         ease: "none",
         onUpdate: render,
+        // finishes while the band is still fully on screen
         scrollTrigger: {
           trigger: band,
           start: "top 85%",
-          end: "top top",
-          scrub: 0.8,
+          end: "top 20%",
+          scrub: 0.6,
           onRefresh: () => (measure(), render()),
         },
       });
     }
-
-    // Band content (light-on-dark) appears only once enough ink is behind it.
-    gsap.fromTo(
-      band.querySelector("[data-band-inner]"),
-      { opacity: 0 },
-      { opacity: 1, ease: "none", scrollTrigger: { trigger: band, start: "top 25%", end: "top 0%", scrub: 0.6 } },
-    );
 
     // 3 — Statement words light up.
     const statement = band.querySelector<HTMLElement>("[data-band-statement]");
