@@ -22,8 +22,12 @@ import LinkButton from "../components/ui/LinkButton.astro";
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: flex-start; /* the button keeps its own width */
     gap: 24px;
     padding-top: var(--nav-h);
+  }
+  .nf hr {
+    align-self: stretch;
   }
   .code {
     font-size: clamp(8rem, 2rem + 30vw, 28rem);
