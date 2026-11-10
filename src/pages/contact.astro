@@ -11,7 +11,9 @@ const profile = (await getEntry("profile", "main"))!.data;
 // Turnstile site key is public. Set PUBLIC_TURNSTILE_SITE_KEY at build time for production.
 // Local dev uses Cloudflare's documented always-pass TEST key; a production build without a
 // real key renders no widget (the form then falls back to the visitor's mail app).
-const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.env.DEV ? "1x00000000000000000000AA" : "");
+// Production site key (public by design) for praveentak.dev / www / workers.dev.
+const TURNSTILE_SITE_KEY = "0x4AAAAAAF7pn6An_FhJYhzE";
+const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.env.DEV ? "1x00000000000000000000AA" : TURNSTILE_SITE_KEY);
 ---
 
 <BaseLayout title="Contact" section="/contact" description="Get in touch with Praveen Tak." bare>
