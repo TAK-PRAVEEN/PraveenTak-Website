@@ -12,6 +12,7 @@
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
+import { maskSvg, type Drop } from "../../lib/ink-transition";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -188,8 +189,6 @@ function windowScene(): () => void {
   const rot = sec.querySelector<HTMLElement>("[data-win-rot]");
   const frameOut = sec.querySelector<HTMLElement>("[data-win-frame]");
   const before = sec.querySelector<HTMLElement>("[data-win-before]");
-  const rim = sec.querySelector<SVGSVGElement>("[data-win-rim]");
-  const rimPath = rim?.querySelector<SVGPathElement>("path") ?? null;
 
   // Looping Blender sequence: wavy glass orb with glowing filaments inside.
   const TOTAL = 36;
@@ -245,51 +244,46 @@ function windowScene(): () => void {
     if (frameOut) frameOut.textContent = String(i).padStart(2, "0");
   };
 
-  // Ink spreading from behind the globe: an organic blob (radius wobbles with layered
-  // noise that keeps moving) grows to cover the pane; a neon orange rim follows its edge.
+  // Ink spreading from behind the globe, scrubbed by scroll: the same torn, wet-edged
+  // ink drop as the page/theme transition (ink-transition.ts maskSvg), used as a mask
+  // on the black pane. Around it the page stays paper. While spreading the pane is
+  // marked data-opening (paints its own black; the ink canvas leaves it alone).
   const ink = { p: 0 };
-  const ph = [Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28];
-  const N = 120;
-  const renderInk = (time: number) => {
+  const SCALE = 0.25;
+  const seed = Math.floor(Math.random() * 1000);
+  const drops: Drop[] = Array.from({ length: 10 }, () => ({
+    angle: Math.random() * Math.PI * 2,
+    dist: 0.95 + Math.random() * 0.5,
+    size: 0.07 + Math.random() * 0.14,
+    delay: Math.random() * 0.12,
+  }));
+  let lastP = -1;
+  let lastW = 0;
+  const renderInk = () => {
     const e = ink.p;
-    if (e >= 0.999) {
-      pane.style.clipPath = "none";
+    const pr = pane.getBoundingClientRect();
+    if (Math.abs(e - lastP) < 0.0015 && pr.width === lastW) return;
+    lastP = e;
+    lastW = pr.width;
+    if (e >= 0.995) {
+      pane.style.removeProperty("mask-image");
+      pane.style.removeProperty("-webkit-mask-image");
       delete pane.dataset.opening;
-      if (rim) rim.style.opacity = "0";
       return;
     }
-    const pr = pane.getBoundingClientRect();
+    pane.dataset.opening = "1";
     const cr = canvas.getBoundingClientRect();
     const W = pr.width, H = pr.height;
     const cx = cr.left - pr.left + cr.width / 2;
     const cy = cr.top - pr.top + cr.height / 2;
-    const r0 = cr.width * 0.56; // at rest: a small pool of ink just around the globe
-    const rMax = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) * 1.3;
-    const R = r0 + (rMax - r0) * (1 - Math.pow(1 - e, 2.2)); // spreads fast, then slows
-    const amp = 0.09 * (1 - e * 0.5);
-    const t = time * 0.6;
-    let d = "";
-    const pts: string[] = [];
-    for (let i = 0; i < N; i++) {
-      const a = (i / N) * Math.PI * 2;
-      const n =
-        0.5 * Math.sin(3 * a + ph[0] + t * 0.7) +
-        0.3 * Math.sin(7 * a + ph[1] - t * 1.1) +
-        0.15 * Math.sin(13 * a + ph[2] + t * 1.6) +
-        0.08 * Math.sin(29 * a + ph[3] - t * 2.3); // fine ragged tendrils
-      const r = R * (1 + amp * n);
-      const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
-      pts.push(`${x.toFixed(1)}px ${y.toFixed(1)}px`);
-      d += `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`;
-    }
-    pane.style.clipPath = `polygon(${pts.join(",")})`;
-    pane.dataset.opening = "1";
-    if (rim && rimPath) {
-      rim.setAttribute("viewBox", `0 0 ${W.toFixed(0)} ${H.toFixed(0)}`);
-      rimPath.setAttribute("d", d + "Z");
-      // the rim glows while the edge is on screen, then fades as the ink fills everything
-      rim.style.opacity = String(1 - Math.max(0, (e - 0.8) / 0.2));
-    }
+    // at rest the ink sits just inside the globe's disc: the glass reads as it should
+    // (dark behind it) while the page around stays paper
+    const r0 = cr.width * 0.36;
+    const rMax = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) * 1.15;
+    const r = r0 + (rMax - r0) * (1 - Math.pow(1 - e, 2.4)); // fast, then soaking slowly
+    const url = `url("data:image/svg+xml,${encodeURIComponent(maskSvg(W * SCALE, H * SCALE, cx * SCALE, cy * SCALE, r * SCALE, drops, seed))}")`;
+    pane.style.setProperty("mask-image", url);
+    pane.style.setProperty("-webkit-mask-image", url);
   };
 
   // Preload the frames only as the scene approaches, so they never compete with the hero portrait.
@@ -322,7 +316,7 @@ function windowScene(): () => void {
     st.scrollVel *= 0.9;
     st.pos += (dt / 1000) * 25 + /* reference speed: 36 frames / 1.44 s */ Math.max(-6, Math.min(6, st.scrollVel));
     draw();
-    renderInk(_t);
+    renderInk();
   };
   gsap.ticker.add(tick);
 
