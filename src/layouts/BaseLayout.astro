@@ -37,6 +37,9 @@ const accent = Astro.props.accent ?? exp.accent;
 
 const pageTitle = title ? `${title} — ${SITE.name}` : SITE.title;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
+const ogImage = new URL("/og.png", Astro.site ?? SITE.url);
+// The service worker only runs in production builds (never against the dev server).
+const registerSW = import.meta.env.PROD;
 ---
 
 <!doctype html>
@@ -52,6 +55,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
     <meta name="theme-color" content={surface === "ink" ? "#080809" : "#f0f0ee"} />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
     <meta property="og:type" content="website" />
@@ -59,7 +65,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    {/* og:image is added in Phase 5 once the social preview is designed. */}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Praveen Tak — AI / ML Engineer. Portfolio 2026, Jaipur, India." />
+    <meta name="twitter:image" content={ogImage} />
     <meta property="og:locale" content={SITE.locale} />
     <meta name="twitter:card" content="summary_large_image" />
 
@@ -89,6 +99,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
       })();
     </script>
     <ClientRouter fallback="swap" />
+    {registerSW && <script is:inline>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));</script>}
   </head>
   <body>
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">

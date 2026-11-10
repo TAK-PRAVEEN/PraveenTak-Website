@@ -1,0 +1,6 @@
+# Cloudflare static-asset headers.
+# The service worker must never be cached, or updates would not reach visitors.
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600

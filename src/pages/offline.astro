@@ -1,0 +1,54 @@
+---
+/**
+ * Shown by the service worker when a page is opened offline and was never visited.
+ * Not indexed, not in the sitemap.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LinkButton from "../components/ui/LinkButton.astro";
+---
+
+<BaseLayout title="Offline" description="You are offline." noindex bare>
+  <section class="frame offline">
+    <p class="micro text-muted">No connection</p>
+    <h1 class="display">You're offline.</h1>
+    <p class="lead">This page hasn't been saved on this device yet. Pages you've already visited still open; the rest will be back as soon as you reconnect.</p>
+    <div class="actions">
+      <LinkButton href="/">Home</LinkButton>
+      <button type="button" class="micro retry" onclick="location.reload()">Try again</button>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .offline {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    padding-block: calc(var(--nav-h) + 40px) 64px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(3rem, 1.5rem + 7vw, 8rem);
+  }
+  .lead {
+    margin: 0;
+    max-width: 46ch;
+    font-size: var(--text-lead);
+    color: var(--fg-muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .retry {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+</style>
