@@ -16,6 +16,10 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
 <section class="win" data-win aria-labelledby="win-title">
   <div class="win-sticky">
     <p class="hud win-before" aria-hidden="true" data-win-before>Look through ↓</p>
+    <!-- Neon orange edge of the spreading ink: the same torn ink shape, a little larger, glowing
+         (masks set by home-motion.ts; the outer layer blurs the masked shape into a glow). -->
+    <div class="win-rim" aria-hidden="true"><i class="win-rim-glow" data-win-rim></i></div>
+    <div class="win-rim win-rim-sharp" aria-hidden="true"><i data-win-rim></i></div>
     <div class="win-pane" data-win-pane data-ink-dark data-surface="ink" data-accent="blue">
       <div class="win-glow" aria-hidden="true"></div>
 
@@ -110,6 +114,25 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
       -webkit-mask-image: linear-gradient(transparent, transparent);
       mask-image: linear-gradient(transparent, transparent);
     }
+  }
+  .win-rim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    filter: blur(7px) saturate(1.3);
+  }
+  .win-rim-sharp {
+    filter: blur(0.6px);
+  }
+  .win-rim i {
+    position: absolute;
+    inset: 0;
+    background: #ff5a1f;
+    -webkit-mask-image: linear-gradient(transparent, transparent);
+    mask-image: linear-gradient(transparent, transparent);
+  }
+  .win-rim-glow {
+    opacity: 0.9;
   }
   /* While the ink is still spreading (masked ink drop), the pane paints its own black;
      once it covers everything the ink background takes over (faint ink wisps). */

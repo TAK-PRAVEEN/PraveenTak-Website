@@ -189,6 +189,7 @@ function windowScene(): () => void {
   const rot = sec.querySelector<HTMLElement>("[data-win-rot]");
   const frameOut = sec.querySelector<HTMLElement>("[data-win-frame]");
   const before = sec.querySelector<HTMLElement>("[data-win-before]");
+  const rims = Array.from(sec.querySelectorAll<HTMLElement>("[data-win-rim]")); // [glow, sharp]
 
   // Looping Blender sequence: wavy glass orb with glowing filaments inside.
   const TOTAL = 36;
@@ -255,7 +256,7 @@ function windowScene(): () => void {
     angle: Math.random() * Math.PI * 2,
     dist: 0.95 + Math.random() * 0.5,
     size: 0.07 + Math.random() * 0.14,
-    delay: Math.random() * 0.12,
+    delay: 0.18 + Math.random() * 0.12,
   }));
   let lastP = -1;
   let lastW = 0;
@@ -265,9 +266,16 @@ function windowScene(): () => void {
     if (Math.abs(e - lastP) < 0.0015 && pr.width === lastW) return;
     lastP = e;
     lastW = pr.width;
+    const setMask = (el: HTMLElement, v: string) => {
+      el.style.setProperty("mask-image", v);
+      el.style.setProperty("-webkit-mask-image", v);
+    };
+    const NONE = "linear-gradient(transparent, transparent)";
     if (e >= 0.995) {
-      pane.style.removeProperty("mask-image");
-      pane.style.removeProperty("-webkit-mask-image");
+      // fully covered: show the whole pane (an explicit "none" — removing the inline value
+      // would bring back the stylesheet's hidden starting state)
+      setMask(pane, "none");
+      rims.forEach((r) => setMask(r, NONE));
       delete pane.dataset.opening;
       return;
     }
@@ -276,14 +284,24 @@ function windowScene(): () => void {
     const W = pr.width, H = pr.height;
     const cx = cr.left - pr.left + cr.width / 2;
     const cy = cr.top - pr.top + cr.height / 2;
-    // at rest the ink sits just inside the globe's disc: the glass reads as it should
-    // (dark behind it) while the page around stays paper
-    const r0 = cr.width * 0.36;
+    // at rest: no ink at all, only the globe. Scrolling grows a circle of ink from the
+    // globe's centre (hidden behind the glass at first), then out over the page.
+    if (e <= 0.002) {
+      setMask(pane, NONE);
+      rims.forEach((r) => setMask(r, NONE));
+      return;
+    }
     const rMax = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) * 1.15;
-    const r = r0 + (rMax - r0) * (1 - Math.pow(1 - e, 2.4)); // fast, then soaking slowly
-    const url = `url("data:image/svg+xml,${encodeURIComponent(maskSvg(W * SCALE, H * SCALE, cx * SCALE, cy * SCALE, r * SCALE, drops, seed))}")`;
-    pane.style.setProperty("mask-image", url);
-    pane.style.setProperty("-webkit-mask-image", url);
+    const r = rMax * Math.pow(e, 1.15); // steady circular growth with the scroll
+    const m = (rad: number) => `url("data:image/svg+xml,${encodeURIComponent(maskSvg(W * SCALE, H * SCALE, cx * SCALE, cy * SCALE, rad * SCALE, drops, seed))}")`;
+    setMask(pane, m(r));
+    // neon edge: same torn shape a few px larger behind the ink (sharp line + soft glow);
+    // fades out as the ink reaches the screen edges
+    const edge = Math.max(4, Math.min(10, r * 0.02));
+    if (rims[0]) setMask(rims[0], m(r + edge * 2.2));
+    if (rims[1]) setMask(rims[1], m(r + edge));
+    const fade = String(1 - Math.max(0, (e - 0.8) / 0.18));
+    rims.forEach((el) => (el.parentElement!.style.opacity = fade));
   };
 
   // Preload the frames only as the scene approaches, so they never compete with the hero portrait.
