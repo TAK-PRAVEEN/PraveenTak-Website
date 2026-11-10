@@ -61,6 +61,7 @@ const statementLead = statementWords.join(" ");
   <!-- PAPER → INK: scroll transition out of the hero ----------------------- -->
   <section class="band" data-surface="ink" data-accent="orange" data-band aria-labelledby="statement">
     <div class="band-ink" data-band-ink data-ink-dark aria-hidden="true"></div>
+    <div class="band-disc" data-band-disc aria-hidden="true"></div>
     <div class="band-moon" data-band-moon aria-hidden="true"><RefSequence name="moon" frames={225} fps={15} plain /></div>
     <div class="frame band-inner" data-band-inner>
       <div class="band-meta micro">
@@ -292,6 +293,19 @@ const statementLead = statementWords.join(" ");
   /* Ink running: the canvas paints true black + neon ink inside this shape (data-ink-dark). */
   :global(html.ink-bg-on) .band-ink {
     background: transparent;
+  }
+  /* Black disc around the moon while it peeks out of the hero (can extend above
+     the band's top edge); sized and moved by home-motion.ts, fades as the window opens. */
+  .band-disc {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    z-index: 0;
+    border-radius: 50%;
+    background: var(--ink);
+    pointer-events: none;
   }
   /* Moon loop (Praveen's video) on the right of the statement, at its own speed. */
   .band-moon {

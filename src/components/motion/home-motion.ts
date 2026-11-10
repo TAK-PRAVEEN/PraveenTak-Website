@@ -34,6 +34,7 @@ export function initHomeMotion(): () => void {
     //     as a circle to full bleed while the moon drifts to its place on the right.
     const ink = band.querySelector<HTMLElement>("[data-band-ink]");
     const moon = band.querySelector<HTMLElement>("[data-band-moon]");
+    const disc = band.querySelector<HTMLElement>("[data-band-disc]");
     if (ink && moon) {
       const geo = { cx: 0, cy: 0, mx: 0, my: 0, r0: 0, r1: 0 };
       const measure = () => {
@@ -49,19 +50,46 @@ export function initHomeMotion(): () => void {
         geo.r1 = Math.hypot(Math.max(geo.mx, b.width - geo.mx), Math.max(geo.my, b.height - geo.my)) + 40;
       };
       const st = { p: 0 };
+      // Two phases, one continuous circle:
+      //  A (0 → SPLIT): only the black disc shows. It carries the moon from the
+      //    hero's bottom edge down to its resting place, growing a little.
+      //    It may overlap the hero, so it is a separate element (not clipped by the band).
+      //  B (SPLIT → 1): the disc now sits fully inside the band; the band's ink takes
+      //    over with the identical circle and opens it to a rounded window, then full bleed.
+      const SPLIT = 0.5;
       const render = () => {
         const e = st.p;
-        const move = gsap.parseEase("power2.inOut")(Math.min(1, e * 1.15));
-        const x = geo.cx + (geo.mx - geo.cx) * move;
-        const y = geo.cy + (geo.my - geo.cy) * move;
-        const r = geo.r0 + (geo.r1 - geo.r0) * gsap.parseEase("power2.in")(e);
-        // A circle written as a rounded square (the ink canvas reads inset() shapes);
-        // once it outgrows the band it becomes a rounded window, then full bleed.
         const W = band.clientWidth, H = band.clientHeight;
-        const t = Math.max(0, y - r), b = Math.max(0, H - y - r), l = Math.max(0, x - r), rt = Math.max(0, W - x - r);
-        const R = r * (1 - gsap.utils.clamp(0, 1, (e - 0.8) / 0.2));
-        ink.style.clipPath = `inset(${t.toFixed(1)}px ${rt.toFixed(1)}px ${b.toFixed(1)}px ${l.toFixed(1)}px round ${R.toFixed(1)}px)`;
+        // largest circle around the moon's resting place that stays inside the band
+        const rh = 0.96 * Math.min(geo.my, H - geo.my, W - geo.mx, geo.mx);
+        let x: number, y: number, r: number, move: number;
+        if (e < SPLIT) {
+          const a = e / SPLIT;
+          move = gsap.parseEase("power2.inOut")(a);
+          x = geo.cx + (geo.mx - geo.cx) * move;
+          y = geo.cy + (geo.my - geo.cy) * move;
+          r = geo.r0 + (rh - geo.r0) * gsap.parseEase("power1.in")(a);
+        } else {
+          move = 1;
+          x = geo.mx;
+          y = geo.my;
+          r = rh + (geo.r1 - rh) * gsap.parseEase("power2.in")((e - SPLIT) / (1 - SPLIT));
+        }
         gsap.set(moon, { x: x - geo.mx, y: y - geo.my, scale: 0.82 + 0.18 * move });
+        if (disc) {
+          disc.style.width = disc.style.height = `${(2 * r).toFixed(1)}px`;
+          disc.style.transform = `translate(${(x - r).toFixed(1)}px, ${(y - r).toFixed(1)}px)`;
+          disc.style.visibility = e < SPLIT ? "visible" : "hidden";
+        }
+        if (e < SPLIT) {
+          ink.style.clipPath = "inset(50% 50% 50% 50%)";
+          return;
+        }
+        // The circle written as a rounded square (the ink canvas reads inset() shapes);
+        // past the band's edges it becomes a rounded window, then full bleed.
+        const t = Math.max(0, y - r), b = Math.max(0, H - y - r), l = Math.max(0, x - r), rt = Math.max(0, W - x - r);
+        const R = r * (1 - gsap.utils.clamp(0, 1, (e - 0.85) / 0.15));
+        ink.style.clipPath = `inset(${t.toFixed(1)}px ${rt.toFixed(1)}px ${b.toFixed(1)}px ${l.toFixed(1)}px round ${R.toFixed(1)}px)`;
       };
       measure();
       render();
