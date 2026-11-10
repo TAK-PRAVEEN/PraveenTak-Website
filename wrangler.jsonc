@@ -10,10 +10,9 @@
 		"html_handling": "drop-trailing-slash",
 		"not_found_handling": "404-page"
 	},
-	// Workers AI powers /api/chat. It needs a Cloudflare login (wrangler always runs AI
-	// remotely), so it is switched on at deploy time — see DESIGN.md §14. Until then
-	// the chatbot answers from its scripted fallback.
-	// "ai": { "binding": "AI" },
+	// Workers AI powers /api/chat (wrangler always runs AI remotely, also in local dev).
+	// If it is unavailable or errors, the chatbot answers from its scripted fallback.
+	"ai": { "binding": "AI" },
 	// Contact form (/api/contact): Email Service binding, locked to Praveen's inbox.
 	// Sending needs the domain onboarded to Email Service (`wrangler email sending enable <domain>`)
 	// and CONTACT_FROM set to an address on it; until then the form falls back to mailto.

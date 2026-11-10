@@ -11,7 +11,7 @@ import { PERSONAL_FACTS, fallbackAnswer, type FallbackContext } from "../../lib/
 
 export const prerender = false;
 
-const MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8";
 const MAX_INPUT = 500;
 const MAX_TURNS = 6;
 
