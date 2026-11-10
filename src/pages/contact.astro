@@ -180,9 +180,15 @@ const profile = (await getEntry("profile", "main"))!.data;
   .sky-img {
     position: absolute;
     inset: -6%;
-    /* Praveen's painting. Portrait art; a wide version (contact-wide.webp) replaces it on laptops once generated. */
+    /* Praveen's painting: portrait art on phones, the wide forest-meadow version on laptops. */
     background: url("/media/contact-portrait.webp") center 70% / cover no-repeat;
     animation: sky-drift 70s ease-in-out infinite alternate;
+  }
+  @media (min-width: 768px) {
+    .sky-img {
+      background-image: url("/media/contact-wide.webp");
+      background-position: center 60%;
+    }
   }
   /* soft paper veil at the top so the title and form stay crisp */
   .sky::after {

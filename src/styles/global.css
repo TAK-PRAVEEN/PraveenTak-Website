@@ -77,6 +77,7 @@
   --blue: #386bff;
   --blue-on-ink: #5b86ff;
   --lavender: #a78bfa;
+  --amber: #ffbf00;
 
   /* Semantic (Paper surface is the default) */
   --bg: var(--paper);
@@ -143,6 +144,10 @@
   --accent: var(--blue);
   --accent-text: var(--paper);
 }
+[data-accent="amber"] {
+  --accent: var(--amber);
+  --accent-text: var(--charcoal);
+}
 [data-accent="lavender"] {
   --accent: var(--lavender);
   --accent-text: var(--charcoal);
@@ -156,6 +161,7 @@
 [data-surface="ink"][data-accent="lime"] { --accent-as-text: var(--lime); }
 [data-surface="ink"][data-accent="blue"] { --accent-as-text: var(--blue-on-ink); --accent: var(--blue-on-ink); }
 [data-surface="ink"][data-accent="lavender"] { --accent-as-text: var(--lavender); }
+[data-surface="ink"][data-accent="amber"] { --accent-as-text: var(--amber); }
 [data-surface="ink"][data-accent="mono"] { --accent: var(--paper); --accent-text: var(--ink); --accent-as-text: var(--paper); }
 
 /* ---------- Dark theme (user toggle / system preference) ----------
@@ -180,6 +186,7 @@
 :root[data-theme="dark"][data-accent="lime"] { --accent-as-text: var(--lime); }
 :root[data-theme="dark"][data-accent="blue"] { --accent-as-text: var(--blue-on-ink); --accent: var(--blue-on-ink); }
 :root[data-theme="dark"][data-accent="lavender"] { --accent-as-text: var(--lavender); }
+:root[data-theme="dark"][data-accent="amber"] { --accent-as-text: var(--amber); }
 :root[data-theme="dark"][data-accent="mono"] { --accent: var(--paper); --accent-text: var(--ink); --accent-as-text: var(--paper); }
 
 /* ---------- Tailwind theme bridge ---------- */

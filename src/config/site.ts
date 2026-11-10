@@ -6,7 +6,7 @@
  */
 
 export type Surface = "paper" | "ink";
-export type Accent = "orange" | "lime" | "blue" | "lavender" | "mono";
+export type Accent = "orange" | "lime" | "blue" | "lavender" | "amber" | "mono";
 
 export interface Experience {
   /** Two-digit index shown in labels: "03 — WORK". */
@@ -37,7 +37,7 @@ export const EXPERIENCES: Experience[] = [
   { index: "03", label: "Work", href: "/work", surface: "paper", accent: "lime", summary: "Selected projects and case studies." },
   { index: "04", label: "Lab", href: "/lab", surface: "ink", accent: "blue", summary: "AI / ML experiments and research." },
   { index: "05", label: "Experiments", href: "/experiments", surface: "ink", accent: "lavender", summary: "Creative technology: 3D, shaders, motion." },
-  { index: "06", label: "Experience", href: "/experience", surface: "paper", accent: "mono", summary: "Roles, internships, education." },
+  { index: "06", label: "Experience", href: "/experience", surface: "paper", accent: "amber", summary: "Roles, internships, education." },
   { index: "07", label: "Contact", href: "/contact", surface: "paper", accent: "orange", summary: "Start a conversation." },
 ];
 
