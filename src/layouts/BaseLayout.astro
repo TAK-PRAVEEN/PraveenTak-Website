@@ -71,7 +71,10 @@ const graph: Record<string, unknown>[] = [
     description: profile.intro,
   },
   { "@type": "WebSite", "@id": `${origin}/#website`, url: `${origin}/`, name: SITE.name, inLanguage: "en-IN", publisher: { "@id": personId } },
-  { "@type": "WebPage", "@id": `${canonical}#page`, url: String(canonical), name: pageTitle, description: metaDescription, isPartOf: { "@id": `${origin}/#website` }, about: { "@id": personId } },
+  // Home and About are Google "ProfilePage"s (eligible for the profile rich result); others are plain WebPages.
+  ["/", "/about"].includes(String(canonical.pathname).replace(/\/$/, "") || "/")
+    ? { "@type": "ProfilePage", "@id": `${canonical}#page`, url: String(canonical), name: pageTitle, description: metaDescription, isPartOf: { "@id": `${origin}/#website` }, mainEntity: { "@id": personId } }
+    : { "@type": "WebPage", "@id": `${canonical}#page`, url: String(canonical), name: pageTitle, description: metaDescription, isPartOf: { "@id": `${origin}/#website` }, about: { "@id": personId } },
 ];
 if (Astro.props.schema) graph.push({ author: { "@id": personId }, ...Astro.props.schema });
 const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replace(/</g, "\u003c");
