@@ -13,6 +13,7 @@
  * Body (JSON): { name, email, message, token, website }
  */
 import type { APIRoute } from "astro";
+import { contactEmail } from "../../lib/contact-email";
 
 export const prerender = false;
 
@@ -29,7 +30,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
-const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 // Strip CR/LF so nothing can be smuggled into header-like fields (subject, names).
 const oneLine = (s: string) => s.replace(/[\r\n]+/g, " ").trim();
 
@@ -80,10 +80,7 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, error: "Couldn't verify you're human. Please try again." }, 403);
   }
 
-  const text = `${message}\n\n— ${name} <${email}>\nSent from the portfolio contact form.`;
-  const html =
-    `<p style="white-space:pre-wrap;font:15px/1.5 system-ui,sans-serif">${escapeHtml(message)}</p>` +
-    `<p style="font:13px system-ui,sans-serif;color:#555">— ${escapeHtml(name)} &lt;${escapeHtml(email)}&gt;<br>Sent from the portfolio contact form.</p>`;
+  const mail = contactEmail({ name, email, message, site: new URL(request.url).host, date: new Date() });
 
   try {
     // The binding's destination_address only allows Praveen's inbox anyway.
@@ -91,9 +88,9 @@ export const POST: APIRoute = async ({ request }) => {
       to: env.CONTACT_TO,
       from: { email: env.CONTACT_FROM, name: "Portfolio contact" },
       replyTo: { email, name },
-      subject: `Portfolio: message from ${name}`,
-      text,
-      html,
+      subject: mail.subject,
+      text: mail.text,
+      html: mail.html,
     });
     return json({ ok: true });
   } catch (e) {
