@@ -14,6 +14,17 @@
 	// remotely), so it is switched on at deploy time — see DESIGN.md §14. Until then
 	// the chatbot answers from its scripted fallback.
 	// "ai": { "binding": "AI" },
+	// Contact form (/api/contact): Email Service binding, locked to Praveen's inbox.
+	// Sending needs the domain onboarded to Email Service (`wrangler email sending enable <domain>`)
+	// and CONTACT_FROM set to an address on it; until then the form falls back to mailto.
+	"send_email": [{ "name": "EMAIL", "destination_address": "hello.praveentak@gmail.com" }],
+	"vars": {
+		"CONTACT_TO": "hello.praveentak@gmail.com",
+		// e.g. "contact@<domain>" once the domain is chosen and onboarded.
+		"CONTACT_FROM": ""
+	},
+	// Secret (never in this file): TURNSTILE_SECRET — `wrangler secret put TURNSTILE_SECRET` at deploy;
+	// locally it lives in .dev.vars (Turnstile's public test secret).
 	"observability": {
 		"enabled": true
 	}

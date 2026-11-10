@@ -8,6 +8,9 @@ import RefSequence from "../components/3d/RefSequence.astro";
 
 
 const profile = (await getEntry("profile", "main"))!.data;
+// Turnstile site key is public. Set PUBLIC_TURNSTILE_SITE_KEY at build time for production;
+// the default is Cloudflare's documented always-pass TEST key for local development.
+const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
 ---
 
 <BaseLayout title="Contact" section="/contact" description="Get in touch with Praveen Tak." bare>
@@ -39,48 +42,108 @@ const profile = (await getEntry("profile", "main"))!.data;
     <form class="col-span-4 md:col-span-6 md:col-start-7 form" data-contact-form data-email={profile.contact.email} novalidate>
       <div class="field">
         <label for="name" class="micro">Name</label>
-        <input id="name" name="name" type="text" autocomplete="name" required />
+        <input id="name" name="name" type="text" autocomplete="name" maxlength="100" required />
       </div>
       <div class="field">
         <label for="email" class="micro">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email" required />
+        <input id="email" name="email" type="email" autocomplete="email" maxlength="200" required />
       </div>
       <div class="field">
         <label for="message" class="micro">Message</label>
-        <textarea id="message" name="message" rows="6" required></textarea>
+        <textarea id="message" name="message" rows="6" maxlength="5000" required></textarea>
       </div>
+      <!-- Honeypot: hidden from people; bots that fill it are dropped server-side. -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">Website</label>
+        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+      <!-- Cloudflare Turnstile: usually invisible; shows a checkbox only if unsure. -->
+      <div class="turnstile" data-turnstile data-sitekey={turnstileKey}></div>
       <p class="micro form-error" role="alert" data-form-error hidden></p>
-      <button type="submit" class="micro submit" data-liquid>Compose email →</button>
-      <p class="micro text-muted">Opens your email app with the message filled in. A direct form arrives soon.</p>
+      <p class="form-done" role="status" data-form-done hidden>Thanks — your message is on its way. I'll reply soon.</p>
+      <button type="submit" class="micro submit" data-liquid data-submit>Send message →</button>
     </form>
   </section>
   </div>
 </BaseLayout>
 
 
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+
 <script>
-  // Phase 1: no backend yet, so compose a mailto: instead of pretending to send.
-  // Phase 5 replaces this with POST /api/contact (Turnstile-protected Worker).
+  // Sends through POST /api/contact (Turnstile-checked, emailed via Cloudflare Email Service).
+  // If the backend isn't set up yet or sending fails, it opens the visitor's mail app instead.
+  type Turnstile = {
+    render: (el: HTMLElement, o: Record<string, unknown>) => string;
+    getResponse: (id: string) => string | undefined;
+    reset: (id: string) => void;
+  };
+  const ts = () => (window as unknown as { turnstile?: Turnstile }).turnstile;
+
   function setupContact() {
     const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
     const error = document.querySelector<HTMLElement>("[data-form-error]");
-    if (!form || !error) return;
-    form.onsubmit = (e) => {
+    const done = document.querySelector<HTMLElement>("[data-form-done]");
+    const button = document.querySelector<HTMLButtonElement>("[data-submit]");
+    const box = document.querySelector<HTMLElement>("[data-turnstile]");
+    if (!form || !error || !done || !button || !box) return;
+
+    let widget: string | null = null;
+    const mount = () => {
+      const t = ts();
+      if (!t || widget !== null || !box.isConnected) return;
+      widget = t.render(box, { sitekey: box.dataset.sitekey, appearance: "interaction-only", theme: "auto", action: "contact" });
+    };
+    // The script loads async: try now, and poll briefly until it is ready.
+    mount();
+    const wait = window.setInterval(() => (widget !== null || !box.isConnected ? clearInterval(wait) : mount()), 300);
+
+    const fail = (msg: string) => {
+      error.textContent = msg;
+      error.hidden = false;
+    };
+    const mailto = (name: string, email: string, message: string) => {
+      const subject = encodeURIComponent(`Portfolio enquiry from ${name}`);
+      const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`);
+      window.location.href = `mailto:${form.dataset.email}?subject=${subject}&body=${body}`;
+    };
+
+    form.onsubmit = async (e) => {
       e.preventDefault();
       const data = new FormData(form);
       const name = String(data.get("name") ?? "").trim();
       const email = String(data.get("email") ?? "").trim();
       const message = String(data.get("message") ?? "").trim();
-      const missing = [!name && "name", !/^\S+@\S+\.\S+$/.test(email) && "a valid email", !message && "a message"].filter(Boolean);
-      if (missing.length) {
-        error.textContent = `Please add ${missing.join(", ")}.`;
-        error.hidden = false;
-        return;
-      }
+      const missing = [!name && "name", !/^\S+@\S+\.\S+$/.test(email) && "a valid email", message.length < 10 && "a message (10+ characters)"].filter(Boolean);
+      if (missing.length) return fail(`Please add ${missing.join(", ")}.`);
       error.hidden = true;
-      const subject = encodeURIComponent(`Portfolio enquiry from ${name}`);
-      const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`);
-      window.location.href = `mailto:${form.dataset.email}?subject=${subject}&body=${body}`;
+
+      const token = widget !== null ? ts()?.getResponse(widget) : undefined;
+      button.disabled = true;
+      button.textContent = "Sending…";
+      try {
+        const r = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name, email, message, token, website: data.get("website") }),
+        });
+        const out = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string; fallback?: string };
+        if (out.ok) {
+          form.reset();
+          done.hidden = false;
+          button.hidden = true;
+          return;
+        }
+        if (out.fallback === "mailto") return mailto(name, email, message);
+        fail(out.error ?? "Something went wrong. Please try again.");
+      } catch {
+        // Offline / network error: the mail app still works.
+        mailto(name, email, message);
+      } finally {
+        button.disabled = false;
+        if (!button.hidden) button.textContent = "Send message →";
+        if (widget !== null) ts()?.reset(widget);
+      }
     };
   }
   document.addEventListener("astro:page-load", setupContact);
@@ -147,6 +210,21 @@ const profile = (await getEntry("profile", "main"))!.data;
   textarea:focus-visible {
     outline: none;
     border-bottom: 2px solid var(--orange);
+  }
+  .hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .form-done {
+    margin: 0;
+    font-size: var(--text-lead);
+  }
+  .submit:disabled {
+    opacity: 0.6;
+    cursor: progress;
   }
   .form-error {
     margin: 0;
