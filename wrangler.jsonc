@@ -24,6 +24,11 @@
 	},
 	// Secret (never in this file): TURNSTILE_SECRET — `wrangler secret put TURNSTILE_SECRET` at deploy;
 	// locally it lives in .dev.vars (Turnstile's public test secret).
+	// Custom domain (Cloudflare Registrar, same account): DNS + certificate are created on deploy.
+	"routes": [
+		{ "pattern": "praveentak.dev", "custom_domain": true },
+		{ "pattern": "www.praveentak.dev", "custom_domain": true }
+	],
 	"observability": {
 		"enabled": true
 	}

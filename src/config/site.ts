@@ -25,7 +25,7 @@ export const SITE = {
   description:
     "Portfolio of Praveen Tak — AI/ML engineer, full-stack developer and creative technologist based in Jaipur, India.",
   /** Production origin. Replace once the domain is decided (see DESIGN.md). */
-  url: "https://praveen-tak-portfolio.praveentak715.workers.dev",
+  url: "https://praveentak.dev",
   locale: "en_IN",
   year: 2026,
 } as const;
