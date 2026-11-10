@@ -1,0 +1,19 @@
+{
+  "kind": "work",
+  "title": "Project Trainee",
+  "org": "Defence Research and Development Organisation (DRDO)",
+  "location": "Jodhpur, India",
+  "start": "2025-02",
+  "end": "2025-04",
+  "highlights": [
+    "Developed a CycleGAN-based image-to-image translation system trained on 10,000+ artwork and painting images with TensorFlow and PyTorch.",
+    "Improved generated image quality by reducing Fréchet Inception Distance (FID) from 58.4 to 49.6 (~15%) through preprocessing, normalisation and hyperparameter tuning.",
+    "Evaluated models with FID and visual quality assessment, achieving more realistic texture transfer and style preservation."
+  ],
+  "stack": [
+    "TensorFlow",
+    "PyTorch",
+    "CycleGAN",
+    "Computer Vision"
+  ]
+}

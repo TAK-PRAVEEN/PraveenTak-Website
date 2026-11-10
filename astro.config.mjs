@@ -2,6 +2,8 @@
 import { defineConfig, sessionDrivers } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 import sitemap from "@astrojs/sitemap";
+import react from "@astrojs/react";
+import keystatic from "@keystatic/astro";
 import tailwindcss from "@tailwindcss/vite";
 
 // https://astro.build/config
@@ -21,6 +23,9 @@ export default defineConfig({
   session: { driver: sessionDrivers.lruCache() },
   // Internal tools (the font/background playground) never go in the sitemap.
   integrations: [
+    // Editing dashboard at /keystatic (React UI + on-demand API routes; see keystatic.config.ts).
+    react(),
+    keystatic(),
     // Internal font/background playground: available at /playground in `astro dev` only,
     // never built for production (the file is _playground.astro, so it isn't routed by default).
     {
@@ -31,9 +36,12 @@ export default defineConfig({
         },
       },
     },
-    sitemap({ filter: (page) => !page.includes("/playground") && !page.includes("/offline") }),
+    sitemap({ filter: (page) => !page.includes("/playground") && !page.includes("/offline") && !page.includes("/keystatic") }),
   ],
   vite: {
     plugins: [tailwindcss()],
+    // Keystatic's API pulls in CommonJS packages; pre-bundle them for the Workers dev runtime
+    // (production builds bundle them anyway).
+    ssr: { optimizeDeps: { include: ["@keystatic/core/api/generic", "@keystatic/astro/api"] } },
   },
 });

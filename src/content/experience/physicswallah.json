@@ -1,0 +1,18 @@
+{
+  "kind": "work",
+  "title": "Student Intern",
+  "org": "PW (PhysicsWallah)",
+  "location": "Remote",
+  "start": "2025-01",
+  "end": "2025-02",
+  "highlights": [
+    "Completed 3+ ML projects applying regression, classification and clustering on datasets of up to 50,000+ records.",
+    "Designed and evaluated models with Scikit-learn, TensorFlow and PyTorch, achieving 10–25% improvements over baseline.",
+    "Executed data cleaning and validation pipelines, reducing preprocessing errors by 30%."
+  ],
+  "stack": [
+    "Machine Learning",
+    "Python",
+    "Data Analysis"
+  ]
+}

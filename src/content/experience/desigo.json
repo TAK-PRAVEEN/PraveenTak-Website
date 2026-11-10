@@ -1,0 +1,23 @@
+{
+  "kind": "work",
+  "title": "AI Engineer",
+  "org": "DESIGO® Milk",
+  "location": "Jodhpur, Rajasthan",
+  "start": "2026-08",
+  "end": "",
+  "highlights": [
+    "Building RTCOM, DESIGO's operating system for traceable milk: Plant, Farm and Fleet (rider) apps, a customer app, Muster attendance and a Supabase ERP, serving ~2,100 customers with 30+ riders.",
+    "Face-recognition attendance (Muster) with layered anti-spoofing — passive liveness, device detection and head-movement challenges — in use for staff check-in.",
+    "Computer-vision R&D: a Milkofit pipeline that locates and reads all 16 reaction pads of a milk-adulteration test card, and a crew dress/PPE check (helmet, jacket, gloves, shoes)."
+  ],
+  "stack": [
+    "Flutter",
+    "Supabase",
+    "Firebase",
+    "Python",
+    "PyTorch",
+    "YOLO",
+    "InsightFace",
+    "OpenCV"
+  ]
+}

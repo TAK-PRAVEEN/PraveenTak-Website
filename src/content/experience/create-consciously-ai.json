@@ -1,0 +1,22 @@
+{
+  "kind": "work",
+  "title": "AI/ML Intern",
+  "org": "Create Consciously AI",
+  "location": "Jaipur, Rajasthan",
+  "start": "2026-05",
+  "end": "2026-08",
+  "highlights": [
+    "Contributed to TourIQ, an AI-powered tour revenue optimisation platform processing 649K+ booking records across multiple tour operators.",
+    "Improved booking forecast accuracy from 82% to 90% and reduced prediction MAPE from 18% to 12% using DTD, occupancy and seasonal demand features.",
+    "Enhanced dynamic pricing recommendations, increasing projected seat fill rates from 68% to 82% and identifying $50K+ revenue recovery opportunities across underperforming departures.",
+    "Worked extensively with ML pipelines, time-series forecasting, pricing optimisation and data analytics."
+  ],
+  "stack": [
+    "Python",
+    "LightGBM",
+    "Time-Series Forecasting",
+    "Dynamic Pricing",
+    "Pandas",
+    "NumPy"
+  ]
+}

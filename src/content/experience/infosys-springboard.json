@@ -1,0 +1,23 @@
+{
+  "kind": "work",
+  "title": "AI Intern",
+  "org": "Infosys Springboard",
+  "location": "Remote",
+  "start": "2025-11",
+  "end": "2026-01",
+  "highlights": [
+    "Built an AI-powered Python code reviewer using AST, Hugging Face (Qwen) and LangChain to detect 20+ code issues and enforce PEP8 standards.",
+    "Reduced linting violations from 50+ to 35 per 1,000 lines of code (~30% improvement) through automated analysis and optimisation recommendations.",
+    "Developed a Streamlit review platform delivering AI-generated feedback in under 2 seconds.",
+    "Integrated LLMs, prompt engineering and static code analysis into an end-to-end AI application."
+  ],
+  "stack": [
+    "Python",
+    "LangChain",
+    "Hugging Face",
+    "Qwen",
+    "AST",
+    "Streamlit",
+    "LLMs"
+  ]
+}

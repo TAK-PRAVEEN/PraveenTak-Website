@@ -1,0 +1,19 @@
+{
+  "kind": "work",
+  "title": "AI Intern",
+  "org": "Elevate Labs",
+  "location": "Remote",
+  "start": "2025-08",
+  "end": "2025-09",
+  "highlights": [
+    "Developed a Sign Language Recognition system achieving 85.2% validation accuracy on a dataset of 10,000+ gesture images.",
+    "Improved model accuracy from 72.8% to 85.2% through data augmentation, feature extraction and hyperparameter optimisation.",
+    "Worked in an Agile team to design, test and improve ML pipelines, reducing model misclassification by ~45%."
+  ],
+  "stack": [
+    "Python",
+    "TensorFlow",
+    "Computer Vision",
+    "Deep Learning"
+  ]
+}
