@@ -492,7 +492,7 @@ html.lenis body {
  *
  *  - Links within the site (href="/...") : only the TEXT changes colour, with an
  *    organic creeping edge (ink-text.ts; .ink-text marks titles in block links).
- *  - Links that leave the site (email, phone, socials, demo/source buttons): the
+ *  - Buttons (any destination) and links that leave the site (email, phone, socials): the
  *    ink fills a block behind the text; an SVG filter (#ink-link, BaseLayout)
  *    tears its edge so it reads as wet ink.
  *  - The big footer heading has its own version (Footer.astro). */
@@ -503,12 +503,12 @@ html.lenis body {
 }
 
 /* Outside links: ink block behind the text */
-:is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link) {
+:is(main, footer) :is(a:not([href^="/"], [href^="#"], .brand, .skip-link), a.btn) {
   position: relative;
   isolation: isolate;
   transition: color 0.45s var(--ease-out) 0.05s;
 }
-:is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link)::before {
+:is(main, footer) :is(a:not([href^="/"], [href^="#"], .brand, .skip-link), a.btn)::before {
   content: "";
   position: absolute;
   inset: -0.2em -0.35em;
@@ -520,18 +520,18 @@ html.lenis body {
   transition: --ink-r 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @media (hover: hover) {
-  :is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link):hover {
+  :is(main, footer) :is(a:not([href^="/"], [href^="#"], .brand, .skip-link), a.btn):hover {
     color: var(--accent-text);
   }
-  :is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link):hover::before {
+  :is(main, footer) :is(a:not([href^="/"], [href^="#"], .brand, .skip-link), a.btn):hover::before {
     --ink-r: 105%;
     transition-duration: 1.3s;
   }
 }
-:is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link):is(:focus-visible, :active) {
+:is(main, footer) :is(a:not([href^="/"], [href^="#"], .brand, .skip-link), a.btn):is(:focus-visible, :active) {
   color: var(--accent-text);
 }
-:is(main, footer) a:not([href^="/"], [href^="#"], .brand, .skip-link):is(:focus-visible, :active)::before {
+:is(main, footer) :is(a:not([href^="/"], [href^="#"], .brand, .skip-link), a.btn):is(:focus-visible, :active)::before {
   --ink-r: 105%;
   transition-duration: 1.3s;
 }
