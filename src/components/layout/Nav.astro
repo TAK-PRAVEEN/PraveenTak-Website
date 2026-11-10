@@ -381,7 +381,8 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
   }
   /* PT monogram. At nav size live text snaps to whole pixels and the T's bar drifts
      away from the square, so the letters are a high-res mask (painted in the text
-     colour, so they follow light/dark) and the square is placed by exact percentages.
+     colour, so they follow light/dark); the square is a second mask of the very same size,
+     so both scale identically at any zoom/density and the square stays on the bar.
      Both come from scripts/make-brand-assets.mjs (Inter Tight 700; the T's bar tip is
      cut and replaced by an orange square of the bar's thickness after a hairline gap). */
   .mono {
@@ -399,11 +400,10 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
   }
   .mono-sq {
     position: absolute;
-    left: 88.8%;
-    top: 13.5%;
-    width: 9.6%;
-    height: 12.7%;
+    inset: 0;
     background: var(--orange);
+    -webkit-mask: url("/icons/monogram-square-mask.png") center / 100% 100% no-repeat;
+    mask: url("/icons/monogram-square-mask.png") center / 100% 100% no-repeat;
   }
   .nav-desktop {
     display: none;
@@ -702,16 +702,16 @@ const chapter = EXPERIENCES.find((e) => e.href === current)?.index ?? "01";
     width: 108px;
     height: 32px;
   }
-  .brand-sig-media {
+  .brand-sig :global(.brand-sig-media) {
     width: 100%;
     height: 100%;
     object-fit: contain;
     object-position: left center;
     pointer-events: none;
   }
-  :global(:root[data-theme="dark"]) .brand-sig-media,
-  :global(:root[data-surface="ink"]) .brand-sig-media,
-  .nav[data-surface="ink"] .brand-sig-media {
+  :global(:root[data-theme="dark"]) .brand-sig :global(.brand-sig-media),
+  :global(:root[data-surface="ink"]) .brand-sig :global(.brand-sig-media),
+  .nav[data-surface="ink"] .brand-sig :global(.brand-sig-media) {
     filter: invert(1);
   }
   @media (max-width: 420px) {

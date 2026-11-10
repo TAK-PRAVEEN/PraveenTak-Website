@@ -96,6 +96,9 @@ await shoot(og, 1200, 630, "og.png");
     return { x: b.x, y: b.y, w: b.width, h: b.height, sq: { left: r((q.x - b.x) / b.width), top: r((q.y - b.y) / b.height), w: r(q.width / b.width), h: r(q.height / b.height) } };
   });
   await p.screenshot({ path: resolve(root, "public/icons/monogram-mask.png"), omitBackground: true, clip: { x: box.x, y: box.y, width: box.w, height: box.h } });
+  // the square alone, same box: both masks scale identically, so the square can never drift off the bar
+  await p.addStyleTag({ content: ".pt-p, .pt-tg { visibility: hidden } .pt-sq { visibility: visible !important; background: #000 }" });
+  await p.screenshot({ path: resolve(root, "public/icons/monogram-square-mask.png"), omitBackground: true, clip: { x: box.x, y: box.y, width: box.w, height: box.h } });
   console.log("monogram box", Math.round(box.w), "x", Math.round(box.h), "square %", JSON.stringify(box.sq));
   await p.close();
 }
