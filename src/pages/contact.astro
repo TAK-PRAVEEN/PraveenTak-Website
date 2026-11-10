@@ -4,14 +4,15 @@ import { ArrowUpRight } from "@lucide/astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
 import StatusDot from "../components/ui/StatusDot.astro";
-import InkBloom from "../components/3d/InkBloom.astro";
 
 
 const profile = (await getEntry("profile", "main"))!.data;
 ---
 
 <BaseLayout title="Contact" section="/contact" description="Get in touch with Praveen Tak." bare>
-  <PageHeader section="/contact" title="Let's talk"><InkBloom slot="visual" class="contact-bloom" /></PageHeader>
+  <div class="sky" aria-hidden="true"><div class="sky-img"></div></div>
+  <div class="over-sky">
+  <PageHeader section="/contact" title="Let's talk" />
 
   <section class="frame grid-12 contact" aria-label="Contact">
     <div class="col-span-4 md:col-span-5 details">
@@ -52,6 +53,7 @@ const profile = (await getEntry("profile", "main"))!.data;
       <p class="micro text-muted">Opens your email app with the message filled in. A direct form arrives soon.</p>
     </form>
   </section>
+  </div>
 </BaseLayout>
 
 
@@ -166,7 +168,36 @@ const profile = (await getEntry("profile", "main"))!.data;
     border-color: var(--orange);
     color: var(--charcoal);
   }
-  .contact-bloom {
-    width: 100%;
+  /* Above-the-clouds sky (reference), drifting very slowly behind the page. */
+  .sky {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .sky-img {
+    position: absolute;
+    inset: -6%;
+    background: url("/media/ref/clouds.webp") center 65% / cover no-repeat;
+    animation: sky-drift 70s ease-in-out infinite alternate;
+  }
+  /* soft paper veil at the top so the title and form stay crisp */
+  .sky::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, color-mix(in oklab, var(--bg) 55%, transparent) 0%, color-mix(in oklab, var(--bg) 15%, transparent) 45%, color-mix(in oklab, var(--bg) 35%, transparent) 100%);
+  }
+  @keyframes sky-drift {
+    from { transform: scale(1) translate(0, 0); }
+    to { transform: scale(1.1) translate(-2%, -3%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sky-img { animation: none; }
+  }
+  .over-sky {
+    position: relative;
+    z-index: 1;
   }
 </style>
