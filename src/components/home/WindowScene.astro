@@ -18,8 +18,6 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
     <p class="hud win-before" aria-hidden="true" data-win-before>Look through ↓</p>
     <div class="win-pane" data-win-pane data-ink-dark data-surface="ink" data-accent="blue">
       <div class="win-glow" aria-hidden="true"></div>
-      
-      <canvas class="win-canvas" aria-hidden="true" data-win-canvas></canvas>
 
       <div class="frame win-inner">
         <div class="win-top hud">
@@ -49,6 +47,10 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
         <p class="hud win-cap">Fig. 02 — Glass orb</p>
       </div>
     </div>
+    <!-- Neon orange rim along the edge of the spreading ink (drawn by home-motion.ts). -->
+    <svg class="win-rim" aria-hidden="true" focusable="false" data-win-rim><path data-win-rim-path></path></svg>
+    <!-- The glass globe sits above the ink, so it shows on paper before the ink spreads from behind it. -->
+    <canvas class="win-canvas" aria-hidden="true" data-win-canvas></canvas>
   </div>
 </section>
 
@@ -104,10 +106,32 @@ const stats = gans?.data.metrics.slice(0, 3) ?? [];
     color: var(--fg);
     overflow: hidden;
   }
-  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  /* Before the scroll: no ink yet (it spreads from behind the globe; see home-motion.ts). */
+  @media (prefers-reduced-motion: no-preference) {
     .win-pane {
-      clip-path: inset(24% 6% 24% 54% round 28px);
+      clip-path: circle(0px at 76% 50%); /* replaced by the ink pool as soon as the script runs */
     }
+  }
+  .win-rim {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+    opacity: 0;
+  }
+  .win-rim path {
+    fill: none;
+    stroke: #ff5a1f;
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 4px #ff5a1f) drop-shadow(0 0 14px rgb(255 90 31 / 0.85)) drop-shadow(0 0 32px rgb(255 90 31 / 0.5));
+  }
+  /* While the ink is still spreading (an organic polygon), the pane paints its own black;
+     once it covers everything the ink background takes over (faint neon wisps). */
+  :global(html.ink-bg-on) .win-pane[data-opening] {
+    background: var(--ink);
   }
   .win-glow {
     position: absolute;

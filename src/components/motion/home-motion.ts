@@ -188,6 +188,8 @@ function windowScene(): () => void {
   const rot = sec.querySelector<HTMLElement>("[data-win-rot]");
   const frameOut = sec.querySelector<HTMLElement>("[data-win-frame]");
   const before = sec.querySelector<HTMLElement>("[data-win-before]");
+  const rim = sec.querySelector<SVGSVGElement>("[data-win-rim]");
+  const rimPath = rim?.querySelector<SVGPathElement>("path") ?? null;
 
   // Looping Blender sequence: wavy glass orb with glowing filaments inside.
   const TOTAL = 36;
@@ -243,6 +245,53 @@ function windowScene(): () => void {
     if (frameOut) frameOut.textContent = String(i).padStart(2, "0");
   };
 
+  // Ink spreading from behind the globe: an organic blob (radius wobbles with layered
+  // noise that keeps moving) grows to cover the pane; a neon orange rim follows its edge.
+  const ink = { p: 0 };
+  const ph = [Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28];
+  const N = 120;
+  const renderInk = (time: number) => {
+    const e = ink.p;
+    if (e >= 0.999) {
+      pane.style.clipPath = "none";
+      delete pane.dataset.opening;
+      if (rim) rim.style.opacity = "0";
+      return;
+    }
+    const pr = pane.getBoundingClientRect();
+    const cr = canvas.getBoundingClientRect();
+    const W = pr.width, H = pr.height;
+    const cx = cr.left - pr.left + cr.width / 2;
+    const cy = cr.top - pr.top + cr.height / 2;
+    const r0 = cr.width * 0.56; // at rest: a small pool of ink just around the globe
+    const rMax = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) * 1.3;
+    const R = r0 + (rMax - r0) * (1 - Math.pow(1 - e, 2.2)); // spreads fast, then slows
+    const amp = 0.09 * (1 - e * 0.5);
+    const t = time * 0.6;
+    let d = "";
+    const pts: string[] = [];
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2;
+      const n =
+        0.5 * Math.sin(3 * a + ph[0] + t * 0.7) +
+        0.3 * Math.sin(7 * a + ph[1] - t * 1.1) +
+        0.15 * Math.sin(13 * a + ph[2] + t * 1.6) +
+        0.08 * Math.sin(29 * a + ph[3] - t * 2.3); // fine ragged tendrils
+      const r = R * (1 + amp * n);
+      const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+      pts.push(`${x.toFixed(1)}px ${y.toFixed(1)}px`);
+      d += `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+    pane.style.clipPath = `polygon(${pts.join(",")})`;
+    pane.dataset.opening = "1";
+    if (rim && rimPath) {
+      rim.setAttribute("viewBox", `0 0 ${W.toFixed(0)} ${H.toFixed(0)}`);
+      rimPath.setAttribute("d", d + "Z");
+      // the rim glows while the edge is on screen, then fades as the ink fills everything
+      rim.style.opacity = String(1 - Math.max(0, (e - 0.8) / 0.2));
+    }
+  };
+
   // Preload the frames only as the scene approaches, so they never compete with the hero portrait.
   const pre = ScrollTrigger.create({ trigger: sec, start: "top 160%", once: true, onEnter: load });
 
@@ -255,13 +304,14 @@ function windowScene(): () => void {
     },
   });
   if (!small) {
-    tl.fromTo(pane, { clipPath: "inset(24% 6% 24% 54% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "power2.inOut", duration: 0.3 }, 0).to(
-      before,
-      { opacity: 0, y: -20, duration: 0.12 },
-      0,
-    );
+    // the ink spreads over the first part of the pinned scroll
+    tl.to(ink, { p: 1, ease: "none", duration: 0.5 }, 0).to(before, { opacity: 0, y: -20, duration: 0.12 }, 0);
   }
   tl.to(st, { dive: 1, ease: "power1.inOut", duration: 0.55 }, small ? 0.2 : 0.4).to(st, { duration: 0.15 });
+  // phones: the scene isn't pinned, so the ink spreads as the section scrolls into view
+  const inkSt = small
+    ? gsap.to(ink, { p: 1, ease: "none", scrollTrigger: { trigger: sec, start: "top 85%", end: "top 15%", scrub: 0.5 } })
+    : null;
 
   // Idle loop: ~18 fps of sequence playback while the scene is on screen; scroll velocity boosts it.
   let visible = false;
@@ -272,6 +322,7 @@ function windowScene(): () => void {
     st.scrollVel *= 0.9;
     st.pos += (dt / 1000) * 25 + /* reference speed: 36 frames / 1.44 s */ Math.max(-6, Math.min(6, st.scrollVel));
     draw();
+    renderInk(_t);
   };
   gsap.ticker.add(tick);
 
@@ -283,6 +334,8 @@ function windowScene(): () => void {
     gsap.ticker.remove(tick);
     tl.scrollTrigger?.kill();
     tl.kill();
+    inkSt?.scrollTrigger?.kill();
+    inkSt?.kill();
     window.removeEventListener("resize", onResize);
   };
 }
