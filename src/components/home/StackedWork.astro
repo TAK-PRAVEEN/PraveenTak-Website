@@ -187,18 +187,21 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     display: grid;
     gap: 6px;
   }
-  /* Phones: each card fits on screen (≈ 62svh) so the next one visibly slides over it. */
+  /* Phones: like desktop, each card fills the screen, so you see one at a time and the
+     next one slides up over it (the one underneath shrinks and darkens). */
   @media (max-width: 767px) {
     .stack-item {
-      top: calc(var(--nav-h) + 8px + var(--i) * 10px);
-      padding-top: 16px;
+      top: calc(var(--nav-h) + 4px + var(--i) * 8px);
+      padding-top: 12px;
     }
     .card-inner {
+      display: flex;
+      flex-direction: column;
+      height: calc(100svh - var(--nav-h) - 28px - var(--i) * 8px);
       min-height: 0;
-      max-height: calc(100svh - var(--nav-h) - 96px);
       overflow: hidden;
-      padding: 20px;
-      row-gap: 16px;
+      padding: 22px;
+      gap: 16px;
       border-radius: 20px;
     }
     .card-inner::after {
@@ -220,16 +223,21 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     .card-metric {
       margin: 0;
     }
+    .card-copy {
+      flex: 0 0 auto;
+    }
     .card-visual {
+      flex: 1 1 auto;
       min-height: 0;
     }
     .card-visual :global(.card-cover) {
-      aspect-ratio: 16 / 9;
-      height: auto;
-      max-height: 22svh;
+      height: 100%;
+      aspect-ratio: auto;
     }
-    /* the big outline number + stack list are desktop decoration */
-    .card-visual:not(:has(:global(.card-cover))) {
+    .card-numeral .numeral {
+      font-size: clamp(5rem, 30vw, 9rem);
+    }
+    .card-stack {
       display: none;
     }
   }

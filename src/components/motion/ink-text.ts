@@ -162,10 +162,5 @@ export function initInkText() {
   document.addEventListener("pointerout", (e) => e.pointerType === "mouse" && leave(e));
   document.addEventListener("focusin", enter);
   document.addEventListener("focusout", leave);
-  // touch: a press inks the link (it is navigating away anyway)
-  document.addEventListener("pointerdown", (e) => {
-    if (e.pointerType === "mouse") return;
-    const a = link(e.target);
-    if (a) targets(a).forEach(spread);
-  });
+  // Touch: no hover ink (a finger never "leaves", and every scroll starts with a press).
 }

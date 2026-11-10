@@ -61,7 +61,7 @@ const facts = [
       {
         facts.map((f) => (
           <li data-wall-fact>
-            <span class="display wall-value" data-count={f.value}>{f.value}</span>
+            <span class="display wall-value" data-wall-value={f.value}>{f.value}</span>
             <span class="wall-label">{f.label}</span>
             <span class="micro text-muted">{f.src}</span>
           </li>
@@ -89,17 +89,36 @@ const facts = [
 
     // Figures land like a stamp as soon as they are actually on screen
     // (the count-up comes from home-motion's [data-count]).
-    const facts = sec.querySelectorAll<HTMLElement>("[data-wall-fact]");
+    const facts = Array.from(sec.querySelectorAll<HTMLElement>("[data-wall-fact]"));
     gsap.set(facts, { opacity: 0, scale: 1.35, rotate: -4 });
+    const countUp = (el: HTMLElement) => {
+      const raw = el.dataset.wallValue ?? el.textContent ?? "";
+      const m = raw.match(/[\d,]+(?:\.\d+)?/);
+      if (!m) return;
+      const target = parseFloat(m[0].replace(/,/g, ""));
+      const o = { n: 0 };
+      gsap.to(o, {
+        n: target,
+        duration: 1.4,
+        ease: "power3.out",
+        onUpdate: () => (el.textContent = raw.replace(m[0], Math.round(o.n).toLocaleString("en-US"))),
+        onComplete: () => (el.textContent = raw),
+      });
+    };
     const factsIo = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting) return;
-        factsIo.disconnect();
-        gsap.to(facts, { opacity: 1, scale: 1, rotate: 0, duration: 0.5, ease: "back.out(2.2)", stagger: 0.15 });
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          factsIo.unobserve(e.target);
+          const f = e.target as HTMLElement;
+          gsap.to(f, { opacity: 1, scale: 1, rotate: 0, duration: 0.55, ease: "back.out(2.2)" });
+          countUp(f.querySelector<HTMLElement>("[data-wall-value]")!);
+        }
       },
-      { threshold: 0.15 },
+      // fires when most of that figure is in view
+      { threshold: 0.7 },
     );
-    factsIo.observe(sec.querySelector(".wall-facts")!);
+    facts.forEach((f) => factsIo.observe(f));
 
     const pos = rows.map((_, i) => (i % 2 ? -25 : 0)); // % of row width
     let boost = 0;

@@ -433,7 +433,9 @@ export function mountInkFluid(canvas: HTMLCanvasElement, opts: { mode?: "paper" 
       if (rects.length >= 16) break;
       const r = el.getBoundingClientRect();
       if (r.bottom < 0 || r.top > window.innerHeight || r.width === 0) continue;
-      const ins = parseInset(getComputedStyle(el).clipPath, r.width, r.height);
+      const cp = getComputedStyle(el).clipPath;
+      if (cp.startsWith("circle")) continue; // opening as a circle: it paints its own black
+      const ins = parseInset(cp, r.width, r.height);
       const x0 = r.left + ins[3], x1 = r.right - ins[1];
       const y0 = window.innerHeight - (r.bottom - ins[2]), y1 = window.innerHeight - (r.top + ins[0]);
       if (x1 <= x0 || y1 <= y0) continue;

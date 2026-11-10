@@ -143,6 +143,9 @@ const statementLead = statementWords.join(" ");
   .band {
     position: relative;
     isolation: isolate;
+    /* the moon disc may rise above the band, but nothing may widen the page sideways
+       (phones zoom the whole page out when anything sticks out) */
+    overflow-x: clip;
     color: var(--fg);
     margin-top: clamp(48px, 8vw, 120px);
   }
@@ -293,6 +296,10 @@ const statementLead = statementWords.join(" ");
   /* Ink running: the canvas paints true black + neon ink inside this shape (data-ink-dark). */
   :global(html.ink-bg-on) .band-ink {
     background: transparent;
+  }
+  /* while the moon window opens (a circle) the band paints its own solid black */
+  :global(html.ink-bg-on) .band[data-opening] .band-ink {
+    background: var(--ink);
   }
   /* Black disc around the moon while it peeks out of the hero (can extend above
      the band's top edge); sized and moved by home-motion.ts, fades as the window opens. */

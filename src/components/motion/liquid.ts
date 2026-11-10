@@ -42,14 +42,26 @@ function ripple(el: HTMLElement) {
 }
 
 function initRipple(): () => void {
+  const SEL = "[data-liquid], main a, footer a, .nav-desktop a";
+  let lastType = "mouse";
   const onDown = (e: PointerEvent) => {
-    if (e.button !== 0 || reduced()) return;
-    // [data-liquid] blocks, plus every link on the page (all wiggle when clicked)
-    const el = (e.target as Element | null)?.closest<HTMLElement>("[data-liquid], main a, footer a, .nav-desktop a");
+    lastType = e.pointerType;
+    // Touch presses also start scrolls: wait for a real tap (click) instead.
+    if (e.pointerType !== "mouse" || e.button !== 0 || reduced()) return;
+    const el = (e.target as Element | null)?.closest<HTMLElement>(SEL);
+    if (el) ripple(el);
+  };
+  const onClick = (e: MouseEvent) => {
+    if (lastType === "mouse" || reduced()) return;
+    const el = (e.target as Element | null)?.closest<HTMLElement>(SEL);
     if (el) ripple(el);
   };
   document.addEventListener("pointerdown", onDown, { passive: true });
-  return () => document.removeEventListener("pointerdown", onDown);
+  document.addEventListener("click", onClick, { capture: true, passive: true });
+  return () => {
+    document.removeEventListener("pointerdown", onDown);
+    document.removeEventListener("click", onClick, { capture: true });
+  };
 }
 
 /** Glass droplet under the current page's nav link; flows to the new link on navigation. */

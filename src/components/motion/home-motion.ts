@@ -68,7 +68,6 @@ export function initHomeMotion(): () => void {
       const ease2 = gsap.parseEase("power2.inOut");
       const render = () => {
         const e = st.p;
-        const W = band.clientWidth, H = band.clientHeight;
         let x: number, y: number, r: number, mxp: number, myp: number, scale: number;
         if (e < SPLIT) {
           const a = ease2(e / SPLIT);
@@ -92,19 +91,24 @@ export function initHomeMotion(): () => void {
         if (disc) {
           disc.style.width = disc.style.height = `${(2 * r).toFixed(1)}px`;
           disc.style.transform = `translate(${(x - r).toFixed(1)}px, ${(y - r).toFixed(1)}px)`;
-          disc.style.visibility = e < SPLIT ? "visible" : "hidden";
+          disc.style.display = e < SPLIT ? "" : "none";
         }
         // the statement fades in as the window finishes opening
-        if (inner) inner.style.opacity = String(gsap.utils.clamp(0, 1, (e - 0.72) / 0.22));
+        if (inner) inner.style.opacity = String(gsap.utils.clamp(0, 1, (e - 0.84) / 0.14));
+        // While opening, the band's ink is a true circle in plain black (data-opening);
+        // once it covers the band it hands back to the ink background (neon ink in black).
         if (e < SPLIT) {
-          ink.style.clipPath = "inset(50% 50% 50% 50%)";
+          band.dataset.opening = "1";
+          ink.style.clipPath = "circle(0px at 50% 0px)";
           return;
         }
-        // The circle written as a rounded square (the ink canvas reads inset() shapes);
-        // past the band's edges it becomes a rounded window, then full bleed.
-        const t = Math.max(0, y - r), b = Math.max(0, H - y - r), l = Math.max(0, x - r), rt = Math.max(0, W - x - r);
-        const R = r * (1 - gsap.utils.clamp(0, 1, (e - 0.85) / 0.15));
-        ink.style.clipPath = `inset(${t.toFixed(1)}px ${rt.toFixed(1)}px ${b.toFixed(1)}px ${l.toFixed(1)}px round ${R.toFixed(1)}px)`;
+        if (e >= 0.995) {
+          delete band.dataset.opening;
+          ink.style.clipPath = "none";
+          return;
+        }
+        band.dataset.opening = "1";
+        ink.style.clipPath = `circle(${r.toFixed(1)}px at ${x.toFixed(1)}px ${y.toFixed(1)}px)`;
       };
       measure();
       render();
