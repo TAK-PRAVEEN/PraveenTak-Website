@@ -9,11 +9,7 @@ import WindowScene from "../components/home/WindowScene.astro";
 import StackedWork from "../components/home/StackedWork.astro";
 import ChapterStrip from "../components/home/ChapterStrip.astro";
 import BigNumbers from "../components/home/BigNumbers.astro";
-import InkDrain from "../components/home/InkDrain.astro";
-import LossCurve from "../components/home/LossCurve.astro";
 import ToolkitWall from "../components/home/ToolkitWall.astro";
-import HowIWork from "../components/home/HowIWork.astro";
-import SectionPicker from "../components/home/SectionPicker.astro";
 import Intro from "../components/motion/Intro.astro";
 import RefSequence from "../components/3d/RefSequence.astro";
 import { SITE } from "../config/site";
@@ -85,13 +81,8 @@ const statementLead = statementWords.join(" ");
   </section>
 
   <!-- SCENES (home film): window → rotating sculpture, stacked work, sideways index, numbers -->
-  <!-- Candidate sections between the statement band and the window scene.
-       Compare with the picker (bottom-right) / ?s=1,2 ; unused ones get removed. -->
-  <InkDrain />
-  <LossCurve />
+  <!-- Paper interlude: toolkit wall + key figures, between the band and the window scene. -->
   <ToolkitWall />
-  <HowIWork />
-  <SectionPicker />
 
   <WindowScene />
   <StackedWork />

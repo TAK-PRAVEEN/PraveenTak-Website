@@ -1,34 +1,73 @@
 ---
 /**
- * Variant 3 — Toolkit wall.
- * Huge outlined technology names in three rows that slide in opposite directions
- * with the scroll (faster when you scroll faster). A word fills with ink while it
- * crosses the centre of the screen. Words come from the projects' stacks.
+ * Home: Toolkit wall + key figures (paper interlude after the statement band).
+ *
+ * Huge technology names in three rows slide in opposite directions with the
+ * scroll (faster when you scroll faster). Words are hollow — a clean single
+ * outline drawn by an SVG filter around the glyph silhouette, so the font's
+ * overlapping contours never show — and fill with ink while crossing the
+ * centre of the screen (the middle row fills in the page accent).
+ * Below: key figures that land like a stamp and count up.
+ * Words and figures come from content collections.
  */
 import { getCollection } from "astro:content";
 
 const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
 const words = [...new Set(projects.flatMap((p) => p.data.stack.map((s) => s.split(/[ (/]/)[0])))].filter((s) => s.length > 1).slice(0, 24);
 const rows = [0, 1, 2].map((r) => words.filter((_, i) => i % 3 === r));
+
+const exp = await getCollection("experience");
+const records = exp.flatMap((e) => e.data.highlights).map((h) => h.match(/([\d.,]+K\+)\s+booking records/)?.[1]).find(Boolean);
+const tech = new Set(projects.flatMap((p) => p.data.stack.map((s) => s.split(/[ (/]/)[0]))).size;
+const facts = [
+  records && { value: records, label: "Booking records processed", src: "TourIQ · Create Consciously AI" },
+  { value: String(projects.length), label: "Projects built", src: "Client systems, products, ML" },
+  { value: `${tech}+`, label: "Technologies in shipped work", src: "Across every project" },
+].filter((f): f is { value: string; label: string; src: string } => !!f);
 ---
 
-<section class="wall" data-variant="3" data-wall aria-labelledby="wall-title">
+<section class="wall" data-wall aria-labelledby="wall-title">
+  <svg class="wall-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <!-- outline = (glyph silhouette grown by ~1px) minus the glyph -->
+    <filter id="wall-outline" x="-2%" y="-10%" width="104%" height="120%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="1.1" result="grown"></feMorphology>
+      <feComposite in="grown" in2="SourceAlpha" operator="out" result="ring"></feComposite>
+      <feFlood class="wall-ink" result="ink"></feFlood>
+      <feComposite in="ink" in2="ring" operator="in"></feComposite>
+    </filter>
+  </svg>
+
   <div class="frame wall-head micro">
-    <h2 id="wall-title" data-decode>01.4 — Toolkit</h2>
+    <h2 id="wall-title" data-decode>01.2 — Toolkit</h2>
     <span class="text-muted">Used in shipped projects</span>
   </div>
+
   <div class="wall-rows" aria-label={words.join(", ")}>
     {
       rows.map((row, r) => (
         <div class="wall-row" data-wall-row data-dir={r % 2 ? "1" : "-1"} aria-hidden="true">
           {[...row, ...row].map((w) => (
-            <span class="display wall-word" data-wall-word>
-              {w}
+            <span class="display wall-word" data-wall-word data-text={w}>
+              <span class="wall-outline">{w}</span>
             </span>
           ))}
         </div>
       ))
     }
+  </div>
+
+  <div class="frame wall-facts-wrap">
+    <ul class="wall-facts" aria-label="Key figures">
+      {
+        facts.map((f) => (
+          <li data-wall-fact>
+            <span class="display wall-value" data-count={f.value}>{f.value}</span>
+            <span class="wall-label">{f.label}</span>
+            <span class="micro text-muted">{f.src}</span>
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </section>
 
@@ -43,12 +82,26 @@ const rows = [0, 1, 2].map((r) => words.filter((_, i) => i % 3 === r));
     sec.dataset.ready = "1";
     const rows = Array.from(sec.querySelectorAll<HTMLElement>("[data-wall-row]"));
     const words = Array.from(sec.querySelectorAll<HTMLElement>("[data-wall-word]"));
-    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return words.forEach((w) => w.classList.add("lit"));
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      words.forEach((w) => w.classList.add("lit"));
+      return;
+    }
+
+    // Figures land like a stamp (the count-up comes from home-motion's [data-count]).
+    gsap.from(sec.querySelectorAll("[data-wall-fact]"), {
+      opacity: 0,
+      scale: 1.35,
+      rotate: -4,
+      duration: 0.5,
+      ease: "back.out(2.2)",
+      stagger: 0.15,
+      scrollTrigger: { trigger: sec.querySelector(".wall-facts"), start: "top 82%", once: true },
+    });
+
     const pos = rows.map((_, i) => (i % 2 ? -25 : 0)); // % of row width
     let boost = 0;
     let progress = 0;
-    ScrollTrigger.create({
+    const st = ScrollTrigger.create({
       trigger: sec,
       start: "top bottom",
       end: "bottom top",
@@ -58,30 +111,50 @@ const rows = [0, 1, 2].map((r) => words.filter((_, i) => i % 3 === r));
       },
     });
     let visible = false;
-    new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(sec);
-    gsap.ticker.add(() => {
+    const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
+    io.observe(sec.querySelector(".wall-rows")!);
+    const tick = () => {
       if (!visible) return;
       boost *= 0.92;
       rows.forEach((row, i) => {
         const dir = Number(row.dataset.dir);
-        // scroll position sets the base offset; scroll speed adds a little drift
+        // scroll position sets the base offset; scroll speed adds drift
         pos[i] += dir * Math.min(0.6, boost) * 0.4;
         const x = ((pos[i] + dir * progress * 30) % 50) - (dir > 0 ? 50 : 0);
         row.style.transform = `translate3d(${x.toFixed(2)}%,0,0)`;
       });
       const mid = innerWidth / 2;
-      words.forEach((w) => {
+      for (const w of words) {
         const r = w.getBoundingClientRect();
         w.classList.toggle("lit", Math.abs(r.left + r.width / 2 - mid) < Math.max(140, r.width * 0.6));
-      });
-    });
+      }
+    };
+    gsap.ticker.add(tick);
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        gsap.ticker.remove(tick);
+        io.disconnect();
+        st.kill();
+      },
+      { once: true },
+    );
   });
 </script>
 
 <style>
   .wall {
     overflow: hidden;
-    padding-block: clamp(40px, 6vw, 96px);
+    padding-block: clamp(48px, 7vw, 112px);
+  }
+  .wall-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+  .wall-ink {
+    flood-color: var(--fg);
+    flood-opacity: 0.55;
   }
   .wall-head {
     display: flex;
@@ -97,29 +170,72 @@ const rows = [0, 1, 2].map((r) => words.filter((_, i) => i % 3 === r));
   }
   .wall-rows {
     display: grid;
-    gap: clamp(4px, 1vw, 14px);
+    gap: clamp(2px, 0.8vw, 12px);
   }
   .wall-row {
     display: flex;
     width: max-content;
-    gap: 0.5em;
+    gap: 0.45em;
     font-size: clamp(3rem, 1.5rem + 7vw, 9.5rem);
     will-change: transform;
   }
+  /* Hollow: the inner text is drawn solid but filtered down to its outline; the
+     filled copy (::after, not filtered) fades in on top when the word is lit. */
   .wall-word {
-    line-height: 1;
+    position: relative;
+    line-height: 1.05;
     text-transform: uppercase;
-    color: transparent;
-    -webkit-text-stroke: 1.5px var(--fg);
-    transition:
-      color 0.5s var(--ease-out),
-      -webkit-text-stroke-color 0.5s var(--ease-out);
-  }
-  .wall-word:global(.lit) {
+    letter-spacing: -0.01em;
     color: var(--fg);
   }
-  .wall-row:nth-child(2) .wall-word:global(.lit) {
+  .wall-outline {
+    filter: url(#wall-outline);
+  }
+  .wall-word::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    color: var(--fg);
+    opacity: 0;
+    transform: translateY(0.04em);
+    transition:
+      opacity 0.45s var(--ease-out),
+      transform 0.45s var(--ease-out);
+  }
+  .wall-word:global(.lit)::after {
+    opacity: 1;
+    transform: none;
+  }
+  .wall-row:nth-child(2) .wall-word::after {
     color: var(--accent);
-    -webkit-text-stroke-color: var(--accent);
+  }
+
+  .wall-facts-wrap {
+    margin-top: clamp(48px, 7vw, 104px);
+  }
+  .wall-facts {
+    display: grid;
+    gap: 32px 24px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 768px) {
+    .wall-facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .wall-facts li {
+    display: grid;
+    gap: 6px;
+    padding-left: 14px;
+    border-left: 1px solid var(--line-strong);
+  }
+  .wall-value {
+    font-size: clamp(3rem, 1.8rem + 4vw, 6rem);
+    line-height: 0.95;
+  }
+  .wall-label {
+    font-size: var(--text-lead);
   }
 </style>
