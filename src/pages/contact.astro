@@ -95,10 +95,10 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
     // the server answers "fallback" and the visitor's mail app opens instead.
     let widget: string | null = null;
     let token = "";
-    // The visitor may press Send before Turnstile has finished its (invisible) check:
-    // wait up to ~8 s for the token instead of sending an empty one.
+    // The visitor may press Send before Turnstile has finished its (invisible) check,
+    // which can take several seconds: wait up to ~20 s for the token, never send without one.
     const waitForToken = async () => {
-      for (let i = 0; i < 40 && !token; i++) {
+      for (let i = 0; i < 100 && !token; i++) {
         const t = widget !== null ? ts()?.getResponse(widget) : undefined;
         if (t) token = t;
         else await new Promise((r) => setTimeout(r, 200));
@@ -145,8 +145,14 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
       error.hidden = true;
 
       button.disabled = true;
-      button.textContent = "Sending…";
+      button.textContent = box && !token ? "Verifying…" : "Sending…";
       const sendToken = box ? await waitForToken() : undefined;
+      if (box && !sendToken) {
+        button.disabled = false;
+        button.textContent = "Send message →";
+        return fail("Still checking you're human — please wait a moment and press Send again.");
+      }
+      button.textContent = "Sending…";
       try {
         const r = await fetch("/api/contact", {
           method: "POST",

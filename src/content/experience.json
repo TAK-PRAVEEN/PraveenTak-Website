@@ -1,12 +1,36 @@
 [
   {
+    "id": "desigo",
+    "kind": "work",
+    "title": "AI Engineer",
+    "org": "DESIGO® Milk",
+    "location": "Jodhpur, Rajasthan",
+    "start": "2026-08",
+    "end": null,
+    "highlights": [
+      "Building RTCOM, DESIGO's operating system for traceable milk: Plant, Farm and Fleet (rider) apps, a customer app, Muster attendance and a Supabase ERP, serving ~2,100 customers with 30+ riders.",
+      "Face-recognition attendance (Muster) with layered anti-spoofing — passive liveness, device detection and head-movement challenges — in use for staff check-in.",
+      "Computer-vision R&D: a Milkofit pipeline that locates and reads all 16 reaction pads of a milk-adulteration test card, and a crew dress/PPE check (helmet, jacket, gloves, shoes)."
+    ],
+    "stack": [
+      "Flutter",
+      "Supabase",
+      "Firebase",
+      "Python",
+      "PyTorch",
+      "YOLO",
+      "InsightFace",
+      "OpenCV"
+    ]
+  },
+  {
     "id": "create-consciously-ai",
     "kind": "work",
     "title": "AI/ML Intern",
     "org": "Create Consciously AI",
     "location": "Jaipur, Rajasthan",
     "start": "2026-05",
-    "end": null,
+    "end": "2026-08",
     "highlights": [
       "Contributed to TourIQ, an AI-powered tour revenue optimisation platform processing 649K+ booking records across multiple tour operators.",
       "Improved booking forecast accuracy from 82% to 90% and reduced prediction MAPE from 18% to 12% using DTD, occupancy and seasonal demand features.",
