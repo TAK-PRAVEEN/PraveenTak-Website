@@ -76,13 +76,34 @@ const projects = defineCollection({
       cover: image().optional(),
       coverAlt: z.string().optional(),
       gallery: z.array(z.object({ src: image(), alt: z.string() })).default([]),
+      /**
+       * Parts of a larger system (e.g. RTCOM's apps), each with a media slot:
+       * `video` (a file in /public, e.g. "/media/work/rtcom-plant.mp4") plays when set;
+       * otherwise `poster` shows; with neither, a "walkthrough coming soon" frame.
+       */
+      modules: z
+        .array(
+          z.object({
+            name: z.string(),
+            kind: z.string(),
+            summary: z.string(),
+            points: z.array(z.string()).default([]),
+            status: z.string().optional(),
+            video: z.string().optional(),
+            poster: image().optional(),
+            posterAlt: z.string().optional(),
+            /** "phone" posters are tall app screens; "wide" are desktop screens. */
+            frame: z.enum(["phone", "wide"]).default("wide"),
+          }),
+        )
+        .default([]),
     }),
 });
 
 /** AI/ML Lab and Experiments are empty until Praveen supplies entries. */
 const lab = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/lab" }),
-  schema: z.object({
+  schema: ({ image }) => z.object({
     title: z.string(),
     summary: z.string(),
     area: z.enum(["generative", "vision", "llm-agents", "research", "other"]),
@@ -94,6 +115,10 @@ const lab = defineCollection({
     stack: z.array(z.string()).default([]),
     metrics: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
     links: z.array(link).default([]),
+    /** Optional figure shown above the write-up (faces must be blurred). */
+    figure: image().optional(),
+    figureAlt: z.string().optional(),
+    figureCaption: z.string().optional(),
   }),
 });
 

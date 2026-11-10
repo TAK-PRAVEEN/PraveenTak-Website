@@ -5,6 +5,7 @@ import PageHeader from "../../components/layout/PageHeader.astro";
 import SpecList from "../../components/ui/SpecList.astro";
 import LinkButton from "../../components/ui/LinkButton.astro";
 import { month } from "../../lib/format";
+import { Image } from "astro:assets";
 
 export async function getStaticPaths() {
   const entries = (await getCollection("lab")).sort((a, b) => a.data.order - b.data.order);
@@ -47,6 +48,14 @@ const d = entry.data;
     </aside>
 
     <div class="col-span-4 md:col-span-7 md:col-start-6 body">
+      {
+        d.figure && (
+          <figure class="figure">
+            <Image src={d.figure} alt={d.figureAlt ?? ""} widths={[600, 1000]} sizes="(min-width: 768px) 55vw, 92vw" loading="eager" />
+            {d.figureCaption && <figcaption class="micro">{d.figureCaption}</figcaption>}
+          </figure>
+        )
+      }
       <Content />
     </div>
   </article>
@@ -143,5 +152,18 @@ const d = entry.data;
   }
   .next-link:hover .next-title {
     transform: translateX(24px);
+  }
+  .figure {
+    margin: 0 0 32px;
+  }
+  .figure :global(img) {
+    width: 100%;
+    height: auto;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+  }
+  .figure figcaption {
+    margin-top: 10px;
+    color: var(--fg-muted);
   }
 </style>
