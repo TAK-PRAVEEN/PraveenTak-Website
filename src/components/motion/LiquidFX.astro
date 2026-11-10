@@ -14,8 +14,9 @@
 
 <script>
   document.addEventListener("astro:page-load", async () => {
-    const { initLiquid } = await import("./liquid");
+    const [{ initLiquid }, { initInkText }] = await Promise.all([import("./liquid"), import("./ink-text")]);
     initLiquid();
+    initInkText();
   });
 </script>
 

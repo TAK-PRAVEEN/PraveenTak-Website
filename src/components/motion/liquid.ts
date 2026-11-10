@@ -17,7 +17,7 @@ function ripple(el: HTMLElement) {
   const turb = document.querySelector<SVGFETurbulenceElement>("#liquid feTurbulence");
   const disp = document.querySelector<SVGFEDisplacementMapElement>("#liquid feDisplacementMap");
   if (!turb || !disp) return;
-  el.style.filter = "url(#liquid)";
+  el.style.filter = `${el.dataset.inkFilter ?? ""} url(#liquid)`.trim();
   gsap.killTweensOf([turb, disp]);
   gsap.fromTo(turb, { attr: { baseFrequency: "0.03 0.08" } }, { attr: { baseFrequency: "0.008 0.02" }, duration: 0.45, ease: "power2.out" });
   gsap.fromTo(
@@ -30,7 +30,8 @@ function ripple(el: HTMLElement) {
       yoyo: true,
       repeat: 1,
       onComplete: () => {
-        el.style.filter = "";
+        // hand back to the hover ink if that link is inked (ink-text.ts)
+        el.style.filter = el.dataset.inkFilter ?? "";
       },
     },
   );

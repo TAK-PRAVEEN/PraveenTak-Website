@@ -485,8 +485,8 @@ html.lenis body {
  * corner (fast, then slowly soaking in); leave and it dries back the same way.
  * --ink-r (the ink radius) is what animates.
  *
- *  - Links within the site (href="/...") : only the TEXT changes colour (.ink-text
- *    on titles inside big block links, or the link's own text).
+ *  - Links within the site (href="/...") : only the TEXT changes colour, with an
+ *    organic creeping edge (ink-text.ts; .ink-text marks titles in block links).
  *  - Links that leave the site (email, phone, socials, demo/source buttons): the
  *    ink fills a block behind the text; an SVG filter (#ink-link, BaseLayout)
  *    tears its edge so it reads as wet ink.
@@ -531,36 +531,11 @@ html.lenis body {
   transition-duration: 1.3s;
 }
 
-/* Links within the site: ink inside the letters only.
- * Keeps each element's own colour at rest; spreads the page's accent on hover. */
-.ink-text,
-:is(main, footer) a[href^="/"]:not(:has(.ink-text), .card, .project, .entry, .chapter, .footer-cta, .dial-item, .dial-core) {
-  background: radial-gradient(circle at 0% 100%, var(--accent) var(--ink-r), currentColor calc(var(--ink-r) + 4%));
-  /* background-clip:text only paints inside the box: pad it so descenders (g, p, y)
-     and overhangs are not cut off, and pull the margin back so layout is unchanged */
-  padding: 0.06em 0.06em 0.2em;
-  margin: -0.06em -0.06em -0.2em;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  transition: --ink-r 1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@media (hover: hover) {
-  a:hover .ink-text,
-  :is(main, footer) a[href^="/"]:not(:has(.ink-text), .card, .project, .entry, .chapter, .footer-cta, .dial-item, .dial-core):hover {
-    --ink-r: 115%;
-    transition-duration: 2s;
-  }
-}
-a:is(:focus-visible, :active) .ink-text,
-:is(main, footer) a[href^="/"]:not(:has(.ink-text), .card, .project, .entry, .chapter, .footer-cta, .dial-item, .dial-core):is(:focus-visible, :active) {
-  --ink-r: 115%;
-  transition-duration: 2s;
-}
+/* Links within the site: ink inside the letters only — drawn by
+ * src/components/motion/ink-text.ts (organic, creeping edge via an SVG filter).
+ * .ink-text marks which text inside a big block link gets inked. */
 @media (prefers-reduced-motion: reduce) {
-  :is(main, footer) a::before,
-  .ink-text,
-  :is(main, footer) a[href^="/"]:not(:has(.ink-text), .card, .project, .entry, .chapter, .footer-cta, .dial-item, .dial-core) {
+  :is(main, footer) a::before {
     transition: none !important;
   }
 }

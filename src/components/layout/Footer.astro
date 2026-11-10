@@ -59,25 +59,12 @@ const profile = (await getEntry("profile", "main"))!.data;
     padding-block: 32px 64px;
     row-gap: 48px;
   }
-  /* Hover: the page's accent ink spreads through the letters from the bottom-left
-     corner (fast, then slowly) and dries back out the same way. --ink-r is
-     registered in global.css. */
+  /* Hover: the page's accent ink creeps through the letters (ink-text.ts). */
   .footer-cta {
     display: block;
     margin-top: 24px;
     font-size: clamp(3rem, 1.5rem + 6vw, 7.5rem);
     width: fit-content;
-    background: radial-gradient(circle at 0% 100%, var(--accent) var(--ink-r), var(--fg) calc(var(--ink-r) + 4%));
-    padding: 0 0.06em 0.2em;
-    margin-bottom: -0.2em;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    transition: --ink-r 1s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .footer-cta:is(:hover, :focus-visible, :active) {
-    --ink-r: 115%;
-    transition-duration: 2.2s;
   }
   /* "rare." is always in the accent; the ink spreads into the rest of the words */
   .footer-cta .script {
