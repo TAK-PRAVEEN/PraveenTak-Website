@@ -80,7 +80,8 @@ await shoot(icon(0.08), 512, 512, "icons/icon-512.png");
 await shoot(icon(0.08), 192, 192, "icons/icon-192.png");
 await shoot(icon(0.2), 512, 512, "icons/maskable-512.png");
 await shoot(icon(0.08), 180, 180, "icons/apple-touch-icon.png");
-await shoot(og, 1200, 630, "og.png");
+// og.png is now the Blender laptop cover (scripts/og-laptop.py + scripts/og-compose.mjs); the old text card is not written.
+// await shoot(og, 1200, 630, "og.png");
 // Nav monogram mask: the letters only (tip cut, no square), tightly cropped, plus the
 // square's position as % of that box (Nav.astro paints letters via mask, square via %).
 {
