@@ -1,0 +1,209 @@
+---
+/**
+ * Digital business card — the link to share on WhatsApp etc. (its share preview is /og-card.jpg).
+ * Tap the card to flip it; switch between the two printed designs; save the contact as a vCard.
+ */
+import { getEntry } from "astro:content";
+import { Image } from "astro:assets";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import paperFront from "../assets/card/01-annotated-address-front.png";
+import paperBack from "../assets/card/01-annotated-address-back.png";
+import termFront from "../assets/card/03-terminal-front.png";
+import termBack from "../assets/card/03-terminal-back.png";
+
+const profile = (await getEntry("profile", "main"))!.data;
+const email = profile.contact.email;
+const phone = profile.contact.phone?.replace(/\s/g, "") ?? "";
+const wa = phone.replace(/^\+/, "");
+const designs = [
+  { id: "paper", label: "Paper", front: paperFront, back: paperBack },
+  { id: "terminal", label: "Terminal", front: termFront, back: termBack },
+];
+const alt = `${profile.name} business card`;
+---
+
+<BaseLayout
+  title="Card"
+  fullTitle={`${profile.name} — Contact card`}
+  section="/"
+  description={`${profile.name} — AI / ML engineer and website builder in ${profile.location.city}. Save the contact, message on WhatsApp, call or email.`}
+  ogImage="/og-card.jpg"
+  ogImageAlt={`${profile.name}'s business cards — "Let's connect." praveentak.dev/card`}
+  noindex
+  bare
+>
+  <section class="frame card-page" aria-labelledby="card-title">
+    <div class="meta micro">
+      <span>{profile.name}® — Contact card</span>
+      <span class="text-muted">{profile.location.city} · {profile.location.country}</span>
+    </div>
+    <hr class="rule-strong" />
+
+    <div class="layout">
+      <div class="intro">
+        <h1 id="card-title" class="display title">Let's connect<span class="dot">.</span></h1>
+        <p class="lead">{profile.roles.join(" · ")}</p>
+
+        <div class="actions">
+          <a class="act act-primary micro" href="/praveen-tak.vcf" download="praveen-tak.vcf" data-liquid>Save contact</a>
+          {wa && <a class="act micro" href={`https://wa.me/${wa}?text=${encodeURIComponent("Hi Praveen, I found your card on praveentak.dev")}`} target="_blank" rel="noopener" data-liquid>WhatsApp<span class="sr-only"> (opens in a new tab)</span></a>}
+          {phone && <a class="act micro" href={`tel:${phone}`} data-liquid>Call</a>}
+          <a class="act micro" href={`mailto:${email}`} data-liquid>Email</a>
+          <button class="act micro" type="button" data-share data-liquid>Share this card</button>
+        </div>
+        <p class="micro text-muted share-note" data-share-note aria-live="polite"></p>
+        <a class="micro more link-underline" href="/work">See the work →</a>
+      </div>
+
+      <div class="deck">
+        <div class="switch micro" role="group" aria-label="Card design">
+          {designs.map((d, i) => <button type="button" data-design={d.id} aria-pressed={i === 0 ? "true" : "false"}>{d.label}</button>)}
+        </div>
+        {
+          designs.map((d, i) => (
+            <button type="button" class="flip" data-flip={d.id} hidden={i !== 0} aria-label={`Flip the ${d.label.toLowerCase()} card`}>
+              <span class="inner">
+                <Image class="face front" src={d.front} alt={`${alt} — front`} widths={[600, 1050, 1600]} sizes="(min-width: 1024px) 640px, 92vw" loading={i === 0 ? "eager" : "lazy"} />
+                <Image class="face back" src={d.back} alt={`${alt} — back`} widths={[600, 1050, 1600]} sizes="(min-width: 1024px) 640px, 92vw" loading="lazy" />
+              </span>
+            </button>
+          ))
+        }
+        <p class="micro text-muted hint">Tap the card to flip it</p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const root = document.querySelector(".card-page");
+    if (!root) return;
+    const flips = [...root.querySelectorAll<HTMLButtonElement>("[data-flip]")];
+    const designs = [...root.querySelectorAll<HTMLButtonElement>("[data-design]")];
+    flips.forEach((f) => (f.onclick = () => f.classList.toggle("is-flipped")));
+    designs.forEach((b) => {
+      b.onclick = () => {
+        designs.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+        flips.forEach((f) => { f.hidden = f.dataset.flip !== b.dataset.design; f.classList.remove("is-flipped"); });
+      };
+    });
+    const share = root.querySelector<HTMLButtonElement>("[data-share]");
+    const note = root.querySelector<HTMLElement>("[data-share-note]");
+    if (share) share.onclick = async () => {
+      const url = location.origin + "/card";
+      try {
+        if (navigator.share) await navigator.share({ title: "Praveen Tak — Contact card", url });
+        else { await navigator.clipboard.writeText(url); if (note) note.textContent = "Link copied — paste it in WhatsApp."; }
+      } catch { /* share sheet dismissed */ }
+    };
+  });
+</script>
+
+<style>
+  .card-page {
+    min-height: 100svh;
+    padding-top: calc(var(--nav-h) + 24px);
+    padding-bottom: 64px;
+  }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 12px;
+  }
+  .layout {
+    display: grid;
+    gap: 40px;
+    align-items: center;
+    padding-top: clamp(24px, 4vw, 56px);
+  }
+  @media (min-width: 1024px) {
+    .layout { grid-template-columns: 5fr 7fr; gap: 64px; }
+  }
+  .title {
+    margin: 0;
+    font-size: clamp(56px, 9vw, 128px);
+    line-height: 0.92;
+  }
+  .dot { color: var(--accent, #ff5a1f); }
+  .lead {
+    margin: 20px 0 0;
+    font-size: clamp(18px, 1.6vw, 22px);
+    opacity: 0.72;
+    max-width: 34ch;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 32px;
+  }
+  .act {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 20px;
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    cursor: pointer;
+  }
+  .act-primary { background: var(--fg); color: var(--bg); }
+  .share-note { min-height: 1.4em; margin: 12px 0 0; }
+  .more { display: inline-block; margin-top: 20px; }
+
+  .deck { display: grid; gap: 16px; justify-items: center; }
+  /* Phones: the card first, then the actions. */
+  @media (max-width: 1023px) {
+    .deck { order: -1; }
+  }
+  .switch { display: flex; gap: 6px; }
+  .switch button {
+    font: inherit;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .switch button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+
+  .flip {
+    width: min(100%, 640px);
+    aspect-ratio: 7 / 4;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    perspective: 1600px;
+  }
+  .flip[hidden] { display: none; }
+  .inner {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .flip.is-flipped .inner { transform: rotateY(180deg); }
+  .flip :global(.face) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    backface-visibility: hidden;
+    box-shadow: 0 30px 60px rgb(0 0 0 / 0.25), 0 6px 14px rgb(0 0 0 / 0.18);
+  }
+  .flip :global(.back) { transform: rotateY(180deg); }
+  .flip:focus-visible { outline: 2px solid var(--fg); outline-offset: 8px; border-radius: 16px; }
+  .hint { margin: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .inner { transition: none; }
+  }
+</style>

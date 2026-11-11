@@ -38,7 +38,7 @@ export default defineConfig({
         },
       },
     },
-    sitemap({ filter: (page) => !page.includes("/playground") && !page.includes("/offline") && !page.includes("/keystatic") }),
+    sitemap({ filter: (page) => !page.includes("/playground") && !page.includes("/offline") && !page.includes("/keystatic") && !page.includes("/card") }),
   ],
   vite: {
     plugins: [tailwindcss()],

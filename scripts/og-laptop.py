@@ -1,6 +1,6 @@
 """Share-card laptop: procedural laptop on a black plinth with a site screenshot on the screen (transparent PNG).
 blender -b -P scripts/og-laptop.py -- <screen.png> <out.png> <W> <H> [samples]   (screen: light-mode hero, 2880x1800, reduced motion)
-Then: node scripts/og-compose.mjs <dir with lap-final.png> <out-2x.png>, downscale to public/og.png (1200x630).
+Then: node scripts/og-compose.mjs <dir with lap-final.png> <out-2x.png>, downscale to public/og.png (1200x630) and save public/og.jpg (quality ~84, < 300 KB for WhatsApp previews).
 """
 import bpy, sys, math
 from mathutils import Vector
