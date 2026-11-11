@@ -12,6 +12,7 @@ import BigNumbers from "../components/home/BigNumbers.astro";
 import ToolkitWall from "../components/home/ToolkitWall.astro";
 import Intro from "../components/motion/Intro.astro";
 import RefSequence from "../components/3d/RefSequence.astro";
+import HeroBackdrop from "../components/home/HeroBackdrop.astro";
 import { SITE } from "../config/site";
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -25,6 +26,7 @@ const statementLead = statementWords.join(" ");
   <Intro />
   <!-- 01 — HERO ----------------------------------------------------------- -->
   <section id="hero" class="hero frame" aria-labelledby="hero-title">
+    <HeroBackdrop />
     <div class="hero-meta micro">
       <span data-decode>01 — Portfolio {SITE.year}</span>
       <span class="text-muted">{profile.location.coords}</span>
@@ -108,6 +110,8 @@ const statementLead = statementWords.join(" ");
 <style>
   /* ---- Hero ---- */
   .hero {
+    position: relative;
+    isolation: isolate;
     padding-top: calc(var(--nav-h) + 24px);
     /* One screen tall, but never stretched on very tall displays. */
     min-height: min(88svh, 960px);

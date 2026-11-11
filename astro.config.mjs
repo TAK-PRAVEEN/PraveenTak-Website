@@ -18,6 +18,8 @@ export default defineConfig({
   adapter: cloudflare({
     // Optimise images at build time — no Cloudflare Images binding needed.
     imageService: "compile",
+    // `NO_REMOTE=1 npm run dev` previews without Cloudflare login (chatbot falls back to scripted answers).
+    ...(process.env.NO_REMOTE && { remoteBindings: false }),
   }),
   // No feature uses sessions yet; avoid auto-provisioning a KV namespace on deploy.
   session: { driver: sessionDrivers.lruCache() },

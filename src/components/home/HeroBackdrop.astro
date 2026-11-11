@@ -1,0 +1,38 @@
+---
+/**
+ * Hero background: the token stream (hero-tokens.ts) on a canvas behind the hero.
+ * Decorative only; quieter behind the text column.
+ */
+---
+
+<canvas class="hero-bd" data-hero-bd aria-hidden="true"></canvas>
+
+<style>
+  .hero-bd {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    mask-image: linear-gradient(to right, rgb(0 0 0 / 0.45), #000 55%);
+  }
+  @media (max-width: 767px) {
+    .hero-bd { mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.5), #000 60%); }
+  }
+</style>
+
+<script>
+  import { mountHeroTokens } from "./hero-tokens";
+  let stop: (() => void) | null = null;
+  document.addEventListener("astro:page-load", () => {
+    stop?.();
+    stop = null;
+    const canvas = document.querySelector<HTMLCanvasElement>("[data-hero-bd]");
+    if (canvas?.parentElement) stop = mountHeroTokens(canvas, canvas.parentElement);
+  });
+  document.addEventListener("astro:before-swap", () => {
+    stop?.();
+    stop = null;
+  });
+</script>
