@@ -3,7 +3,6 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/layout/PageHeader.astro";
 import GlassFolder from "../../components/ui/GlassFolder.astro";
-import GlassPreview from "../../components/ui/GlassPreview.astro";
 
 const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
 const GROUPS = [
@@ -58,12 +57,12 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
           {g.items.map(({ p, i }) => (
             <li>
               <GlassFolder
+                wide
                 href={`/work/${p.id}`}
                 kicker={`P—${String(i).padStart(2, "0")}${p.data.client ? ` · ${p.data.client}` : ""}`}
                 title={p.data.title}
                 meta={p.data.status}
                 note={p.data.summary}
-                cover={p.data.cover}
                 seed={i}
               />
             </li>
@@ -72,7 +71,6 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
       </section>
     ))
   }
-  {import.meta.env.DEV && <GlassPreview />}
 </BaseLayout>
 
 <style>
@@ -82,7 +80,7 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
     padding: 24px 0 0;
     display: grid;
     gap: clamp(28px, 3.5vw, 56px) clamp(20px, 2.5vw, 40px);
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    grid-template-columns: 1fr;
   }
   .stats {
     display: grid;

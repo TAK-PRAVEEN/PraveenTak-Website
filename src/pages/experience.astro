@@ -3,7 +3,6 @@ import { getCollection, getEntry } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
 import GlassFolder from "../components/ui/GlassFolder.astro";
-import GlassPreview from "../components/ui/GlassPreview.astro";
 import { period, month, byStartDesc } from "../lib/format";
 
 const work = (await getCollection("experience", (e) => e.data.kind === "work")).sort(byStartDesc);
@@ -20,6 +19,7 @@ const profile = (await getEntry("profile", "main"))!.data;
         work.map((e, i) => (
           <li>
             <GlassFolder
+                wide
               href={`#${e.id}`}
               kicker={`E—${String(work.length - i).padStart(2, "0")} · ${period(e.data.start, e.data.end)}`}
               title={e.data.org}
@@ -89,7 +89,6 @@ const profile = (await getEntry("profile", "main"))!.data;
       {profile.activities.map((a) => <li>{a}</li>)}
     </ul>
   </section>
-  {import.meta.env.DEV && <GlassPreview />}
 </BaseLayout>
 
 <script>
@@ -112,7 +111,7 @@ const profile = (await getEntry("profile", "main"))!.data;
     padding: 8px 0 0;
     display: grid;
     gap: clamp(28px, 3.5vw, 56px) clamp(20px, 2.5vw, 40px);
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    grid-template-columns: 1fr;
   }
   .entry { scroll-margin-top: calc(var(--nav-h) + 24px); }
   .timeline {

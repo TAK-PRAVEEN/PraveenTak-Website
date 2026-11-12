@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import GlassFolder from "../../components/ui/GlassFolder.astro";
-import GlassPreview from "../../components/ui/GlassPreview.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/layout/PageHeader.astro";
 import EmptyChapter from "../../components/layout/EmptyChapter.astro";
@@ -31,14 +30,13 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
           {entries.map((e, i) => (
             <li>
               <GlassFolder
+                wide
                 href={`/lab/${e.id}`}
                 tone="dark"
                 kicker={`L—${String(i + 1).padStart(2, "0")} · ${areaLabel(e.data.area)}`}
                 title={e.data.title}
                 meta={[month(e.data.date), e.data.context].filter(Boolean).join(" · ")}
                 note={e.data.summary}
-                cover={e.data.figure}
-                coverAlt={e.data.figureAlt ?? ""}
                 badge={e.data.metrics[0] ? `${e.data.metrics[0].value} ${e.data.metrics[0].label}` : undefined}
                 seed={i + 1}
               />
@@ -54,7 +52,6 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
       <EmptyChapter areas={planned} note="More notebooks are being written up — these areas land next." />
     )
   }
-  {import.meta.env.DEV && <GlassPreview />}
 </BaseLayout>
 
 <style>
@@ -64,7 +61,7 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
     padding: 24px 0 0;
     display: grid;
     gap: clamp(28px, 3.5vw, 56px) clamp(20px, 2.5vw, 40px);
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    grid-template-columns: 1fr;
   }
   .entries {
     list-style: none;

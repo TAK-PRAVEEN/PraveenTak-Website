@@ -1,6 +1,6 @@
 /**
  * HUD dial runtime: a WebGL Earth (real day/night for "now", Jaipur centred), live clocks,
- * and click-and-hold 3D rotation of the whole dial (inertia; double-click resets).
+ * and click-and-hold spin of the dial in its own plane (inertia; double-click resets).
  */
 const JAIPUR = { lat: 26.9124, lon: 75.7873 };
 const rad = Math.PI / 180;
@@ -120,22 +120,30 @@ export function mountHudDial(root: HTMLElement) {
   });
   ro.observe(canvas);
 
-  // ---- 3D rotation: click-and-hold to rotate, inertia, double-click to reset ----
-  let rx = -14, ry = 18, vx = 0, vy = 0, lonOff = 0, dragging = false, lx = 0, ly = 0, lastMove = 0;
+  // ---- Spin: click-and-hold and drag around the centre turns the dial in its own plane (like a
+  // rotary dial), with inertia. The tilt stays fixed; double-click / Home resets.
+  const TILT_X = -12, TILT_Y = 14;
+  let spin = 0, vel = 0, dragging = false, lastAng = 0;
+  const angleAt = (e: PointerEvent) => {
+    const r = root.getBoundingClientRect();
+    return (Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180) / Math.PI;
+  };
   const onDown = (e: PointerEvent) => {
-    dragging = true; lx = e.clientX; ly = e.clientY; vx = vy = 0;
+    dragging = true; lastAng = angleAt(e); vel = 0;
     root.setPointerCapture(e.pointerId); root.classList.add("is-grab");
   };
   const onMove = (e: PointerEvent) => {
     if (!dragging) return;
-    const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY;
-    vy = dx * 0.35; vx = -dy * 0.35; ry += vy; rx += vx; lonOff -= dx * 0.25; lastMove = performance.now();
+    const a = angleAt(e);
+    let d = a - lastAng;
+    if (d > 180) d -= 360; else if (d < -180) d += 360;
+    lastAng = a; spin += d; vel = d;
   };
   const onUp = () => { dragging = false; root.classList.remove("is-grab"); };
-  const onDbl = () => { rx = -14; ry = 18; vx = vy = 0; lonOff = 0; };
+  const onDbl = () => { spin = 0; vel = 0; };
   const onKey = (e: KeyboardEvent) => {
-    const k = { ArrowLeft: [0, -8], ArrowRight: [0, 8], ArrowUp: [8, 0], ArrowDown: [-8, 0] }[e.key];
-    if (k) { e.preventDefault(); rx += k[0]; ry += k[1]; lonOff -= k[1] * 0.6; }
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); spin -= 10; }
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); spin += 10; }
     if (e.key === "Home") onDbl();
   };
   root.addEventListener("pointerdown", onDown);
@@ -152,16 +160,13 @@ export function mountHudDial(root: HTMLElement) {
     raf = 0;
     if (!visible) return;
     const d = new Date();
-    // inertia + gentle idle float (none under reduced motion)
-    if (!dragging) {
-      rx += vx; ry += vy; vx *= 0.94; vy *= 0.94;
-      if (!reduce && now - lastMove > 2500) { rx += (-14 + Math.sin(now / 2600) * 5 - rx) * 0.01; ry += (18 + Math.cos(now / 3100) * 9 - ry) * 0.01; }
-    }
-    rx = Math.max(-75, Math.min(75, rx));
-    stage.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    if (!dragging) { spin += vel; vel *= 0.95; if (Math.abs(vel) < 0.01) vel = 0; }
+    const sway = reduce ? 0 : Math.sin(now / 3000) * 3;
+    stage.style.transform = `rotateX(${TILT_X + sway * 0.5}deg) rotateY(${TILT_Y + sway}deg) rotateZ(${spin}deg)`;
+    stage.style.setProperty("--spin", `${spin}deg`); // the Earth and the info cards stay upright
 
     const s = sun(d);
-    draw?.(JAIPUR.lat, JAIPUR.lon + lonOff, s);
+    draw?.(JAIPUR.lat, JAIPUR.lon, s);
     const ms = d.getMilliseconds(), sec = d.getSeconds() + ms / 1000;
     secRing?.setAttribute("transform", `rotate(${sec * 6} 500 500)`);
     minRing?.setAttribute("transform", `rotate(${(d.getMinutes() + sec / 60) * 6} 500 500)`);
