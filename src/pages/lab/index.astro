@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
-import { ArrowUpRight } from "@lucide/astro";
+import GlassFolder from "../../components/ui/GlassFolder.astro";
+import GlassPreview from "../../components/ui/GlassPreview.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/layout/PageHeader.astro";
 import EmptyChapter from "../../components/layout/EmptyChapter.astro";
@@ -26,28 +27,21 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
   {
     entries.length > 0 && (
       <section class="frame" aria-label="Lab entries">
-        <ol class="entries">
+        <ol class="folders">
           {entries.map((e, i) => (
             <li>
-              <a href={`/lab/${e.id}`} class="entry grid-12" data-liquid>
-                <span class="micro code col-span-1">L—{String(i + 1).padStart(2, "0")}</span>
-                <div class="col-span-3 md:col-span-7">
-                  <p class="micro meta">
-                    <span class="area">{areaLabel(e.data.area)}</span>
-                    <span>{month(e.data.date)}</span>
-                    {e.data.context && <span class="ctx">{e.data.context}</span>}
-                  </p>
-                  <h2 class="heading title ink-text">{e.data.title}</h2>
-                  <p class="summary">{e.data.summary}</p>
-                </div>
-                {e.data.metrics[0] && (
-                  <p class="col-span-4 md:col-span-3 metric">
-                    <span class="display value">{e.data.metrics[0].value}</span>
-                    <span class="micro label">{e.data.metrics[0].label}</span>
-                  </p>
-                )}
-                <ArrowUpRight class="arrow" size={28} aria-hidden="true" />
-              </a>
+              <GlassFolder
+                href={`/lab/${e.id}`}
+                tone="dark"
+                kicker={`L—${String(i + 1).padStart(2, "0")} · ${areaLabel(e.data.area)}`}
+                title={e.data.title}
+                meta={[month(e.data.date), e.data.context].filter(Boolean).join(" · ")}
+                note={e.data.summary}
+                cover={e.data.figure}
+                coverAlt={e.data.figureAlt ?? ""}
+                badge={e.data.metrics[0] ? `${e.data.metrics[0].value} ${e.data.metrics[0].label}` : undefined}
+                seed={i + 1}
+              />
             </li>
           ))}
         </ol>
@@ -60,9 +54,18 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
       <EmptyChapter areas={planned} note="More notebooks are being written up — these areas land next." />
     )
   }
+  {import.meta.env.DEV && <GlassPreview />}
 </BaseLayout>
 
 <style>
+  .folders {
+    list-style: none;
+    margin: 0 0 clamp(48px, 6vw, 96px);
+    padding: 24px 0 0;
+    display: grid;
+    gap: clamp(28px, 3.5vw, 56px) clamp(20px, 2.5vw, 40px);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  }
   .entries {
     list-style: none;
     margin: 0 0 clamp(48px, 6vw, 96px);

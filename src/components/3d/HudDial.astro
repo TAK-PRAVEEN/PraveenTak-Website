@@ -1,0 +1,206 @@
+---
+/**
+ * Sci-fi HUD dial with a live Earth (real day/night for now, Jaipur centred) and live clocks.
+ * Layers sit at different depths (CSS 3D); click-and-hold rotates it, double-click resets.
+ * Runtime: hud-dial.ts.
+ */
+interface Props {
+  class?: string;
+  /** CSS width of the dial (it stays square). */
+  size?: string;
+  label?: string;
+}
+const { class: cls, size = "min(560px, 86vw)", label = "Live Earth clock — drag to rotate" } = Astro.props;
+
+const C = 500;
+const pol = (r: number, deg: number) => {
+  const a = ((deg - 90) * Math.PI) / 180;
+  return [C + r * Math.cos(a), C + r * Math.sin(a)] as const;
+};
+const arc = (r: number, a0: number, a1: number) => {
+  const [x0, y0] = pol(r, a0), [x1, y1] = pol(r, a1);
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+};
+const ticks = (r: number, n: number, len: number, every = 0, longLen = 0) =>
+  Array.from({ length: n }, (_, i) => {
+    const L = every && i % every === 0 ? longLen : len;
+    const [x0, y0] = pol(r, (i / n) * 360), [x1, y1] = pol(r - L, (i / n) * 360);
+    return `M${x0.toFixed(1)} ${y0.toFixed(1)}L${x1.toFixed(1)} ${y1.toFixed(1)}`;
+  }).join("");
+// outer plate silhouette: a circle with a raised tab on top and two side bumps
+const plate = `M500 28 A472 472 0 1 1 499.9 28 Z`;
+const tabs = [
+  [310, 6, 380, 74],
+  [26, 380, 70, 170],
+  [910, 600, 70, 150],
+] as const;
+const segs = [
+  { r: 455, a: [200, 250], w: 14 },
+  { r: 455, a: [262, 300], w: 14 },
+  { r: 455, a: [20, 70], w: 14 },
+  { r: 418, a: [300, 340], w: 6 },
+  { r: 418, a: [110, 160], w: 6 },
+];
+const barcode = Array.from({ length: 22 }, (_, i) => ({ x: i * 7 + (i % 3) * 2, w: i % 4 === 0 ? 4 : 2 }));
+---
+
+<div class:list={["hud", cls]} style={`--hud-size:${size}`} data-hud-dial tabindex="0" role="img" aria-label={label}>
+  <div class="hud-shadow" aria-hidden="true"></div>
+  <div class="hud-3d" data-hud-3d>
+    <!-- z0: plate -->
+    <svg class="layer plate" viewBox="0 0 1000 1000" aria-hidden="true">
+      <defs>
+        <radialGradient id="hud-plate-g" cx="38%" cy="30%" r="80%">
+          <stop offset="0" class="pg0" /><stop offset="1" class="pg1" />
+        </radialGradient>
+      </defs>
+      <path d={plate} fill="url(#hud-plate-g)" class="plate-fill" />
+      {tabs.map(([x, y, w, h]) => <rect x={x} y={y} width={w} height={h} rx="18" fill="url(#hud-plate-g)" class="plate-fill" />)}
+      <circle cx="500" cy="500" r="472" class="stroke-edge" fill="none" />
+      <circle cx="500" cy="500" r="436" class="band" />
+      <circle cx="500" cy="500" r="404" class="stroke-edge" fill="none" />
+      <circle cx="500" cy="500" r="392" class="window" />
+      {/* top-tab gauges */}
+      {[0, 1, 2].map((i) => (
+        <g transform={`translate(${380 + i * 120} 40)`}>
+          <circle r="16" class="stroke-mid" fill="none" stroke-width="5" />
+          <path d={`M0 -16 A16 16 0 ${i === 1 ? 1 : 0} 1 ${[14, -10, 16][i]} ${[8, 12, 0][i]}`} class="stroke-strong" fill="none" stroke-width="5" />
+        </g>
+      ))}
+      <g class="fill-dim" transform="translate(70 430)">{barcode.map((b) => <rect x={b.x * 0.3} y={0} width={b.w * 0.5} height="120" transform="rotate(0)" />)}</g>
+    </svg>
+
+    <!-- z1: live Earth -->
+    <canvas class="layer globe" data-hud-globe aria-hidden="true"></canvas>
+
+    <!-- z2: rings that turn with time -->
+    <svg class="layer rings" viewBox="0 0 1000 1000" aria-hidden="true">
+      <path d={ticks(462, 120, 8, 10, 18)} class="stroke-mid" />
+      <g data-hud-spin>
+        <path d={ticks(392, 72, 10, 6, 22)} class="stroke-glass" />
+        <defs><path id="hud-orbit" d={arc(372, 0, 359.9)} /></defs>
+        <text class="ring-text"><textPath href="#hud-orbit">EARTH ROTATION · 23H 56M 04S SIDEREAL · 15.041° PER HOUR · JAIPUR 26°54′N 75°47′E · LIVE ·</textPath></text>
+      </g>
+      <g data-hud-min><path d={arc(430, -40, 40)} class="stroke-accent" stroke-width="5" fill="none" /><circle cx="500" cy="70" r="7" class="fill-accent" /></g>
+      <g data-hud-sec><path d={`M500 92 L500 126`} class="stroke-strong" stroke-width="4" /><circle cx="500" cy="92" r="5" class="fill-strong" /></g>
+      {segs.map((s) => <path d={arc(s.r, s.a[0], s.a[1])} class="stroke-strong" stroke-width={s.w} fill="none" />)}
+      <path d={arc(455, 120, 175)} class="stroke-accent" stroke-width="14" fill="none" />
+    </svg>
+
+    <!-- z3: crosshair + markers -->
+    <svg class="layer cross" viewBox="0 0 1000 1000" aria-hidden="true">
+      <circle cx="500" cy="500" r="120" class="stroke-glass" fill="none" stroke-dasharray="3 9" />
+      <circle cx="500" cy="500" r="250" class="stroke-glass" fill="none" />
+      <path d="M500 240V300M500 700V760M240 500H300M700 500H760" class="stroke-glass" />
+      <circle cx="500" cy="500" r="9" class="fill-accent" />
+      <circle cx="500" cy="500" r="22" class="stroke-accent" fill="none" stroke-width="2" />
+      <text x="530" y="490" class="tag">JAIPUR</text>
+      <text x="78" y="600" class="tag dim" transform="rotate(-90 78 600)">X55 · DIAL</text>
+      <text x="840" y="190" class="tag">X10</text>
+    </svg>
+
+    <!-- z4: cards -->
+    <div class="layer cards">
+      <div class="card card-main">
+        <div class="card-top micro"><span>Class · Live</span><span class="dot"></span></div>
+        <div class="card-name"><span class="micro idx">01</span><span class="nm">Jaipur</span></div>
+        <div class="row micro"><span>IST</span><span><b data-hud="ist-hm">--:--</b>:<span data-hud="ist-s">--</span></span></div>
+        <div class="row micro"><span>UTC</span><span data-hud="utc">--:--:--</span></div>
+      </div>
+      <div class="card card-timer">
+        <div class="micro rec"><i></i> Recording</div>
+        <div class="big"><span data-hud="ist-hm">--:--</span><small data-hud="ist-s">--</small></div>
+      </div>
+      <div class="card card-sun micro">
+        <div class="row"><span>Rotation</span><span data-hud="gmst">—</span></div>
+        <div class="row"><span>Sunrise</span><span data-hud="rise">—</span></div>
+        <div class="row"><span>Sunset</span><span data-hud="set">—</span></div>
+        <div class="row"><span>Day</span><span data-hud="daylen">—</span></div>
+        <div class="row accent"><span data-hud="phase">—</span><span data-hud="decl">—</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="hud-hint micro">Hold &amp; drag to rotate · double-click to reset</p>
+</div>
+
+<script>
+  import { mountHudDial } from "./hud-dial";
+  const stops = new Map<HTMLElement, () => void>();
+  document.addEventListener("astro:page-load", () => {
+    document.querySelectorAll<HTMLElement>("[data-hud-dial]").forEach((el) => {
+      if (!stops.has(el)) stops.set(el, mountHudDial(el));
+    });
+  });
+  document.addEventListener("astro:before-swap", () => { stops.forEach((s) => s()); stops.clear(); });
+</script>
+
+<style>
+  .hud {
+    --plate0: #ffffff; --plate1: #d2d2cd; --band: #e9e9e5; --edge: rgb(11 11 12 / 0.28); --ink: #0b0b0c; --mid: rgb(11 11 12 / 0.45); --soft: rgb(11 11 12 / 0.12);
+    --glass: rgb(255 255 255 / 0.55); --win: #0b0b0c; --card: #ffffff; --card-fg: #0b0b0c;
+    --accent-c: var(--accent, #ff5a1f);
+    position: relative;
+    width: var(--hud-size);
+    aspect-ratio: 1;
+    perspective: 1800px;
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none;
+  }
+  :global(:root[data-theme="dark"]) .hud {
+    --plate0: #1b1b1e; --plate1: #060607; --band: #111113; --edge: rgb(240 240 238 / 0.22); --ink: #f0f0ee; --mid: rgb(240 240 238 / 0.5); --soft: rgb(240 240 238 / 0.14);
+    --card: #0b0b0c; --card-fg: #f0f0ee;
+  }
+  .hud.is-grab { cursor: grabbing; }
+  .hud:focus-visible { outline: 2px solid var(--accent-c); outline-offset: 8px; border-radius: 50%; }
+  .hud-3d { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+  .layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .plate { transform: translateZ(-30px); }
+  /* soft floor shadow: a static gradient (a filter on a rotating layer re-rasterises every frame) */
+  .hud-shadow { position: absolute; left: 8%; right: 8%; bottom: -6%; height: 16%; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / 0.28), transparent); pointer-events: none; }
+  .globe { inset: 11%; width: 78%; height: 78%; transform: translateZ(-14px); border-radius: 50%; }
+  .rings { transform: translateZ(10px); }
+  .cross { transform: translateZ(26px); pointer-events: none; }
+  .cards { transform: translateZ(70px); pointer-events: none; }
+
+  .pg0 { stop-color: var(--plate0); }
+  .pg1 { stop-color: var(--plate1); }
+  .window { fill: var(--win); }
+  .stroke-soft { stroke: var(--soft); stroke-width: 2; }
+  .stroke-edge { stroke: var(--edge); stroke-width: 2.5; }
+  .band { fill: none; stroke: var(--band); stroke-width: 56; }
+  .stroke-mid { stroke: var(--mid); stroke-width: 2; fill: none; }
+  .stroke-strong { stroke: var(--ink); }
+  .stroke-glass { stroke: var(--glass); stroke-width: 2; fill: none; }
+  .stroke-accent { stroke: var(--accent-c); }
+  .fill-accent { fill: var(--accent-c); }
+  .fill-strong { fill: var(--ink); }
+  .fill-dim { fill: var(--mid); }
+  .ring-text { font-family: "Space Mono", monospace; font-size: 15px; letter-spacing: 3px; fill: var(--glass); }
+  .tag { font-family: "Space Mono", monospace; font-size: 18px; letter-spacing: 2px; fill: #fff; }
+  .tag.dim { fill: var(--mid); }
+
+  .card { position: absolute; background: var(--card); color: var(--card-fg); border-radius: 6px; box-shadow: 0 18px 40px rgb(0 0 0 / 0.3); }
+  .card-main { right: -2%; top: 24%; width: 38%; padding: 3% 3.5%; }
+  .card-top { display: flex; justify-content: space-between; align-items: center; opacity: 0.6; font-size: clamp(8px, 1.4cqi, 11px); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-c); box-shadow: 0 0 10px var(--accent-c); animation: hud-pulse 1.2s ease-in-out infinite; }
+  .card-name { display: flex; align-items: baseline; justify-content: space-between; margin: 4% 0 6%; }
+  .idx { font-size: clamp(14px, 3cqi, 24px); }
+  .nm { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 6.4cqi, 48px); letter-spacing: -0.04em; line-height: 1; }
+  .row { display: flex; justify-content: space-between; gap: 8px; padding: 3% 0; border-top: 1px solid var(--soft); font-size: clamp(8px, 1.6cqi, 12px); }
+  .row b { font-weight: 400; }
+  .card-timer { left: -5%; top: 56%; padding: 2.4% 3.2%; }
+  .rec { display: flex; align-items: center; gap: 6px; opacity: 0.6; font-size: clamp(7px, 1.3cqi, 10px); }
+  .rec i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-c); }
+  .big { font-family: "Space Mono", monospace; font-size: clamp(16px, 4.6cqi, 34px); letter-spacing: 0.04em; line-height: 1.2; }
+  .big small { font-size: 0.5em; opacity: 0.55; margin-left: 4px; }
+  .card-sun { left: 28%; bottom: -3%; width: 44%; padding: 2% 3%; }
+  .card-sun .row:first-child { border-top: 0; }
+  .card-sun .accent { color: var(--accent-c); }
+  .hud { container-type: inline-size; }
+  .hud-hint { position: absolute; left: 0; right: 0; bottom: -9%; text-align: center; opacity: 0.55; font-size: 11px; pointer-events: none; }
+  @keyframes hud-pulse { 50% { opacity: 0.35; } }
+  @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
+</style>

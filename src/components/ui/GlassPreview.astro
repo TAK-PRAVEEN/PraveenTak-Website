@@ -1,0 +1,28 @@
+---
+/** DEV ONLY: switch the glass recipe (frosted / clear / blur) to compare; remembered in localStorage. */
+---
+<div class="glsw micro" data-glsw>
+  <span>Glass</span>
+  <button type="button" data-g="frosted">Frosted</button>
+  <button type="button" data-g="clear">Clear</button>
+  <button type="button" data-g="blur">Blur</button>
+</div>
+<style>
+  .glsw { position: fixed; right: 16px; bottom: 16px; z-index: 9999; display: flex; gap: 6px; align-items: center; padding: 8px; border-radius: 12px; background: #080809; color: #f0f0ee; }
+  .glsw span { padding: 0 6px; opacity: 0.6; }
+  .glsw button { font: inherit; color: inherit; background: transparent; border: 1px solid rgb(240 240 238 / 0.3); border-radius: 999px; padding: 6px 10px; cursor: pointer; }
+  .glsw button[aria-pressed="true"] { background: #ff5a1f; border-color: #ff5a1f; color: #080809; }
+</style>
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const bs = [...document.querySelectorAll<HTMLButtonElement>("[data-glsw] button")];
+    const pick = (g: string) => {
+      document.documentElement.dataset.glass = g;
+      try { localStorage.setItem("glass", g); } catch {}
+      bs.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.g === g)));
+    };
+    let g = "frosted"; try { g = localStorage.getItem("glass") || g; } catch {}
+    bs.forEach((b) => (b.onclick = () => pick(b.dataset.g!)));
+    pick(g);
+  });
+</script>

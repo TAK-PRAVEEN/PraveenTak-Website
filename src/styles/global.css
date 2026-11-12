@@ -544,3 +544,63 @@ html.lenis body {
     transition: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Glass panels (home stacked work, chapter strip). Same recipe family as the
+ * glass folders (GlassFolder.astro): frosted by default; [data-glass] on <html>
+ * switches to "clear" or "blur". Ink surfaces / dark theme get dark glass.
+ * ------------------------------------------------------------------------- */
+.glass {
+  --g-a: rgb(255 255 255 / 0.62);
+  --g-b: rgb(255 255 255 / 0.2);
+  --g-blur: 22px;
+  --g-sat: 170%;
+  --g-line: rgb(255 255 255 / 0.7);
+  background: linear-gradient(180deg, var(--g-a), var(--g-b)) !important;
+  -webkit-backdrop-filter: blur(var(--g-blur)) saturate(var(--g-sat));
+  backdrop-filter: blur(var(--g-blur)) saturate(var(--g-sat));
+  border: 1px solid var(--g-line) !important;
+  box-shadow:
+    inset 0 1.5px 0 rgb(255 255 255 / 0.75),
+    inset 0 -28px 56px rgb(255 255 255 / 0.1),
+    0 34px 70px -34px rgb(0 0 0 / 0.38) !important;
+}
+:root[data-theme="dark"] .glass,
+[data-surface="ink"] .glass,
+.glass[data-surface="ink"] {
+  --g-a: rgb(26 26 30 / 0.72);
+  --g-b: rgb(8 8 10 / 0.42);
+  --g-line: rgb(255 255 255 / 0.16);
+}
+:root[data-glass="clear"] .glass { --g-a: rgb(255 255 255 / 0.16); --g-b: rgb(255 255 255 / 0.05); --g-blur: 3px; --g-sat: 140%; }
+:root[data-glass="clear"]:is([data-theme="dark"]) .glass,
+:root[data-glass="clear"] [data-surface="ink"] .glass { --g-a: rgb(30 30 34 / 0.28); --g-b: rgb(0 0 0 / 0.08); }
+:root[data-glass="blur"] .glass { --g-a: rgb(255 255 255 / 0.34); --g-b: rgb(255 255 255 / 0.12); --g-blur: 46px; --g-sat: 120%; }
+:root[data-glass="blur"]:is([data-theme="dark"]) .glass,
+:root[data-glass="blur"] [data-surface="ink"] .glass { --g-a: rgb(30 30 34 / 0.48); --g-b: rgb(0 0 0 / 0.22); }
+
+/* Soft colour fields behind glass sections, so the glass has something to blur. */
+.glass-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.glass-field i {
+  position: absolute;
+  width: 46vmax;
+  height: 46vmax;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+}
+.glass-field i:nth-child(1) { left: -10vmax; top: 10%; background: radial-gradient(circle, #ff5a1f, transparent 65%); }
+.glass-field i:nth-child(2) { right: -12vmax; top: 30%; background: radial-gradient(circle, #3d5afe, transparent 65%); }
+.glass-field i:nth-child(3) { left: 30%; bottom: -14vmax; background: radial-gradient(circle, #c9b8ff, transparent 65%); }
+@media (prefers-reduced-transparency: reduce) {
+  .glass { -webkit-backdrop-filter: none; backdrop-filter: none; --g-a: var(--bg); --g-b: var(--bg); }
+}
+/* Stacked work cards overlap each other: denser glass so the card underneath doesn't muddy the one on top. */
+.stack .glass { --g-a: rgb(252 252 250 / 0.9); --g-b: rgb(246 246 243 / 0.78); }
+:root[data-theme="dark"] .stack .glass { --g-a: rgb(24 24 28 / 0.92); --g-b: rgb(10 10 12 / 0.82); }

@@ -18,7 +18,7 @@
 import { gsap } from "gsap";
 
 const NS = "http://www.w3.org/2000/svg";
-const SELF_EXCLUDE = ".btn, .card, .project, .entry, .chapter, .dial-item, .dial-core, .brand, .skip-link"; // buttons get the ink fill (global.css) instead
+const SELF_EXCLUDE = ".btn, .card, .project, .entry, .chapter, .gf, .dial-item, .dial-core, .brand, .skip-link"; // buttons get the ink fill (global.css) instead
 // Corner-to-far-corner gradient, stretched to the element (white = bottom-left).
 const GRAD =
   "data:image/svg+xml;charset=utf-8," +

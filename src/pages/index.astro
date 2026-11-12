@@ -13,6 +13,8 @@ import ToolkitWall from "../components/home/ToolkitWall.astro";
 import Intro from "../components/motion/Intro.astro";
 import RefSequence from "../components/3d/RefSequence.astro";
 import HeroBackdrop from "../components/home/HeroBackdrop.astro";
+import HudDial from "../components/3d/HudDial.astro";
+import HudPreview from "../components/3d/HudPreview.astro";
 import { SITE } from "../config/site";
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -27,6 +29,7 @@ const statementLead = statementWords.join(" ");
   <!-- 01 — HERO ----------------------------------------------------------- -->
   <section id="hero" class="hero frame" aria-labelledby="hero-title">
     <HeroBackdrop />
+    {import.meta.env.DEV && <div class="hud-bg" data-hud-variant="2"><HudDial size="min(980px, 120vw)" /></div>}
     <div class="hero-meta micro">
       <span data-decode>01 — Portfolio {SITE.year}</span>
       <span class="text-muted">{profile.location.coords}</span>
@@ -55,10 +58,23 @@ const statementLead = statementWords.join(" ");
         </div>
       </div>
 
-      <BinaryPortrait class="hero-portrait col-span-4 md:col-span-5" scrollTarget="#hero" />
+      <div class="col-span-4 md:col-span-5 hero-visual" data-hud-hide="1"><BinaryPortrait class="hero-portrait" scrollTarget="#hero" /></div>
+      {import.meta.env.DEV && <div class="col-span-4 md:col-span-5 hud-right" data-hud-variant="1"><HudDial size="min(560px, 84vw)" /></div>}
     </div>
 
   </section>
+
+  {import.meta.env.DEV && (
+    <section class="frame hud-now" data-hud-variant="3" aria-label="Right now">
+      <div class="hud-now-copy">
+        <p class="micro text-muted">01.0 — Right now</p>
+        <h2 class="display hud-now-title">Jaipur, <span class="script">live.</span></h2>
+        <p class="hud-now-text">The Earth as it is this second — the night side, the terminator, Jaipur at the centre. Drag it around.</p>
+      </div>
+      <HudDial size="min(620px, 88vw)" />
+    </section>
+  )}
+  {import.meta.env.DEV && <HudPreview />}
 
   <!-- PAPER → INK: scroll transition out of the hero ----------------------- -->
   <section class="band" data-surface="ink" data-accent="orange" data-band aria-labelledby="statement">
@@ -277,6 +293,16 @@ const statementLead = statementWords.join(" ");
     padding: 0;
   }
 
+  /* HUD dial preview placements (dev only until one is chosen) */
+  .hud-right { justify-self: center; padding-bottom: 40px; }
+  .hud-bg { position: absolute; right: -16vw; top: 50%; transform: translateY(-46%); z-index: 0; opacity: 0.9; }
+  .hero-grid { position: relative; z-index: 1; }
+  .hud-now { display: grid; gap: 48px; align-items: center; padding-block: clamp(64px, 10vw, 140px); }
+  @media (min-width: 1024px) { .hud-now { grid-template-columns: 5fr 7fr; } }
+  .hud-now-title { margin: 12px 0 0; font-size: clamp(56px, 8vw, 120px); line-height: 0.95; }
+  .hud-now-title .script { color: var(--accent); }
+  .hud-now-text { max-width: 38ch; margin-top: 20px; color: var(--fg-muted); }
+  .hero-visual { display: grid; justify-items: center; width: 100%; }
   .hero-grid :global(.hero-portrait) {
     max-width: 540px;
     justify-self: center;

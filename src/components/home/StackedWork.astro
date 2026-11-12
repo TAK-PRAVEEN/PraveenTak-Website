@@ -13,6 +13,7 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
 ---
 
 <section class="stack" data-accent="lime" aria-labelledby="stack-title">
+  <div class="glass-field" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="frame stack-head micro">
     <h2 id="stack-title" data-decode>Selected work</h2>
     <a href="/work" class="link-underline" data-decode-hover><span data-decode-target>All projects</span> →</a>
@@ -22,7 +23,7 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
       projects.map((p, i) => (
         <li class="stack-item" style={`--i:${i}`} data-stack-item>
           <a href={`/work/${p.id}`} class="card frame" data-stack-card data-liquid>
-            <div class="card-inner grid-12">
+            <div class="card-inner grid-12 glass">
               <div class="card-copy col-span-4 md:col-span-6">
                 <p class="hud card-meta">
                   <span>P—{String(i + 1).padStart(2, "0")}</span>
@@ -65,8 +66,10 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
 
 <style>
   .stack {
+    position: relative;
     padding-top: clamp(64px, 10vw, 160px);
   }
+  .stack-head, .stack-list { position: relative; z-index: 1; }
   .stack-head {
     display: flex;
     justify-content: space-between;

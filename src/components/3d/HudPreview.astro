@@ -1,0 +1,41 @@
+---
+/**
+ * DEV ONLY: picks which HUD-dial placement is visible (?hud=1..4) so Praveen can compare them.
+ * Variants are elements with data-hud-variant="N"; data-hud-hide="N" hides an element for variant N.
+ */
+const options = [
+  [0, "Off", "/"],
+  [1, "Hero right", "/"],
+  [2, "Hero background", "/"],
+  [3, "'Right now' section", "/"],
+  [4, "Contact page", "/contact"],
+] as const;
+---
+
+<div class="hudsw micro" data-hudsw>
+  <span>Dial placement</span>
+  {options.map(([n, l, page]) => <a href={`${page}?hud=${n}`} data-n={n}>{n} · {l}</a>)}
+</div>
+
+<style>
+  .hudsw { position: fixed; left: 50%; top: 76px; transform: translateX(-50%); z-index: 9999; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    max-width: calc(100vw - 32px); padding: 8px; border-radius: 12px; background: #080809; color: #f0f0ee; }
+  .hudsw span { padding: 0 6px; opacity: 0.6; }
+  .hudsw a { border: 1px solid rgb(240 240 238 / 0.3); border-radius: 999px; padding: 6px 10px; color: inherit; text-decoration: none; }
+  .hudsw a[aria-current="true"] { background: #ff5a1f; border-color: #ff5a1f; color: #080809; }
+  @media (max-width: 767px) { .hudsw { top: auto; bottom: 88px; flex-wrap: nowrap; overflow-x: auto; } .hudsw a { white-space: nowrap; } }
+  /* hide every variant except the chosen one (the chosen one keeps its own display) */
+  :global(html:not([data-hud="1"]) [data-hud-variant="1"]),
+  :global(html:not([data-hud="2"]) [data-hud-variant="2"]),
+  :global(html:not([data-hud="3"]) [data-hud-variant="3"]),
+  :global(html:not([data-hud="4"]) [data-hud-variant="4"]) { display: none !important; }
+  :global(html[data-hud="1"] [data-hud-hide~="1"]) { display: none !important; }
+</style>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const n = new URL(location.href).searchParams.get("hud") ?? (location.pathname.startsWith("/contact") ? "4" : "1");
+    document.documentElement.dataset.hud = n;
+    document.querySelectorAll<HTMLAnchorElement>("[data-hudsw] a").forEach((a) => a.setAttribute("aria-current", String(a.dataset.n === n)));
+  });
+</script>

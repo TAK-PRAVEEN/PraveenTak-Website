@@ -5,6 +5,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
 import StatusDot from "../components/ui/StatusDot.astro";
 import RefSequence from "../components/3d/RefSequence.astro";
+import HudDial from "../components/3d/HudDial.astro";
+import HudPreview from "../components/3d/HudPreview.astro";
 
 
 const profile = (await getEntry("profile", "main"))!.data;
@@ -40,7 +42,9 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
         }
       </ul>
       <p class="micro text-muted">{profile.location.city}, {profile.location.region}, {profile.location.country} · {profile.location.coords}</p>
+      {import.meta.env.DEV && <div class="hud-contact" data-hud-variant="4"><p class="micro text-muted">Where I am, right now</p><HudDial size="min(440px, 84vw)" /></div>}
     </div>
+    {import.meta.env.DEV && <HudPreview />}
 
     <form class="col-span-4 md:col-span-6 md:col-start-7 form" data-contact-form data-email={profile.contact.email} novalidate>
       <div class="field">
@@ -185,6 +189,8 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
 </script>
 
 <style>
+  .hud-contact { margin-top: 40px; padding-bottom: 48px; }
+  .hud-contact > p { margin-bottom: 24px; }
   .contact {
     row-gap: 64px;
     padding-bottom: clamp(64px, 10vw, 160px);

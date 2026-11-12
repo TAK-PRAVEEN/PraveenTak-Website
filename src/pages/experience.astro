@@ -2,6 +2,8 @@
 import { getCollection, getEntry } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
+import GlassFolder from "../components/ui/GlassFolder.astro";
+import GlassPreview from "../components/ui/GlassPreview.astro";
 import { period, month, byStartDesc } from "../lib/format";
 
 const work = (await getCollection("experience", (e) => e.data.kind === "work")).sort(byStartDesc);
@@ -12,12 +14,32 @@ const profile = (await getEntry("profile", "main"))!.data;
 <BaseLayout title="Experience" fullTitle="Experience & Certifications — Praveen Tak, AI/ML Engineer" section="/experience" description="Praveen Tak's work history — AI Engineer at DESIGO® Milk, internships at DRDO, Infosys Springboard and Elevate Labs — plus education and certifications.">
   <PageHeader section="/experience" title="Experience" lead="Internships and research across forecasting, LLM tooling, computer vision and generative models." />
 
+  <section class="frame" aria-label="Roles at a glance">
+    <ol class="folders">
+      {
+        work.map((e, i) => (
+          <li>
+            <GlassFolder
+              href={`#${e.id}`}
+              kicker={`E—${String(work.length - i).padStart(2, "0")} · ${period(e.data.start, e.data.end)}`}
+              title={e.data.org}
+              meta={e.data.title}
+              note={e.data.highlights[0]}
+              badge={e.data.end === null ? "Current" : undefined}
+              seed={i + 2}
+            />
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
   <section class="frame" aria-labelledby="work-title">
     <h2 id="work-title" class="sr-only">Work experience</h2>
     <ol class="timeline">
       {
         work.map((e, i) => (
-          <li class="entry grid-12">
+          <li class="entry grid-12" id={e.id}>
             <div class="col-span-4 md:col-span-3 entry-when">
               <span class="micro">{period(e.data.start, e.data.end)}</span>
               {e.data.end === null && <span class="micro now">Current</span>}
@@ -67,6 +89,7 @@ const profile = (await getEntry("profile", "main"))!.data;
       {profile.activities.map((a) => <li>{a}</li>)}
     </ul>
   </section>
+  {import.meta.env.DEV && <GlassPreview />}
 </BaseLayout>
 
 <script>
@@ -83,6 +106,15 @@ const profile = (await getEntry("profile", "main"))!.data;
 </script>
 
 <style>
+  .folders {
+    list-style: none;
+    margin: 0 0 clamp(48px, 6vw, 96px);
+    padding: 8px 0 0;
+    display: grid;
+    gap: clamp(28px, 3.5vw, 56px) clamp(20px, 2.5vw, 40px);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  }
+  .entry { scroll-margin-top: calc(var(--nav-h) + 24px); }
   .timeline {
     list-style: none;
     margin: 0;
