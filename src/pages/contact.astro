@@ -277,11 +277,36 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
     .joint:hover { transform: rotate(45deg) scale(1.06); }
     .joint:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
   }
+  /* Phones / tablets: the same puzzle, stacked. Email and phone sit side by side on a
+     2-column grid; the joint button locks the phone tile and the message tile together
+     (round notch in each), then the dial and the three links. */
   @media (max-width: 899px) {
-    .tile-mail, .tile-phone, .tile-form, .tile-dial, .socials { grid-column: 1 / -1; grid-row: auto; }
-    /* phones: the joint becomes a "My card" button under the phone tile */
-    .joint { display: inline-flex; justify-self: start; align-items: center; gap: 10px; min-height: 48px; padding: 0 20px; border-radius: 999px; background: var(--fg); color: var(--bg); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
-    .joint::before { content: "My contact card"; }
+    .bento { --gap: 12px; --notch: 40px; grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: 20px; }
+    .tile { padding: 18px; border-radius: 26px; gap: 12px; }
+    .tile-mail { grid-column: 1 / -1; grid-row: auto; min-height: 0; }
+    .tile-phone { grid-column: 1 / -1; grid-row: auto;
+      -webkit-mask: radial-gradient(circle at 50% 100%, transparent var(--notch), #000 calc(var(--notch) + 1px));
+      mask: radial-gradient(circle at 50% 100%, transparent var(--notch), #000 calc(var(--notch) + 1px)); }
+    .tile-form { grid-column: 1 / -1; grid-row: auto;
+      -webkit-mask: radial-gradient(circle at 50% 0%, transparent var(--notch), #000 calc(var(--notch) + 1px));
+      mask: radial-gradient(circle at 50% 0%, transparent var(--notch), #000 calc(var(--notch) + 1px)); }
+    .tile-dial, .socials { grid-column: 1 / -1; grid-row: auto; }
+    .tile-form .tile-k { padding-top: 24px; }
+    .joint {
+      display: grid; place-items: center;
+      grid-column: 1 / -1; justify-self: center;
+      width: 62px; height: 62px; border-radius: 50%;
+      margin: calc(-31px - var(--gap) / 2) 0;
+      z-index: 2; position: relative;
+      background: var(--fg); color: var(--bg);
+      box-shadow: 0 10px 24px rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.25);
+    }
+    .mail-big { font-size: clamp(1.45rem, 7.2vw, 2.2rem); }
+    .phone-big { font-size: clamp(1.45rem, 7.2vw, 2.2rem); }
+    .tile-foot { margin-top: 4px; gap: 10px; }
+    .pill { min-height: 40px; padding: 0 16px; }
+    .tile-h { font-size: clamp(1.4rem, 6.4vw, 2rem); }
+    .dial-wrap { padding: 8px 0 40px; }
   }
   .mail-big {
     font-family: var(--font-display); font-weight: 700;
