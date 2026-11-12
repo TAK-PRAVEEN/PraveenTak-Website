@@ -44,7 +44,7 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
     </div>
 
     <!-- puzzle joint where the four tiles meet -->
-    <span class="joint" aria-hidden="true"><ArrowUpRight size={26} /></span>
+    <a class="joint" href="/card" aria-label="Open my digital business card" title="My contact card"><ArrowUpRight size={26} aria-hidden="true" /></a>
 
     <!-- 03 Message -->
     <div class="tile tile-form glass">
@@ -272,10 +272,16 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
       display: grid; place-items: center;
       background: var(--fg); color: var(--bg);
       box-shadow: 0 14px 30px rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.25);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .joint:hover { transform: rotate(45deg) scale(1.06); }
+    .joint:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
   }
   @media (max-width: 899px) {
     .tile-mail, .tile-phone, .tile-form, .tile-dial, .socials { grid-column: 1 / -1; grid-row: auto; }
+    /* phones: the joint becomes a "My card" button under the phone tile */
+    .joint { display: inline-flex; justify-self: start; align-items: center; gap: 10px; min-height: 48px; padding: 0 20px; border-radius: 999px; background: var(--fg); color: var(--bg); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+    .joint::before { content: "My contact card"; }
   }
   .mail-big {
     font-family: var(--font-display); font-weight: 700;

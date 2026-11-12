@@ -180,8 +180,8 @@ const gripR = (() => {
       </div>
 
       <div class="timer">
-        <div class="timer-top micro"><span class="rec"><i></i> Recording</span></div>
-        <div class="timer-big"><span class="dim">IST</span> <span data-hud="ist-hm">--:--</span><small data-hud="ist-s">--</small></div>
+        <div class="timer-top micro"><span class="rec"><i></i> Recording</span><span>IST</span></div>
+        <div class="timer-big"><span data-hud="ist-hm">--:--</span><small data-hud="ist-s">--</small></div>
         <div class="timer-bar"><i data-hud-secbar></i></div>
       </div>
     </div>
@@ -289,18 +289,18 @@ const gripR = (() => {
   .row { display: flex; justify-content: space-between; padding: 0.45cqi 0.9cqi; background: var(--row-bg); color: var(--row-fg); letter-spacing: 0.12em; }
 
   .timer {
-    position: absolute; left: 6.5%; top: 52%; width: 20%;
+    position: absolute; left: 5.5%; top: 52%; width: 22%;
     padding: 0.9cqi 1.3cqi 1cqi;
     background: var(--card-bg); color: var(--card-fg);
     border-radius: 1cqi;
     box-shadow: 0 1.2cqi 2.6cqi rgb(0 0 0 / 0.28);
   }
-  .timer-top { font-size: clamp(5px, 1cqi, 8px); opacity: 0.65; letter-spacing: 0.14em; }
+  .timer-top { display: flex; justify-content: space-between; font-size: clamp(5px, 1cqi, 8px); opacity: 0.65; letter-spacing: 0.14em; }
   .rec { display: inline-flex; align-items: center; gap: 0.6cqi; }
   .rec i { width: 0.8cqi; height: 0.8cqi; border-radius: 50%; background: var(--accent, #ff5a1f); animation: hud-pulse 1.2s ease-in-out infinite; }
-  .timer-big { font-family: "Space Mono", monospace; font-size: 3.6cqi; line-height: 1.2; letter-spacing: 0.02em; white-space: nowrap; }
+  .timer-big { display: flex; align-items: baseline; font-family: "Space Mono", monospace; font-size: 3.5cqi; line-height: 1.2; white-space: nowrap; }
   .timer-big .dim { font-size: 0.42em; opacity: 0.45; vertical-align: 0.6em; }
-  .timer-big small { font-size: 0.45em; opacity: 0.5; margin-left: 0.4em; }
+  .timer-big small { font-size: 0.45em; opacity: 0.5; margin-left: 0.35em; }
   .timer-bar { margin-top: 0.6cqi; height: 0.45cqi; background: rgb(128 128 128 / 0.3); }
   .timer-bar i { display: block; height: 100%; width: 0; background: currentColor; }
 
