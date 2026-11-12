@@ -41,11 +41,11 @@
     background: var(--orange);
     opacity: 0.85;
   }
-  /* The ink itself: dark on paper, pale "milk" in dark mode. */
+  /* The ink itself matches the theme: white ink in the light theme, black ink in the dark theme. */
   .core {
-    background: var(--ink);
+    background: var(--paper);
   }
   :global(:root[data-theme="dark"]) .core {
-    background: var(--paper);
+    background: var(--ink);
   }
 </style>

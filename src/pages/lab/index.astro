@@ -37,7 +37,9 @@ const planned = AREAS.filter((a) => !covered.has(a.key)).map((a, i) => ({ code: 
                 title={e.data.title}
                 meta={[month(e.data.date), e.data.context].filter(Boolean).join(" · ")}
                 note={e.data.summary}
-                badge={e.data.metrics[0] ? `${e.data.metrics[0].value} ${e.data.metrics[0].label}` : undefined}
+                metric={e.data.metrics[0]}
+                stack={e.data.stack}
+                year={month(e.data.date)}
                 seed={i + 1}
               />
             </li>

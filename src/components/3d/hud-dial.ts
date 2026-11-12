@@ -19,7 +19,7 @@ function sun(d: Date) {
   // subsolar longitude = RA - GMST
   let lon = ra / rad - gmst;
   lon = ((lon + 540) % 360) - 180;
-  return { lat: decl / rad, lon, gmst: (gmst + 360) % 360, decl };
+  return { lat: decl / rad, lon, gmst: ((gmst % 360) + 360) % 360, decl };
 }
 function sunTimes(d: Date, lat: number, lon: number) {
   // NOAA sunrise equation for the local calendar day (IST)
@@ -109,6 +109,7 @@ export function mountHudDial(root: HTMLElement) {
   const secRing = root.querySelector<SVGGElement>("[data-hud-sec]");
   const minRing = root.querySelector<SVGGElement>("[data-hud-min]");
   const spinRing = root.querySelector<SVGGElement>("[data-hud-spin]");
+  const secBar = root.querySelector<HTMLElement>("[data-hud-secbar]");
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const draw = initGlobe(canvas);
 
@@ -171,12 +172,18 @@ export function mountHudDial(root: HTMLElement) {
     secRing?.setAttribute("transform", `rotate(${sec * 6} 500 500)`);
     minRing?.setAttribute("transform", `rotate(${(d.getMinutes() + sec / 60) * 6} 500 500)`);
     spinRing?.setAttribute("transform", `rotate(${-s.gmst} 500 500)`);
+    if (secBar) secBar.style.width = `${(sec / 60) * 100}%`;
     if (d.getSeconds() !== lastSec) {
       lastSec = d.getSeconds();
       const ist = fmt(d, "Asia/Kolkata");
       const t = sunTimes(d, JAIPUR.lat, JAIPUR.lon);
       const set = (k: string, v: string) => root.querySelectorAll<HTMLElement>(`[data-hud="${k}"]`).forEach((el) => { if (el.textContent !== v) el.textContent = v; });
-      set("ist-hm", ist.slice(0, 5)); set("ist-s", ist.slice(6));
+      set("ist", ist); set("ist-hm", ist.slice(0, 5)); set("ist-s", ist.slice(6));
+      set("dom", new Intl.DateTimeFormat("en-GB", { day: "2-digit", timeZone: "Asia/Kolkata" }).format(d));
+      // top-tab gauges: hour of day, minute, second (as % of a full turn)
+      const [hh, mm, ss] = ist.split(":").map(Number);
+      const g = { h: ((hh + mm / 60) / 24) * 100, m: ((mm + ss / 60) / 60) * 100, s: (ss / 60) * 100 };
+      root.querySelectorAll<SVGCircleElement>("[data-gauge]").forEach((c) => c.setAttribute("stroke-dasharray", `${g[c.dataset.gauge as "h" | "m" | "s"].toFixed(1)} 100`));
       set("utc", fmt(d, "UTC"));
       set("gmst", s.gmst.toFixed(2) + "°");
       set("rise", fmt(t.rise, "Asia/Kolkata", false)); set("set", fmt(t.set, "Asia/Kolkata", false));

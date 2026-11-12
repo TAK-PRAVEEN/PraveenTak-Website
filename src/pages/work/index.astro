@@ -64,6 +64,9 @@ const groups = GROUPS.map((g) => ({ ...g, items: projects.filter((p) => p.data.c
                 meta={p.data.status}
                 note={p.data.summary}
                 seed={i}
+                metric={p.data.metrics[0]}
+                stack={p.data.stack}
+                year={p.data.year ? String(p.data.year) : undefined}
               />
             </li>
           ))}

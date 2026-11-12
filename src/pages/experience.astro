@@ -8,6 +8,13 @@ import { period, month, byStartDesc } from "../lib/format";
 const work = (await getCollection("experience", (e) => e.data.kind === "work")).sort(byStartDesc);
 const certs = (await getCollection("certifications")).sort((a, b) => b.data.date.localeCompare(a.data.date));
 const profile = (await getEntry("profile", "main"))!.data;
+/** Whole months from "YYYY-MM" to "YYYY-MM" (or today), inclusive of the start month. */
+const months = (start: string, end: string | null) => {
+  const [y0, m0] = start.split("-").map(Number);
+  const now = new Date();
+  const [y1, m1] = end ? end.split("-").map(Number) : [now.getFullYear(), now.getMonth() + 1];
+  return Math.max(1, (y1 - y0) * 12 + (m1 - m0) + 1);
+};
 ---
 
 <BaseLayout title="Experience" fullTitle="Experience & Certifications — Praveen Tak, AI/ML Engineer" section="/experience" description="Praveen Tak's work history — AI Engineer at DESIGO® Milk, internships at DRDO, Infosys Springboard and Elevate Labs — plus education and certifications.">
@@ -27,6 +34,9 @@ const profile = (await getEntry("profile", "main"))!.data;
               note={e.data.highlights[0]}
               badge={e.data.end === null ? "Current" : undefined}
               seed={i + 2}
+              stack={e.data.stack}
+              year={e.data.location}
+              metric={{ value: `${months(e.data.start, e.data.end)} mo`, label: e.data.end === null ? "and counting" : "in the role" }}
             />
           </li>
         ))

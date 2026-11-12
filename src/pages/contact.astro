@@ -22,56 +22,85 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
   <div class="over-sky">
   <PageHeader section="/contact" title="Let's talk"><RefSequence slot="visual" name="sphere" frames={90} fps={25} /></PageHeader>
 
-  <section class="frame grid-12 contact" aria-label="Contact">
-    <div class="col-span-4 md:col-span-5 details">
-      <StatusDot open={profile.availability.open} label={profile.availability.label} />
-      <a href={`mailto:${profile.contact.email}`} class="heading email link-underline">{profile.contact.email}</a>
-      {profile.contact.phone && <a href={`tel:${profile.contact.phone.replace(/\s/g, "")}`} class="micro">{profile.contact.phone}</a>}
-      <ul class="socials">
-        {
-          profile.socials.map((s, i) => (
-            <li>
-              <a href={s.href} target="_blank" rel="me noopener" class="social glass">
-                <span class="social-top">
-                  <span class="micro social-idx">0{i + 1}</span>
-                  <span class="social-go" aria-hidden="true"><ArrowUpRight size={18} /></span>
-                </span>
-                <span class="social-label">{s.label}</span>
-                <span class="micro social-handle">{s.href.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}</span>
-                <span class="sr-only">(opens in a new tab)</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-      <p class="micro text-muted">{profile.location.city}, {profile.location.region}, {profile.location.country} · {profile.location.coords}</p>
-      <div class="hud-contact"><p class="micro text-muted">Where I am, right now</p><HudDial size="min(440px, 84vw)" label="Live Earth clock centred on Jaipur — drag to spin" /></div>
+  <section class="frame bento" aria-label="Contact">
+    <!-- 01 Email -->
+    <div class="tile tile-mail glass">
+      <p class="micro tile-k">01 — Email</p>
+      <a href={`mailto:${profile.contact.email}`} class="mail-big link-underline">{profile.contact.email}</a>
+      <div class="tile-foot">
+        <StatusDot open={profile.availability.open} label={profile.availability.label} />
+        <button type="button" class="pill micro" data-copy={profile.contact.email}>Copy address</button>
+      </div>
     </div>
 
-    <form class="col-span-4 md:col-span-6 md:col-start-7 form" data-contact-form data-email={profile.contact.email} novalidate>
-      <div class="field">
-        <label for="name" class="micro">Name</label>
-        <input id="name" name="name" type="text" autocomplete="name" maxlength="100" required />
+    <!-- 02 Phone -->
+    <div class="tile tile-phone glass">
+      <p class="micro tile-k">02 — Phone</p>
+      {profile.contact.phone && <p class="phone-big">{profile.contact.phone}</p>}
+      <div class="tile-foot">
+        {profile.contact.phone && <a class="pill pill-solid micro" href={`tel:${profile.contact.phone.replace(/\s/g, "")}`}>Call</a>}
+        {profile.contact.phone && <a class="pill micro" href={`https://wa.me/${profile.contact.phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener">WhatsApp<span class="sr-only"> (opens in a new tab)</span></a>}
       </div>
-      <div class="field">
-        <label for="email" class="micro">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email" maxlength="200" required />
-      </div>
-      <div class="field">
-        <label for="message" class="micro">Message</label>
-        <textarea id="message" name="message" rows="6" maxlength="5000" required></textarea>
-      </div>
-      <!-- Honeypot: hidden from people; bots that fill it are dropped server-side. -->
-      <div class="hp" aria-hidden="true">
-        <label for="website">Website</label>
-        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
-      </div>
-      <!-- Cloudflare Turnstile: usually invisible; shows a checkbox only if unsure. -->
-      {turnstileKey && <div class="turnstile" data-turnstile data-sitekey={turnstileKey}></div>}
-      <p class="micro form-error" role="alert" data-form-error hidden></p>
-      <p class="form-done" role="status" data-form-done hidden>Thanks — your message is on its way. I'll reply soon.</p>
-      <button type="submit" class="micro submit" data-liquid data-submit>Send message →</button>
-    </form>
+    </div>
+
+    <!-- puzzle joint where the four tiles meet -->
+    <span class="joint" aria-hidden="true"><ArrowUpRight size={26} /></span>
+
+    <!-- 03 Message -->
+    <div class="tile tile-form glass">
+      <p class="micro tile-k">03 — Message</p>
+      <h2 class="tile-h">Tell me about your project.</h2>
+        <form class="form" data-contact-form data-email={profile.contact.email} novalidate>
+          <div class="field">
+            <label for="name" class="micro">Name</label>
+            <input id="name" name="name" type="text" autocomplete="name" maxlength="100" required />
+          </div>
+          <div class="field">
+            <label for="email" class="micro">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="200" required />
+          </div>
+          <div class="field">
+            <label for="message" class="micro">Message</label>
+            <textarea id="message" name="message" rows="6" maxlength="5000" required></textarea>
+          </div>
+          <!-- Honeypot: hidden from people; bots that fill it are dropped server-side. -->
+          <div class="hp" aria-hidden="true">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+          <!-- Cloudflare Turnstile: usually invisible; shows a checkbox only if unsure. -->
+          {turnstileKey && <div class="turnstile" data-turnstile data-sitekey={turnstileKey}></div>}
+          <p class="micro form-error" role="alert" data-form-error hidden></p>
+          <p class="form-done" role="status" data-form-done hidden>Thanks — your message is on its way. I'll reply soon.</p>
+          <button type="submit" class="micro submit" data-liquid data-submit>Send message →</button>
+        </form>
+    </div>
+
+    <!-- 04 Where I am -->
+    <div class="tile tile-dial glass">
+      <p class="micro tile-k">04 — Where I am, right now</p>
+      <p class="micro text-muted">{profile.location.city}, {profile.location.region}, {profile.location.country} · {profile.location.coords}</p>
+      <div class="dial-wrap"><HudDial size="min(500px, 100%)" label="Live Earth clock centred on Jaipur — drag to spin" /></div>
+    </div>
+
+    <!-- 05–07 Links -->
+    <ul class="socials">
+      {
+        profile.socials.map((s, i) => (
+          <li>
+            <a href={s.href} target="_blank" rel="me noopener" class="social glass">
+              <span class="social-top">
+                <span class="micro social-idx">0{i + 5}</span>
+                <span class="social-go" aria-hidden="true"><ArrowUpRight size={18} /></span>
+              </span>
+              <span class="social-label">{s.label}</span>
+              <span class="micro social-handle">{s.href.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}</span>
+              <span class="sr-only">(opens in a new tab)</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
   </section>
   </div>
 </BaseLayout>
@@ -188,44 +217,98 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
     };
   }
   document.addEventListener("astro:page-load", setupContact);
+  // "Copy address" on the email tile.
+  document.addEventListener("astro:page-load", () => {
+    document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((b) => {
+      b.onclick = async () => {
+        try { await navigator.clipboard.writeText(b.dataset.copy!); b.textContent = "Copied ✓"; }
+        catch { location.href = `mailto:${b.dataset.copy}`; }
+        setTimeout(() => (b.textContent = "Copy address"), 1800);
+      };
+    });
+  });
 </script>
 
 <style>
-  .hud-contact { margin-top: 40px; padding-bottom: 48px; }
-  .hud-contact > p { margin-bottom: 24px; }
-  .contact {
-    row-gap: 64px;
+  /* Bento "puzzle" of glass tiles: email | phone, message | live dial, then three links.
+     The four upper tiles have a round notch where they meet; the joint button sits in it. */
+  .bento {
+    --gap: 16px; --notch: 50px;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--gap);
+    padding-top: 32px;
     padding-bottom: clamp(64px, 10vw, 160px);
-    border-top: 1px solid var(--line-strong);
-    padding-top: 40px;
   }
-  .details {
+  .tile {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+    padding: clamp(20px, 2.4vw, 36px);
+    border-radius: 32px;
+    min-width: 0;
   }
-  .email {
-    font-size: clamp(1.4rem, 0.6rem + 1.9vw, 2.4rem);
-    width: fit-content;
-    overflow-wrap: anywhere;
+  .tile-k { opacity: 0.6; margin: 0; }
+  .tile-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: auto; }
+  .tile-mail { grid-column: 1 / 8; grid-row: 1; min-height: 240px; }
+  .tile-phone { grid-column: 8 / 13; grid-row: 1; }
+  .tile-form { grid-column: 1 / 8; grid-row: 2; }
+  .tile-dial { grid-column: 8 / 13; grid-row: 2; }
+  .socials { grid-column: 1 / -1; grid-row: 3; }
+  .joint { display: none; }
+  @media (min-width: 900px) {
+    .tile-mail { -webkit-mask: radial-gradient(circle at 100% 100%, transparent var(--notch), #000 calc(var(--notch) + 1px)); mask: radial-gradient(circle at 100% 100%, transparent var(--notch), #000 calc(var(--notch) + 1px)); }
+    .tile-phone { -webkit-mask: radial-gradient(circle at 0% 100%, transparent var(--notch), #000 calc(var(--notch) + 1px)); mask: radial-gradient(circle at 0% 100%, transparent var(--notch), #000 calc(var(--notch) + 1px)); }
+    .tile-form { -webkit-mask: radial-gradient(circle at 100% 0%, transparent var(--notch), #000 calc(var(--notch) + 1px)); mask: radial-gradient(circle at 100% 0%, transparent var(--notch), #000 calc(var(--notch) + 1px)); }
+    .tile-dial { -webkit-mask: radial-gradient(circle at 0% 0%, transparent var(--notch), #000 calc(var(--notch) + 1px)); mask: radial-gradient(circle at 0% 0%, transparent var(--notch), #000 calc(var(--notch) + 1px)); }
+    .joint {
+      grid-column: 7 / 9; grid-row: 1;
+      justify-self: center; align-self: end;
+      margin-bottom: calc(-1 * (var(--gap) / 2) - 38px);
+      z-index: 2;
+      width: 76px; height: 76px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--fg); color: var(--bg);
+      box-shadow: 0 14px 30px rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.25);
+    }
   }
-  /* Socials: three frosted-glass tabs in one row. */
+  @media (max-width: 899px) {
+    .tile-mail, .tile-phone, .tile-form, .tile-dial, .socials { grid-column: 1 / -1; grid-row: auto; }
+  }
+  .mail-big {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.6rem, 0.6rem + 3vw, 3.4rem); letter-spacing: -0.035em; line-height: 1;
+    width: fit-content; overflow-wrap: anywhere;
+  }
+  .phone-big { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: clamp(1.6rem, 0.8rem + 2.2vw, 2.8rem); letter-spacing: -0.03em; line-height: 1; }
+  .tile-h { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: clamp(1.6rem, 1rem + 1.6vw, 2.6rem); letter-spacing: -0.03em; line-height: 1.02; }
+  .pill {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+    border-radius: 999px; border: 1px solid var(--line-strong);
+    background: transparent; color: var(--fg); font: inherit; cursor: pointer; text-decoration: none;
+  }
+  .pill-solid { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .dial-wrap { display: grid; place-items: center; padding: 24px 0 48px; }
+
+  /* Links: three frosted-glass tabs in one row. */
   .socials {
     list-style: none;
-    margin: 12px 0;
+    margin: 0;
     padding: 0;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    gap: var(--gap);
   }
   .social {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-height: 132px;
-    padding: 14px 14px 16px;
-    border-radius: 24px;
+    gap: 8px;
+    min-height: 170px;
+    padding: 22px 22px 24px;
+    border-radius: 32px;
     color: var(--fg);
     text-decoration: none;
     transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
@@ -235,17 +318,18 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
   .social-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: auto; }
   .social-idx { opacity: 0.6; }
   .social-go {
-    display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
     background: var(--fg); color: var(--bg);
     box-shadow: 0 6px 14px rgb(0 0 0 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.3);
     transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .social:hover .social-go { transform: rotate(45deg); }
-  .social-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.05rem, 0.8rem + 0.6vw, 1.4rem); letter-spacing: -0.02em; line-height: 1.05; }
-  .social-handle { opacity: 0.55; overflow-wrap: anywhere; font-size: 10px; }
-  @media (max-width: 420px) {
-    .social { min-height: 112px; padding: 12px; border-radius: 20px; }
+  .social-label { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.3rem, 0.8rem + 1.2vw, 2.2rem); letter-spacing: -0.03em; line-height: 1; }
+  .social-handle { opacity: 0.55; overflow-wrap: anywhere; }
+  @media (max-width: 560px) {
+    .social { min-height: 120px; padding: 14px; border-radius: 22px; }
     .social-handle { display: none; }
+    .social-go { width: 34px; height: 34px; }
   }
   .form {
     display: flex;
@@ -348,15 +432,5 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
   .over-sky {
     position: relative;
     z-index: 1;
-  }
-  /* Details + form sit on frosted glass so they read over the painting. */
-  .over-sky .contact {
-    margin-bottom: clamp(32px, 5vw, 64px);
-    padding: clamp(20px, 3vw, 40px);
-    border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
-    border-radius: 24px;
-    background: color-mix(in oklab, var(--bg) 72%, transparent);
-    -webkit-backdrop-filter: blur(18px) saturate(1.3);
-    backdrop-filter: blur(18px) saturate(1.3);
   }
 </style>

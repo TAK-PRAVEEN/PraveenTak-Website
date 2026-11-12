@@ -19,8 +19,12 @@ interface Props {
   tone?: "light" | "dark";
   badge?: string;
   wide?: boolean;
+  /** Spec sheet on the paper: key number, tech stack, year / status. */
+  metric?: { value: string; label: string };
+  stack?: string[];
+  year?: string;
 }
-const { href, title, kicker, meta, note, seed = 0, tone = "light", badge, wide = false } = Astro.props;
+const { href, title, kicker, meta, note, seed = 0, tone = "light", badge, wide = false, metric, stack = [], year } = Astro.props;
 const Tag = href ? "a" : "div";
 
 // Fluid artwork — varies by seed (no project images, by request).
@@ -66,7 +70,17 @@ const clips = `--cb:url(#${uid}-b);--cf:url(#${uid}-f);--cbw:url(#${uid}-bw);--c
     <span class="gf-back">
       <span class="gf-fluid" style={`--h1:${h1};--h2:${h2};--h3:${h3};--ang:${ang}deg;--px:${px}%;--py:${py}%`} aria-hidden="true"></span>
     </span>
-    <span class="gf-paper" aria-hidden="true">{note && !wide && <span class="gf-note">{note}</span>}</span>
+    <span class="gf-paper">
+      <span class="gf-spec-top micro"><span>Spec sheet</span>{year && <span>{year}</span>}</span>
+      <span class="gf-spec">
+        {metric && (
+          <span class="gf-metric"><b>{metric.value}</b><span class="micro">{metric.label}</span></span>
+        )}
+        {stack.length > 0 && (
+          <span class="gf-chips">{stack.slice(0, wide ? 6 : 3).map((t) => <span class="gf-chip micro">{t}</span>)}</span>
+        )}
+      </span>
+    </span>
     <span class="gf-front">
       <span class="gf-grain" aria-hidden="true"></span>
       <span class="gf-text">
@@ -156,16 +170,26 @@ const clips = `--cb:url(#${uid}-b);--cf:url(#${uid}-f);--cbw:url(#${uid}-bw);--c
     transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .gf:hover .gf-fluid { transform: rotate(8deg) scale(1.08); }
+  /* Paper = a spec sheet peeking out of the folder; slides up on hover. */
   .gf-paper {
-    position: absolute; left: 12%; right: 12%; top: 13%; height: 50%;
-    display: block; border-radius: 10px; background: var(--paper);
-    box-shadow: 0 6px 18px rgb(0 0 0 / 0.18);
-    transform: translateZ(-6px) translateY(calc(26% - var(--lift) * 30%));
+    position: absolute; left: 9%; right: 9%; top: 5%; height: 52%;
+    display: flex; flex-direction: column; gap: 8px;
+    border-radius: 12px; background: var(--paper); color: var(--fg);
+    background-image: repeating-linear-gradient(0deg, transparent 0 21px, rgb(128 128 128 / 0.08) 21px 22px);
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.18), inset 0 1px 0 rgb(255 255 255 / 0.6);
+    transform: translateZ(-6px) translateY(calc(10% - var(--lift) * 14%));
     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    padding: 7% 7%;
+    padding: 3.2% 4.5%;
   }
-  .gf-wide .gf-paper { left: 30%; right: 8%; }
-  .gf-note { display: block; font-size: 13px; line-height: 1.45; color: var(--fg); opacity: calc(var(--lift) * 0.85); transition: opacity 0.4s; }
+  .gf-wide .gf-paper { left: 32%; right: 6%; top: 4%; }
+  .gf-spec-top { display: flex; justify-content: space-between; opacity: 0.55; font-size: 10px; }
+  .gf-spec { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .gf-metric { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .gf-metric b { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.2vw, 40px); letter-spacing: -0.03em; line-height: 1; }
+  .gf-metric .micro { opacity: 0.6; font-size: 10px; }
+  .gf-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; max-width: 70%; }
+  .gf-chip { padding: 3px 8px; border-radius: 999px; border: 1px solid rgb(128 128 128 / 0.35); font-size: 9.5px; white-space: nowrap; }
+  @media (max-width: 767px) { .gf-chips { display: none; } }
   .gf-front {
     position: absolute; left: 0; right: 0; bottom: 0; height: 78.5%;
     display: block;
