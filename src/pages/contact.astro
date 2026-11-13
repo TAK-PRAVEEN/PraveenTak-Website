@@ -255,7 +255,7 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
   .tile-mail { grid-column: 1 / 8; grid-row: 1; min-height: 240px; }
   .tile-phone { grid-column: 8 / 13; grid-row: 1; }
   .tile-form { grid-column: 1 / 8; grid-row: 2; }
-  .tile-dial { grid-column: 8 / 13; grid-row: 2; }
+  .tile-dial { grid-column: 8 / 13; grid-row: 2; overflow: clip; }
   .socials { grid-column: 1 / -1; grid-row: 3; }
   .joint { display: none; }
   @media (min-width: 900px) {
@@ -281,22 +281,26 @@ const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.e
      2-column grid; the joint button locks the phone tile and the message tile together
      (round notch in each), then the dial and the three links. */
   @media (max-width: 899px) {
-    .bento { --gap: 12px; --notch: 40px; grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: 20px; }
+    .bento { --gap: 12px; --notch: 44px; grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: 20px; }
     .tile { padding: 18px; border-radius: 26px; gap: 12px; }
     .tile-mail { grid-column: 1 / -1; grid-row: auto; min-height: 0; }
     .tile-phone { grid-column: 1 / -1; grid-row: auto;
-      -webkit-mask: radial-gradient(circle at 50% 100%, transparent var(--notch), #000 calc(var(--notch) + 1px));
-      mask: radial-gradient(circle at 50% 100%, transparent var(--notch), #000 calc(var(--notch) + 1px)); }
+      -webkit-mask: radial-gradient(circle at 50% calc(100% + var(--gap)), transparent var(--notch), #000 calc(var(--notch) + 1px));
+      mask: radial-gradient(circle at 50% calc(100% + var(--gap)), transparent var(--notch), #000 calc(var(--notch) + 1px)); }
     .tile-form { grid-column: 1 / -1; grid-row: auto;
-      -webkit-mask: radial-gradient(circle at 50% 0%, transparent var(--notch), #000 calc(var(--notch) + 1px));
-      mask: radial-gradient(circle at 50% 0%, transparent var(--notch), #000 calc(var(--notch) + 1px)); }
+      -webkit-mask: radial-gradient(circle at 50% calc(-1 * var(--gap)), transparent var(--notch), #000 calc(var(--notch) + 1px));
+      mask: radial-gradient(circle at 50% calc(-1 * var(--gap)), transparent var(--notch), #000 calc(var(--notch) + 1px)); }
     .tile-dial, .socials { grid-column: 1 / -1; grid-row: auto; }
-    .tile-form .tile-k { padding-top: 24px; }
+    .tile-form .tile-k { padding-top: 22px; }
+    /* the dial's 3D layers must never widen the page while it spins */
+    .tile-dial { overflow: clip; }
     .joint {
       display: grid; place-items: center;
       grid-column: 1 / -1; justify-self: center;
       width: 62px; height: 62px; border-radius: 50%;
-      margin: calc(-31px - var(--gap) / 2) 0;
+      /* margin box of zero height: its row collapses to 0, so the button's centre sits exactly
+         one gap below the phone tile and one gap above the message tile (the notch centres). */
+      margin: -31px 0;
       z-index: 2; position: relative;
       background: var(--fg); color: var(--bg);
       box-shadow: 0 10px 24px rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.25);

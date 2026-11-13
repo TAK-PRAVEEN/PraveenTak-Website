@@ -265,6 +265,10 @@
     -webkit-font-smoothing: antialiased;
     scroll-padding-top: calc(var(--nav-h) + 16px);
   }
+  /* Mobile browsers ignore overflow on <body> for touch panning: clip the root too. */
+  html {
+    overflow-x: clip;
+  }
   body {
     background: var(--bg);
     color: var(--fg);
