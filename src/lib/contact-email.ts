@@ -112,7 +112,7 @@ export function contactEmail(m: ContactMail): { subject: string; html: string; t
     <tr><td style="padding:16px 28px;background:#080809;">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr>
         <td style="font-family:${MONO};font-size:11px;letter-spacing:1px;color:#a3a3a6;">Sent from the contact form on <a href="https://${esc(m.site)}" style="color:#f0f0ee;text-decoration:none;">${esc(m.site)}</a></td>
-        <td align="right" style="white-space:nowrap;padding-left:12px;font-family:${MONO};font-size:11px;letter-spacing:1px;color:#ff5a1f;">Jaipur · IN</td>
+        <td align="right" style="white-space:nowrap;padding-left:12px;font-family:${MONO};font-size:11px;letter-spacing:1px;color:#ff5a1f;">Jodhpur · IN</td>
       </tr></table>
     </td></tr>
 

@@ -21,9 +21,9 @@ export interface Experience {
 
 export const SITE = {
   name: "Praveen Tak",
-  title: "Praveen Tak — AI/ML Engineer & Full-Stack Developer, Jaipur",
+  title: "Praveen Tak — AI/ML Engineer & Full-Stack Developer, Jodhpur",
   description:
-    "Praveen Tak is an AI/ML engineer and full-stack developer from Jaipur, India — computer vision, LLM tools and production apps for real businesses.",
+    "Praveen Tak is an AI/ML engineer and full-stack developer from Jodhpur, India — computer vision, LLM tools and production apps for real businesses.",
   /** Production origin. Replace once the domain is decided (see DESIGN.md). */
   url: "https://praveentak.dev",
   locale: "en_IN",

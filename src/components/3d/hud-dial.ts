@@ -1,8 +1,8 @@
 /**
- * HUD dial runtime: a WebGL Earth (real day/night for "now", Jaipur centred), live clocks,
+ * HUD dial runtime: a WebGL Earth (real day/night for "now", Jodhpur centred), live clocks,
  * and click-and-hold spin of the dial in its own plane (inertia; double-click resets).
  */
-const JAIPUR = { lat: 26.9124, lon: 75.7873 };
+const HOME = { lat: 26.2389, lon: 73.0243 }; // Jodhpur
 const rad = Math.PI / 180;
 
 // ---------- astronomy (NOAA approximations, accurate to ~1 min) ----------
@@ -167,7 +167,7 @@ export function mountHudDial(root: HTMLElement) {
     stage.style.setProperty("--spin", `${spin}deg`); // the Earth and the info cards stay upright
 
     const s = sun(d);
-    draw?.(JAIPUR.lat, JAIPUR.lon, s);
+    draw?.(HOME.lat, HOME.lon, s);
     const ms = d.getMilliseconds(), sec = d.getSeconds() + ms / 1000;
     secRing?.setAttribute("transform", `rotate(${sec * 6} 500 500)`);
     minRing?.setAttribute("transform", `rotate(${(d.getMinutes() + sec / 60) * 6} 500 500)`);
@@ -176,7 +176,7 @@ export function mountHudDial(root: HTMLElement) {
     if (d.getSeconds() !== lastSec) {
       lastSec = d.getSeconds();
       const ist = fmt(d, "Asia/Kolkata");
-      const t = sunTimes(d, JAIPUR.lat, JAIPUR.lon);
+      const t = sunTimes(d, HOME.lat, HOME.lon);
       const set = (k: string, v: string) => root.querySelectorAll<HTMLElement>(`[data-hud="${k}"]`).forEach((el) => { if (el.textContent !== v) el.textContent = v; });
       set("ist", ist); set("ist-hm", ist.slice(0, 5)); set("ist-s", ist.slice(6));
       set("dom", new Intl.DateTimeFormat("en-GB", { day: "2-digit", timeZone: "Asia/Kolkata" }).format(d));

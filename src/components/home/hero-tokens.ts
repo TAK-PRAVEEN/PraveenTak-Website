@@ -9,7 +9,7 @@ const FONT = "'Space Mono', monospace";
 const VOCAB = (
   "attention softmax ∇L embed relu <bos> <eos> 0.9821 logits token q·kᵀ/√d layer_norm dropout(0.1) " +
   "argmax 1e-4 batch=32 epoch 12 adam β₁ loss↓ yolo11 bbox conf=0.91 opencv flutter supabase rls 16/16 pads " +
-  "jaipur praveen tak ai/ml engineer forward() backward() grad ∑ σ(x) tanh conv2d 3×3 stride=2 → ✓ #ff5a1f"
+  "jodhpur praveen tak ai/ml engineer forward() backward() grad ∑ σ(x) tanh conv2d 3×3 stride=2 → ✓ #ff5a1f"
 ).split(" ");
 const LINES = [
   "praveen.generate(prompt) → AI systems that ship",

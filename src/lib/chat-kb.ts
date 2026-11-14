@@ -17,7 +17,7 @@ export function age(now = new Date()): number {
 /** Personal facts Praveen is happy to share (fed to the AI as context). */
 export const PERSONAL_FACTS = () =>
   [
-    `Born 10 November 2004 (age ${age()}). Lives in Jaipur, Rajasthan, India.`,
+    `Born 10 November 2004 (age ${age()}). Lives in Jodhpur, Rajasthan, India.`,
     "Hobbies: football, watching movies, photography, travelling, exploring new technology.",
     "Favourite movie: The Godfather. Favourite series: Vikings.",
     "A cat person — loves petting and hanging out with cats.",
@@ -58,7 +58,7 @@ const KB: Entry[] = [
   { keywords: ["education", "study", "college", "university", "degree", "mca", "bsc"], answer: () => "MCA in AI & Data Science at Poornima University, Jaipur (2025–2027); B.Sc (PMCS) from Lachoo Memorial College, Jodhpur (2022–2025, 85%, Honours); XII Science from Army Public School, Jodhpur." },
   { keywords: ["research", "paper", "gan", "lab"], answer: () => "His research paper 'GANs Under Data Scarcity' compares four GAN losses across 16 training runs — LSGAN was the most stable, WGAN collapsed at 1,000 images. Details are in the Lab." },
   { keywords: ["contact", "email", "reach", "hire", "connect", "phone"], answer: (c) => `Email ${c.email}, or use the Contact page. He's open to AI / ML roles.` },
-  { keywords: ["where", "location", "live", "city", "based", "from"], answer: () => "He's based in Jaipur, Rajasthan, India." },
+  { keywords: ["where", "location", "live", "city", "based", "from"], answer: () => "He's based in Jodhpur, Rajasthan, India." },
   { keywords: ["hobby", "hobbies", "free time", "fun", "interest"], answer: () => "Outside code: football, movies, photography, travelling and exploring new tech." },
   { keywords: ["movie", "film", "cinema"], answer: () => "His all-time favourite movie is The Godfather." },
   { keywords: ["series", "show", "tv", "netflix"], answer: () => "His favourite series is Vikings." },
