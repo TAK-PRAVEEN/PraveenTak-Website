@@ -44,7 +44,7 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
               </div>
               <div class="card-visual col-span-4 md:col-span-6" aria-hidden="true">
                 {p.data.cover ? (
-                  <Image src={p.data.cover} alt="" widths={[600, 1000, 1400]} sizes="(min-width: 768px) 46vw, 92vw" class="card-cover" loading="lazy" />
+                  <Image src={p.data.cover} alt={p.data.coverAlt || `${p.data.title} — project screenshot`} widths={[600, 1000, 1400]} sizes="(min-width: 768px) 46vw, 92vw" class="card-cover" loading="lazy" />
                 ) : (
                   <div class="card-numeral">
                     <span class="numeral text-outline">{String(i + 1).padStart(2, "0")}</span>
