@@ -18,6 +18,7 @@ import InkNav from "../components/motion/InkNav.astro";
 import ChatBot from "../components/layout/ChatBot.astro";
 import FaviconFX from "../components/motion/FaviconFX.astro";
 import { SITE, experienceFor, type Accent, type Surface } from "../config/site";
+import { SERVICES, EXTRA_SAME_AS } from "../config/answers";
 
 interface Props {
   title?: string;
@@ -34,6 +35,8 @@ interface Props {
   fullTitle?: string;
   /** Extra schema.org object for this page (e.g. a project or article), added to the JSON-LD graph. */
   schema?: Record<string, unknown>;
+  /** Further schema.org nodes added as they are (e.g. the About page's FAQPage). */
+  extraSchema?: Record<string, unknown>[];
   /** Share-card image for this page (root-relative path, 1200x630). Keep it under ~300 KB so WhatsApp shows it. */
   ogImage?: string;
   ogImageAlt?: string;
@@ -59,6 +62,8 @@ const profile = (await getEntry("profile", "main"))!.data;
 const currentRole = (await getCollection("experience", (e) => e.data.kind === "work" && !e.data.end))[0]?.data;
 const school = (await getCollection("experience", (e) => e.data.kind === "education")).map((e) => e.data.org);
 const personId = `${origin}/#person`;
+// Freshness signal for search and AI engines: pages are rebuilt on every deploy.
+const builtAt = new Date().toISOString().slice(0, 10);
 const graph: Record<string, unknown>[] = [
   {
     "@type": "Person",
@@ -72,16 +77,19 @@ const graph: Record<string, unknown>[] = [
     alumniOf: school.map((name) => ({ "@type": "EducationalOrganization", name })),
     address: { "@type": "PostalAddress", addressLocality: profile.location.city, addressRegion: profile.location.region, addressCountry: "IN" },
     knowsAbout: profile.skills.flatMap((g) => g.items).slice(0, 20),
-    sameAs: profile.socials.map((s) => s.href),
+    sameAs: [...profile.socials.map((s) => s.href), ...EXTRA_SAME_AS],
     description: profile.intro,
+    // What he offers — lets answer engines match "who builds AI dashboards / ML forecasting in Rajasthan".
+    makesOffer: SERVICES.map((sv) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name: sv.name, description: sv.description, provider: { "@id": personId }, areaServed: "IN" } })),
   },
-  { "@type": "WebSite", "@id": `${origin}/#website`, url: `${origin}/`, name: SITE.name, inLanguage: "en-IN", publisher: { "@id": personId } },
+  { "@type": "WebSite", "@id": `${origin}/#website`, url: `${origin}/`, name: SITE.name, description: SITE.description, inLanguage: "en-IN", publisher: { "@id": personId } },
   // Home and About are Google "ProfilePage"s (eligible for the profile rich result); others are plain WebPages.
   ["/", "/about"].includes(String(canonical.pathname).replace(/\/$/, "") || "/")
-    ? { "@type": "ProfilePage", "@id": `${canonical}#page`, url: String(canonical), name: pageTitle, description: metaDescription, isPartOf: { "@id": `${origin}/#website` }, mainEntity: { "@id": personId } }
-    : { "@type": "WebPage", "@id": `${canonical}#page`, url: String(canonical), name: pageTitle, description: metaDescription, isPartOf: { "@id": `${origin}/#website` }, about: { "@id": personId } },
+    ? { "@type": "ProfilePage", "@id": `${canonical}#page`, url: String(canonical), name: pageTitle, description: metaDescription, isPartOf: { "@id": `${origin}/#website` }, mainEntity: { "@id": personId }, dateModified: builtAt }
+    : { "@type": "WebPage", "@id": `${canonical}#page`, url: String(canonical), name: pageTitle, description: metaDescription, isPartOf: { "@id": `${origin}/#website` }, about: { "@id": personId }, dateModified: builtAt },
 ];
 if (Astro.props.schema) graph.push({ author: { "@id": personId }, ...Astro.props.schema });
+for (const node of Astro.props.extraSchema ?? []) graph.push(node);
 const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replace(/</g, "\u003c");
 // The service worker only runs in production builds (never against the dev server).
 const registerSW = import.meta.env.PROD;
@@ -104,6 +112,8 @@ const registerSW = import.meta.env.PROD;
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <!-- Plain-text summary for AI assistants (llmstxt.org). -->
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="Praveen Tak — summary for AI assistants" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={SITE.name} />

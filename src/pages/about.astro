@@ -4,12 +4,20 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/layout/PageHeader.astro";
 import SpecList from "../components/ui/SpecList.astro";
 import { period, byStartDesc } from "../lib/format";
+import { faqs } from "../config/answers";
 
 const profile = (await getEntry("profile", "main"))!.data;
 const education = (await getCollection("experience", (e) => e.data.kind === "education")).sort(byStartDesc);
+// Visible Q&A + matching FAQPage JSON-LD: what answer engines quote when people ask about Praveen.
+const faq = faqs(profile.location.city, profile.location.region, profile.contact.email);
+const faqSchema = {
+  "@type": "FAQPage",
+  "@id": "https://praveentak.dev/about#faq",
+  mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+};
 ---
 
-<BaseLayout title="About" fullTitle="About Praveen Tak — AI/ML Engineer from Jaipur, India" section="/about" description="About Praveen Tak: AI/ML engineer and full-stack developer from Jaipur — skills, education, achievements, and how he turns data into real systems.">
+<BaseLayout title="About" fullTitle="About Praveen Tak — AI/ML Engineer from Jaipur, India" section="/about" extraSchema={[faqSchema]} description="About Praveen Tak: AI/ML engineer and full-stack developer from Jaipur — skills, education, achievements, and how he turns data into real systems.">
   <PageHeader section="/about" title="About" statement={profile.statement} lead={profile.intro} />
 
   <section class="frame block" aria-labelledby="identity-title">
@@ -64,6 +72,22 @@ const education = (await getCollection("experience", (e) => e.data.kind === "edu
       <h2 id="ach-title" class="micro col-span-4 md:col-span-3 label">Recognition</h2>
       <ol class="col-span-4 md:col-span-9 list">
         {profile.achievements.map((a) => <li class="heading">{a}</li>)}
+      </ol>
+    </div>
+  </section>
+
+  <section class="frame block" aria-labelledby="faq-title" id="faq">
+    <div class="grid-12">
+      <h2 id="faq-title" class="micro col-span-4 md:col-span-3 label">Questions</h2>
+      <ol class="col-span-4 md:col-span-9 rows">
+        {
+          faq.map((f) => (
+            <li class="row faq-row">
+              <h3 class="heading row-title">{f.q}</h3>
+              <p class="faq-a">{f.a}</p>
+            </li>
+          ))
+        }
       </ol>
     </div>
   </section>
@@ -139,6 +163,15 @@ const education = (await getCollection("experience", (e) => e.data.kind === "edu
     font-size: var(--text-h3);
     padding-block: 12px;
     border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 768px) {
+    .faq-row {
+      grid-template-columns: 1fr 1.3fr;
+    }
+  }
+  .faq-a {
+    margin: 0;
+    color: var(--fg-muted);
   }
   .interests {
     font-size: var(--text-h2);
