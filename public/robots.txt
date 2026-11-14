@@ -1,5 +1,7 @@
 # praveentak.dev — open to search engines and AI assistants.
 User-agent: *
+# Content Signals (contentsignals.org): search, AI answers and AI training are all welcome.
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 Disallow: /keystatic
 Disallow: /api/
